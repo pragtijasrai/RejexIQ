@@ -294,7 +294,7 @@ app.get("/api/download-log", authMiddleware, (req, res) => {
 });
 
 // ── SERVE REACT APP ───────────────────────────────────────────────────────────
-app.get("*", (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../dist", "index.html"));
 });
 
