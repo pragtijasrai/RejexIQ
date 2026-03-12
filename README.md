@@ -211,8 +211,4 @@ AI Assistant (personalized career Q&A)
 - The radar chart visualizes multi-dimensional skill profiles
 - Market data simulates real-time industry insights
 
----
 
-## License
-
-MIT — Built as a 2nd Year Computer Science Academic Project
