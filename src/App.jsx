@@ -1,5 +1,15 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import DSATutorial from "./DSATutorial.jsx";
+import ArraysRecursion from "./ArraysRecursion.jsx";
+import ControlFlow from "./ControlFlow.jsx";
+import StringsTutorial from "./StringsTutorial.jsx";
+import LinkedList from "./LinkedList.jsx";
+import StacksQueues from "./StacksQueues.jsx";
+import DSAHub from "./DSAHub.jsx";
+import Sorting from "./Sorting.jsx";
+import Searching from "./Searching.jsx";
+import Backtracking from "./Backtracking.jsx";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -1107,6 +1117,7 @@ function Sidebar({ active, onNav, user, onLogout }) {
     { key: "dashboard", icon: "🏠", label: "Dashboard" },
     { key: "profile", icon: "👤", label: "Profile" },
     { key: "assessment", icon: "🎯", label: "Skill Assessment" },
+    { key: "dsa",  icon: "📚", label: "DSA Tutorial" },
     { key: "career", icon: "🏆", label: "Career Match" },
     { key: "market", icon: "📈", label: "Market Demand" },
     { key: "resume", icon: "📄", label: "Resume Builder" },
@@ -2574,6 +2585,7 @@ export default function App() {
             {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
             {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
             {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
+            {appPage === "dsa" && <DSAHub />}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
