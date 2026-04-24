@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap');
@@ -966,11 +966,14 @@ const COLOR_MAP = {
   pu:"var(--pu)", te:"var(--te)", pk:"var(--pk)", re:"var(--re)"
 };
 
-export default function StringsTutorial({ onPrev, onNext }) {
+export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
   const [active, setActive] = useState("intro");
   const curIdx = CHAPTERS.findIndex(c => c.id === active);
+  useEffect(() => { onChapterChange?.(curIdx, CHAPTERS.length); }, [active]);
 
   function switchTab(id) {
+    const newIdx = CHAPTERS.findIndex(c => c.id === id);
+    onChapterChange?.(newIdx, CHAPTERS.length);
     setActive(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

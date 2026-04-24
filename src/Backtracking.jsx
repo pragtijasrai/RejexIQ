@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const styles = `
 .bt-root { font-family:var(--font-sans,sans-serif); }
@@ -286,10 +286,11 @@ const CHAPTERS = [
   { id:"permsub", label:"3. Permutations & Subsets" },
 ];
 
-export default function Backtracking({ onPrev, onNext }) {
+export default function Backtracking({ onPrev, onNext, onChapterChange }) {
   const [active, setActive] = useState("intro");
   const curIdx = CHAPTERS.findIndex(c => c.id === active);
-  function switchTab(id) { setActive(id); window.scrollTo({ top:0, behavior:"smooth" }); }
+  useEffect(() => { onChapterChange?.(curIdx, CHAPTERS.length); }, [active]);
+  function switchTab(id) { const newIdx = CHAPTERS.findIndex(c => c.id === id); onChapterChange?.(newIdx, CHAPTERS.length); setActive(id); window.scrollTo({ top:0, behavior:"smooth" }); }
   return (
     <div className="bt-root">
       <style>{styles}</style>

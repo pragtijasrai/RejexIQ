@@ -601,6 +601,21 @@ const hubCss = `
   background: var(--color-background-secondary);
   box-shadow: 0 0 0 2px var(--pill-color, #6c63ff), 0 4px 20px rgba(0,0,0,0.2);
 }
+.hub-pill.done {
+  border-color: rgba(67,233,123,.5);
+  background: rgba(67,233,123,.07);
+}
+.hub-pill.done::before { background: #43e97b; }
+.hub-pill.done.on {
+  box-shadow: 0 0 0 2px #43e97b, 0 4px 20px rgba(67,233,123,.25);
+}
+.hub-pill .p-done {
+  position: absolute; top: 5px; right: 5px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #43e97b; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 900; color: #0a0e27;
+  box-shadow: 0 0 6px rgba(67,233,123,.6);
+}
 .hub-pill .p-label {
   font-size: 11px; font-weight: 700;
   color: #ffffff !important; line-height: 1.3;
@@ -776,14 +791,17 @@ const TOPIC_META = {
   dp:        { tags:["Memoization","Tabulation","Fibonacci","Knapsack","LCS"], color:"#badc58", color2:"#55efc4", stats:[{v:"O(n)",l:"Fib DP"},{v:"O(nW)",l:"Knapsack"},{v:"2",l:"Approaches"}], desc:"Dynamic Programming solves problems by breaking them into overlapping subproblems and storing results to avoid recomputation." },
 };
 
-export default function DSAHub() {
+export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
   const [topicIdx, setTopicIdx] = useState(0);
+  const [isOnLastChapter, setIsOnLastChapter] = useState(false);
   const topic = TOPICS[topicIdx];
   const meta  = TOPIC_META[topic.id];
   const HeroGraphic = HERO_GRAPHICS[topic.id];
+  const isDone = completedTopics.includes(topic.id);
 
   function goTo(idx) {
     setTopicIdx(idx);
+    setIsOnLastChapter(false); // reset when switching topics
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -791,27 +809,68 @@ export default function DSAHub() {
   const prev = topicIdx > 0 ? () => goTo(topicIdx - 1) : undefined;
   const next = topicIdx < TOPICS.length - 1 ? () => goTo(topicIdx + 1) : undefined;
 
+  // Called by each tutorial when chapter changes
+  const onChapterChange = (curIdx, totalChapters) => {
+    setIsOnLastChapter(curIdx === totalChapters - 1);
+  };
+
   function renderTopic() {
+    // Only show mark-complete bar when on the last chapter of the topic
+    const markBar = (onMarkComplete && isOnLastChapter) ? (
+      <div style={{
+        display:"flex", alignItems:"center", justifyContent:"center",
+        padding:"20px 0 8px", borderTop:"0.5px solid var(--color-border-tertiary)",
+        marginTop:8
+      }}>
+        {isDone ? (
+          <div style={{
+            display:"flex", alignItems:"center", gap:10,
+            padding:"12px 24px", borderRadius:12,
+            background:"rgba(67,233,123,.1)", border:"1px solid rgba(67,233,123,.3)",
+            color:"#43e97b", fontWeight:700, fontSize:14
+          }}>
+            ✅ {topic.label} Completed! +{TOPIC_META[topic.id]?.stats?.[0]?.v || ""} XP earned
+          </div>
+        ) : (
+          <button onClick={() => onMarkComplete(topic.id)} style={{
+            display:"flex", alignItems:"center", gap:10,
+            padding:"13px 32px", borderRadius:12, border:"none", cursor:"pointer",
+            background:"linear-gradient(135deg,#43e97b,#00b894)",
+            color:"#0a0e27", fontWeight:800, fontSize:15,
+            boxShadow:"0 4px 20px rgba(67,233,123,.35)",
+            transition:"all .2s"
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform="translateY(-2px)"}
+          onMouseLeave={e => e.currentTarget.style.transform="translateY(0)"}
+          >
+            🎯 Mark "{topic.label}" as Completed
+          </button>
+        )}
+      </div>
+    ) : null;
+
+    const wrap = (el) => <>{el}{markBar}</>;
+
     switch (topic.id) {
-      case "basics":    return <DSATutorial     onNext={next} />;
-      case "complex":   return <DSATutorial     onNext={next} />;
-      case "arrays":    return <ArraysTopic     onPrev={prev} onNext={next} />;
-      case "strings":   return <StringsTutorial onPrev={prev} onNext={next} />;
-      case "recursion": return <RecursionTopic  onPrev={prev} onNext={next} />;
-      case "control":   return <ControlFlow     onPrev={prev} onNext={next} />;
-      case "ll":        return <LinkedList      onPrev={prev} onNext={next} />;
-      case "stack":     return <StackTopic      onPrev={prev} onNext={next} />;
-      case "queue":     return <QueueTopic      onPrev={prev} onNext={next} />;
-      case "trees":     return <Trees       onPrev={prev} onNext={next} />;
-      case "bst":       return <BST         onPrev={prev} onNext={next} />;
-      case "heap":      return <Heap        onPrev={prev} onNext={next} />;
-      case "hashing":   return <Hashing     onPrev={prev} onNext={next} />;
-      case "graphs":    return <Graphs      onPrev={prev} onNext={next} />;
-      case "bfs":       return <BFS         onPrev={prev} onNext={next} />;
-      case "dfs":       return <DFS         onPrev={prev} onNext={next} />;
-      case "backtrack": return <Backtracking onPrev={prev} onNext={next} />;
-      case "greedy":    return <Greedy      onPrev={prev} onNext={next} />;
-      case "dp":        return <DP          onPrev={prev} onNext={next} />;
+      case "basics":    return wrap(<DSATutorial     mode="basics"     onNext={next} onChapterChange={onChapterChange} />);
+      case "complex":   return wrap(<DSATutorial     mode="complexity" onNext={next} onChapterChange={onChapterChange} />);
+      case "arrays":    return wrap(<ArraysTopic     onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "strings":   return wrap(<StringsTutorial onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "recursion": return wrap(<RecursionTopic  onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "control":   return wrap(<ControlFlow     onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "ll":        return wrap(<LinkedList      onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "stack":     return wrap(<StackTopic      onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "queue":     return wrap(<QueueTopic      onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "trees":     return wrap(<Trees       onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "bst":       return wrap(<BST         onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "heap":      return wrap(<Heap        onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "hashing":   return wrap(<Hashing     onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "graphs":    return wrap(<Graphs      onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "bfs":       return wrap(<BFS         onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "dfs":       return wrap(<DFS         onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "backtrack": return wrap(<Backtracking onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "greedy":    return wrap(<Greedy      onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
+      case "dp":        return wrap(<DP          onPrev={prev} onNext={next} onChapterChange={onChapterChange} />);
       default:          return null;
     }
   }
@@ -822,15 +881,20 @@ export default function DSAHub() {
 
       {/* ── Topic selector grid ── */}
       <div className="hub-grid">
-        {TOPICS.map((t, i) => (
-          <button key={t.id} className={`hub-pill${topicIdx===i?" on":""}`}
-            style={{"--pill-color": t.color}}
-            onClick={() => goTo(i)}>
-            <span className="p-num">{String(i+1).padStart(2,"0")}</span>
-            <span className="p-icon">{t.icon}</span>
-            <span className="p-label">{t.label}</span>
-          </button>
-        ))}
+        {TOPICS.map((t, i) => {
+          const done = completedTopics.includes(t.id);
+          return (
+            <button key={t.id}
+              className={`hub-pill${topicIdx===i?" on":""}${done?" done":""}`}
+              style={{"--pill-color": t.color}}
+              onClick={() => goTo(i)}>
+              {done && <span className="p-done">✓</span>}
+              <span className="p-num">{String(i+1).padStart(2,"0")}</span>
+              <span className="p-icon">{done ? "✅" : t.icon}</span>
+              <span className="p-label">{t.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Progress bar ── */}

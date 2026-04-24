@@ -232,7 +232,7 @@ const CHAPTERS = [
   { id:"quiz",   label:"Quiz",          comp: SecQuiz },
 ];
 
-export default function Graphs({ onPrev, onNext }) {
+export default function Graphs({ onPrev, onNext, onChapterChange }) {
   const [ch, setCh] = useState(0);
   const Comp = CHAPTERS[ch].comp;
   return (

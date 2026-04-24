@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const T = {
   bg: "#0a0a0f",
@@ -1127,20 +1127,43 @@ if ((n & 1) == 0) {
 }
 
 // ── MAIN EXPORT ──
-export default function DSATutorial({ onNext }) {
-  const tocItems = [
-    { href:"#java-history",  label:"Programming Basics" },
+export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
+  // DSATutorial is a single scrollable page — always on "last chapter"
+  useEffect(() => { onChapterChange?.(0, 1); }, [mode]);
+  // mode: "basics" = Java only, "complexity" = Algorithms only, "all" = everything
+
+  const basicsItems = [
+    { href:"#java-history", label:"Java History" },
+    { href:"#jvm",          label:"JVM / JRE / JDK" },
+    { href:"#compile",      label:"Compile & Interpret" },
+    { href:"#main",         label:"main() Method" },
+    { href:"#basics",       label:"Java Basics" },
+    { href:"#datatypes",    label:"Data Types" },
+    { href:"#operators",    label:"Operators" },
+    { href:"#practice-java",label:"Practice Problems" },
+  ];
+
+  const complexityItems = [
     { href:"#complexity",    label:"Complexity Analysis" },
+    { href:"#tradoffs",      label:"Time vs Space" },
     { href:"#notations",     label:"Asymptotic Notations" },
+    { href:"#opcounting",    label:"Operation Counting" },
+    { href:"#iterative",     label:"Iterative Approach" },
     { href:"#master",        label:"Master Theorem" },
-    { href:"#basics",        label:"Java Basics" },
-    { href:"#datatypes",     label:"Data Types" },
-    { href:"#operators",     label:"Operators" },
-    { href:"#main",          label:"main() Method" },
-    { href:"#jvm",           label:"JVM / JRE / JDK" },
-    { href:"#compile",       label:"Compile & Interpret" },
     { href:"#practice-algo", label:"Practice Problems" },
   ];
+
+  const tocItems = mode === "basics" ? basicsItems
+                 : mode === "complexity" ? complexityItems
+                 : [...complexityItems, ...basicsItems];
+
+  const heroTitle  = mode === "basics"     ? "Programming Basics"
+                   : mode === "complexity" ? "Complexity Analysis"
+                   : "Algorithms & Java Deep Dive";
+
+  const heroDesc   = mode === "basics"     ? "Java syntax, data types, operators, JVM, and how your code runs."
+                   : mode === "complexity" ? "Big-O, asymptotic notations, operation counting, and the Master Theorem."
+                   : "From Programming Basics to Stacks & Queues — every concept from first principles.";
 
   function scrollTo(href) {
     const el = document.querySelector(href);
@@ -1153,9 +1176,11 @@ export default function DSATutorial({ onNext }) {
 
       {/* HERO */}
       <div className="dsa-hero">
-        <div className="dsa-badge">Complete DSA Curriculum</div>
-        <h1>Algorithms &amp; <span>Java</span> Deep Dive</h1>
-        <p>From Programming Basics to Stacks & Queues — every concept explained from first principles.</p>
+        <div className="dsa-badge">
+          {mode === "basics" ? "Programming Basics" : mode === "complexity" ? "Complexity Analysis" : "Complete DSA Curriculum"}
+        </div>
+        <h1><span>{heroTitle}</span></h1>
+        <p>{heroDesc}</p>
         <div className="dsa-toc">
           {tocItems.map(t => (
             <span key={t.href} className="dsa-pill" onClick={() => scrollTo(t.href)}>{t.label}</span>
@@ -1164,34 +1189,42 @@ export default function DSATutorial({ onNext }) {
       </div>
 
       <div className="dsa-container">
-        {/* Part 1: Algorithms */}
-        <div className="dsa-part algo">
-          <div className="dsa-part-label">Part I</div>
-          <h2>Algorithm Analysis &amp; Complexity</h2>
-        </div>
-        <ComplexitySection />
-        <TradeoffsSection />
-        <NotationsSection />
-        <OpCountingSection />
-        <IterativeSection />
-        <MasterTheoremSection />
-        <PracticeAlgoSection />
+        {/* Complexity sections — shown in "complexity" or "all" mode */}
+        {(mode === "complexity" || mode === "all") && (
+          <>
+            <div className="dsa-part algo">
+              <div className="dsa-part-label">Algorithm Analysis</div>
+              <h2>Complexity &amp; Asymptotic Notations</h2>
+            </div>
+            <ComplexitySection />
+            <TradeoffsSection />
+            <NotationsSection />
+            <OpCountingSection />
+            <IterativeSection />
+            <MasterTheoremSection />
+            <PracticeAlgoSection />
+          </>
+        )}
 
-        {/* Part 2: Java */}
-        <div className="dsa-part java" style={{ marginTop: 80 }}>
-          <div className="dsa-part-label">Part II</div>
-          <h2>Java — Complete Foundation</h2>
-        </div>
-        <JavaHistorySection />
-        <JVMSection />
-        <SetupSection />
-        <IDESection />
-        <CompileSection />
-        <MainMethodSection />
-        <JavaBasicsSection />
-        <DataTypesSection />
-        <OperatorsSection />
-        <PracticeJavaSection />
+        {/* Java sections — shown in "basics" or "all" mode */}
+        {(mode === "basics" || mode === "all") && (
+          <>
+            <div className="dsa-part java" style={{ marginTop: mode === "all" ? 80 : 0 }}>
+              <div className="dsa-part-label">Java Foundation</div>
+              <h2>Programming Basics</h2>
+            </div>
+            <JavaHistorySection />
+            <JVMSection />
+            <SetupSection />
+            <IDESection />
+            <CompileSection />
+            <MainMethodSection />
+            <JavaBasicsSection />
+            <DataTypesSection />
+            <OperatorsSection />
+            <PracticeJavaSection />
+          </>
+        )}
 
         <div className="dsa-footer">
           Master Guide — Algorithms &amp; Java &nbsp;|&nbsp; All topics covered deeply for exam &amp; interview readiness
