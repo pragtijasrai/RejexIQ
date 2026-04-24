@@ -776,11 +776,14 @@ const CHAPTERS = [
   { id:"quiz",     label:"7. Quiz" },
 ];
 
-export default function StacksQueues({ onPrev, onNext, _startAt }) {
+export default function StacksQueues({ onPrev, onNext, _startAt, onChapterChange }) {
   const [active, setActive] = useState(_startAt || "stack");
   const curIdx = CHAPTERS.findIndex(c => c.id === active);
+  useEffect(() => { onChapterChange?.(curIdx, CHAPTERS.length); }, [active]);
 
   function switchTab(id) {
+    const newIdx = CHAPTERS.findIndex(c => c.id === id);
+    onChapterChange?.(newIdx, CHAPTERS.length);
     setActive(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

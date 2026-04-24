@@ -860,11 +860,14 @@ const CHAPTERS = [
   { id:"quiz",     label:"8. Quiz" },
 ];
 
-export default function LinkedList({ onPrev, onNext }) {
+export default function LinkedList({ onPrev, onNext, onChapterChange }) {
   const [active, setActive] = useState("intro");
   const curIdx = CHAPTERS.findIndex(c => c.id === active);
+  useEffect(() => { onChapterChange?.(curIdx, CHAPTERS.length); }, [active]);
 
   function switchTab(id) {
+    const newIdx = CHAPTERS.findIndex(c => c.id === id);
+    onChapterChange?.(newIdx, CHAPTERS.length);
     setActive(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

@@ -7,6 +7,7 @@ import StringsTutorial from "./StringsTutorial.jsx";
 import LinkedList from "./LinkedList.jsx";
 import StacksQueues from "./StacksQueues.jsx";
 import DSAHub from "./DSAHub.jsx";
+import DSAGame from "./DSAGame.jsx";
 import Sorting from "./Sorting.jsx";
 import Searching from "./Searching.jsx";
 import Backtracking from "./Backtracking.jsx";
@@ -2585,7 +2586,7 @@ export default function App() {
             {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
             {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
             {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
-            {appPage === "dsa" && <DSAHub />}
+            {appPage === "dsa" && <DSAGame />}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}

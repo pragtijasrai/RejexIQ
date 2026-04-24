@@ -420,10 +420,11 @@ const CHAPTERS = [
   { id:"compare",   label:"6. Comparison & Quiz" },
 ];
 
-export default function Sorting({ onPrev, onNext }) {
+export default function Sorting({ onPrev, onNext, onChapterChange }) {
   const [active, setActive] = useState("bubble");
   const curIdx = CHAPTERS.findIndex(c => c.id === active);
-  function switchTab(id) { setActive(id); window.scrollTo({ top:0, behavior:"smooth" }); }
+  useEffect(() => { onChapterChange?.(curIdx, CHAPTERS.length); }, [active]);
+  function switchTab(id) { const newIdx = CHAPTERS.findIndex(c => c.id === id); onChapterChange?.(newIdx, CHAPTERS.length); setActive(id); window.scrollTo({ top:0, behavior:"smooth" }); }
   return (
     <div className="sort-root">
       <style>{styles}</style>
