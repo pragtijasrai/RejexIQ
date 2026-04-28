@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
 import ControlFlow from "./ControlFlow.jsx";
@@ -1882,8 +1883,13 @@ function MarketDemand({ onNav }) {
   );
 }
 
-// RESUME BUILDER
+// RESUME BUILDER — delegates to the premium standalone component
 function ResumeBuilder({ user }) {
+  return <PremiumResumeBuilder user={user} />;
+}
+
+// OLD RESUME BUILDER (replaced) — keeping stub for reference
+function _OldResumeBuilder_UNUSED({ user }) {
   const [form, setForm] = useState({
     name: user.name || "",
     title: "Full Stack Developer",
@@ -2140,6 +2146,7 @@ function ResumeBuilder({ user }) {
     </div>
   );
 }
+// END _OldResumeBuilder_UNUSED
 
 // AI ASSISTANT - Real AI Integration
 function AIAssistant({ user }) {
