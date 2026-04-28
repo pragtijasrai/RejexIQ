@@ -293,6 +293,70 @@ app.get("/api/download-log", authMiddleware, (req, res) => {
   readStream.on("error", (err) => res.status(500).json({ error: "Stream error" }));
 });
 
+// ── RESUME PARSING ENDPOINT (NEW) ──────────────────────────────────────────────
+app.post("/api/parse-resume", async (req, res, next) => {
+  try {
+    const { fileContent, fileName, mimeType } = req.body;
+    
+    if (!fileContent || !fileName) {
+      return res.status(400).json({ error: "File content and name required" });
+    }
+    
+    // Simulate resume parsing - extract structured data
+    const lines = fileContent.split('\n').map(l => l.trim()).filter(Boolean);
+    
+    const resumeData = {
+      name: lines[0] || "",
+      title: lines.find(l => l.match(/engineer|developer|analyst|manager/i)) || "",
+      email: lines.find(l => l.includes('@')) || "",
+      phone: lines.find(l => /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)) || "",
+      location: "",
+      summary: "",
+      skills: [],
+      experience: [],
+      projects: [],
+      education: [],
+      certifications: []
+    };
+    
+    // Extract sections based on keywords
+    let currentSection = '';
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      
+      if (lower.includes('experience') || lower.includes('professional')) currentSection = 'experience';
+      else if (lower.includes('project')) currentSection = 'projects';
+      else if (lower.includes('skill')) currentSection = 'skills';
+      else if (lower.includes('education')) currentSection = 'education';
+      else if (lower.includes('certification')) currentSection = 'certifications';
+      else if (lower.includes('summary') || lower.includes('about')) currentSection = 'summary';
+      else if (line && currentSection) {
+        if (currentSection === 'skills' && line.length < 50) {
+          resumeData.skills.push(line);
+        } else if (currentSection === 'summary') {
+          resumeData.summary += (resumeData.summary ? ' ' : '') + line;
+        } else if (currentSection === 'experience' && line.length > 10) {
+          resumeData.experience.push({
+            id: 'e' + Date.now(),
+            role: line,
+            company: "",
+            duration: "",
+            description: ""
+          });
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: resumeData,
+      message: "Resume parsed successfully"
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── SERVE REACT APP ───────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../dist", "index.html"));
