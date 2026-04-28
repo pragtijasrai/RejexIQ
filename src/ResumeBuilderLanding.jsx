@@ -1749,7 +1749,7 @@ function FooterCTA({ onBuild }) {
             Ready to land your<br/>
             <span style={{background:"linear-gradient(135deg,#818cf8,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>dream job?</span>
           </h2>
-          <br></br><p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">Join 500,000+ professionals who built their resume with us.</p>
+          <br></br><p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">Join 500,000+ professionals who built their resume with us.</p><br></br>
           <motion.button whileHover={{scale:1.05,boxShadow:"0 20px 60px rgba(99,102,241,0.5)"}} whileTap={{scale:0.95}} onClick={onBuild}
             className="px-12 py-5 rounded-2xl text-white font-black text-xl shadow-2xl transition-all"
             style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>✨ Build My Resume — It's Free</motion.button><br></br>
