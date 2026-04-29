@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect, useRef, useCallback } from "react";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import DSATutorial from "./DSATutorial.jsx";
@@ -1791,97 +1791,1038 @@ function CareerMatch({ user, onNav }) {
   );
 }
 
-// MARKET DEMAND
-function MarketDemand({ onNav }) {
-  const [tab, setTab] = useState("demand");
+// ─── MARKET DEMAND DATA ───────────────────────────────────────────────────────
+
+const MD_ROLES = {
+  "Software Engineer": {
+    icon: "💻", color: "#00e5ff",
+    salary: { min: "₹8L", max: "₹35L", avg: "₹18L" },
+    trend: "increasing", trendPct: "+23%",
+    openings: "42,000+",
+    trendingSkills: ["JavaScript", "TypeScript", "React.js", "Node.js", "System Design", "Docker", "AWS", "SQL", "Git", "REST APIs"],
+    skills: [
+      { name: "JavaScript", demand: 92, userHas: true },
+      { name: "Data Structures", demand: 88, userHas: true },
+      { name: "System Design", demand: 82, userHas: false },
+      { name: "React / Vue", demand: 78, userHas: true },
+      { name: "Node.js", demand: 74, userHas: false },
+      { name: "SQL / NoSQL", demand: 70, userHas: false },
+      { name: "Git & CI/CD", demand: 68, userHas: true },
+      { name: "TypeScript", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Learn System Design fundamentals — it's asked in 82% of SWE interviews." },
+      { type: "skill", icon: "🟢", text: "Add Node.js to your stack. Full-stack ability increases offers by 40%." },
+      { type: "project", icon: "🛠️", text: "Build a REST API with authentication — demonstrates backend readiness." },
+      { type: "resume", icon: "📄", text: "Quantify your impact: 'Reduced load time by 40%' beats 'Improved performance'." },
+    ]
+  },
+  "Frontend Developer": {
+    icon: "🎨", color: "#c084fc",
+    salary: { min: "₹6L", max: "₹28L", avg: "₹14L" },
+    trend: "increasing", trendPct: "+18%",
+    openings: "28,000+",
+    trendingSkills: ["React.js", "JavaScript", "TypeScript", "Next.js", "CSS / Tailwind", "Vue.js", "Webpack", "Testing", "Accessibility", "Performance"],
+    skills: [
+      { name: "React.js", demand: 94, userHas: true },
+      { name: "JavaScript", demand: 92, userHas: true },
+      { name: "CSS / Tailwind", demand: 88, userHas: true },
+      { name: "TypeScript", demand: 80, userHas: false },
+      { name: "Next.js", demand: 74, userHas: false },
+      { name: "Performance Opt.", demand: 68, userHas: false },
+      { name: "Testing (Jest)", demand: 60, userHas: false },
+      { name: "Accessibility", demand: 55, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "TypeScript is now required at 80% of frontend roles — prioritize it." },
+      { type: "skill", icon: "🟢", text: "Next.js expertise can increase your salary band by ₹3–5L." },
+      { type: "project", icon: "🛠️", text: "Build a portfolio with Lighthouse score 90+ to stand out." },
+      { type: "resume", icon: "📄", text: "List specific component libraries and bundle size optimizations." },
+    ]
+  },
+  "Backend Developer": {
+    icon: "⚙️", color: "#34d399",
+    salary: { min: "₹8L", max: "₹40L", avg: "₹20L" },
+    trend: "increasing", trendPct: "+21%",
+    openings: "35,000+",
+    trendingSkills: ["Node.js", "Python", "SQL", "REST APIs", "GraphQL", "Docker", "Kubernetes", "AWS", "Redis", "System Design"],
+    skills: [
+      { name: "Node.js / Python", demand: 90, userHas: false },
+      { name: "REST / GraphQL APIs", demand: 88, userHas: false },
+      { name: "SQL Databases", demand: 85, userHas: false },
+      { name: "System Design", demand: 82, userHas: false },
+      { name: "Docker / K8s", demand: 72, userHas: false },
+      { name: "Redis / Caching", demand: 65, userHas: false },
+      { name: "AWS / GCP", demand: 70, userHas: false },
+      { name: "Security Basics", demand: 60, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Master SQL — it's tested in 85% of backend interviews." },
+      { type: "skill", icon: "🟢", text: "Docker knowledge is now a baseline expectation, not a bonus." },
+      { type: "project", icon: "🛠️", text: "Build a microservices project with auth, caching, and a database." },
+      { type: "resume", icon: "📄", text: "Highlight API throughput numbers and database query optimizations." },
+    ]
+  },
+  "Data Analyst": {
+    icon: "📊", color: "#fbbf24",
+    salary: { min: "₹5L", max: "₹22L", avg: "₹11L" },
+    trend: "stable", trendPct: "+9%",
+    openings: "18,000+",
+    trendingSkills: ["Python", "SQL", "Excel", "Power BI", "Tableau", "Statistics", "Data Viz", "Pandas", "Machine Learning", "Communication"],
+    skills: [
+      { name: "Python (Pandas)", demand: 92, userHas: false },
+      { name: "SQL", demand: 90, userHas: false },
+      { name: "Data Visualization", demand: 82, userHas: false },
+      { name: "Excel / Sheets", demand: 78, userHas: false },
+      { name: "Statistics", demand: 75, userHas: false },
+      { name: "Power BI / Tableau", demand: 68, userHas: false },
+      { name: "Machine Learning", demand: 55, userHas: false },
+      { name: "Communication", demand: 80, userHas: true },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Python + Pandas is the #1 skill gap for aspiring data analysts." },
+      { type: "skill", icon: "🟢", text: "Learn Power BI — it's requested in 68% of analyst job postings." },
+      { type: "project", icon: "🛠️", text: "Create a public Kaggle notebook with EDA and visualizations." },
+      { type: "resume", icon: "📄", text: "Mention specific datasets, tools, and business insights you derived." },
+    ]
+  },
+  "DevOps Engineer": {
+    icon: "🚀", color: "#f87171",
+    salary: { min: "₹10L", max: "₹45L", avg: "₹24L" },
+    trend: "increasing", trendPct: "+31%",
+    openings: "22,000+",
+    trendingSkills: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Linux", "Python", "Monitoring", "Ansible", "Jenkins"],
+    skills: [
+      { name: "Docker / Kubernetes", demand: 94, userHas: false },
+      { name: "CI/CD Pipelines", demand: 90, userHas: false },
+      { name: "AWS / Azure / GCP", demand: 88, userHas: false },
+      { name: "Linux / Shell", demand: 85, userHas: false },
+      { name: "Terraform / IaC", demand: 75, userHas: false },
+      { name: "Monitoring (Grafana)", demand: 68, userHas: false },
+      { name: "Python / Bash", demand: 72, userHas: false },
+      { name: "Security / IAM", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Kubernetes is the fastest-growing DevOps skill — get certified." },
+      { type: "skill", icon: "🟢", text: "Terraform (IaC) is now expected at senior DevOps roles." },
+      { type: "project", icon: "🛠️", text: "Deploy a full-stack app on AWS with CI/CD and monitoring." },
+      { type: "resume", icon: "📄", text: "Highlight uptime improvements, deployment frequency, and cost savings." },
+    ]
+  },
+  "AI/ML Engineer": {
+    icon: "🤖", color: "#818cf8",
+    salary: { min: "₹12L", max: "₹60L", avg: "₹28L" },
+    trend: "increasing", trendPct: "+47%",
+    openings: "15,000+",
+    trendingSkills: ["Python", "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "LLMs", "MLOps", "Statistics", "Data Engineering", "NLP"],
+    skills: [
+      { name: "Python", demand: 98, userHas: false },
+      { name: "Machine Learning", demand: 95, userHas: false },
+      { name: "Deep Learning / NNs", demand: 88, userHas: false },
+      { name: "PyTorch / TensorFlow", demand: 85, userHas: false },
+      { name: "LLMs / Prompt Eng.", demand: 80, userHas: false },
+      { name: "MLOps", demand: 70, userHas: false },
+      { name: "Statistics / Math", demand: 82, userHas: false },
+      { name: "Data Engineering", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "LLM fine-tuning and prompt engineering are the hottest skills of 2025." },
+      { type: "skill", icon: "🟢", text: "MLOps knowledge separates junior from senior ML engineers." },
+      { type: "project", icon: "🛠️", text: "Build and deploy a fine-tuned model on HuggingFace with a demo." },
+      { type: "resume", icon: "📄", text: "Include model accuracy metrics, dataset sizes, and inference speed." },
+    ]
+  }
+};
+
+// Master skill database with real-time market data
+const MD_ALL_SKILLS = {
+  "JavaScript":     { demand: 92, growth: "+5%",  category: "Web",        color: "#f7df1e", icon: "⚡" },
+  "Python":         { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
+  "React.js":       { demand: 88, growth: "+8%",  category: "Frontend",   color: "#61dafb", icon: "⚛️" },
+  "TypeScript":     { demand: 84, growth: "+22%", category: "Web",        color: "#3178c6", icon: "📘" },
+  "Node.js":        { demand: 81, growth: "+10%", category: "Backend",    color: "#68a063", icon: "🟢" },
+  "Docker":         { demand: 78, growth: "+18%", category: "DevOps",     color: "#2496ed", icon: "🐳" },
+  "AWS":            { demand: 76, growth: "+15%", category: "Cloud",      color: "#ff9900", icon: "☁️" },
+  "SQL":            { demand: 82, growth: "+6%",  category: "Data",       color: "#336791", icon: "🗄️" },
+  "Kubernetes":     { demand: 70, growth: "+31%", category: "DevOps",     color: "#326ce5", icon: "⚙️" },
+  "LLM / AI":       { demand: 74, growth: "+47%", category: "AI",         color: "#818cf8", icon: "🤖" },
+  "Next.js":        { demand: 72, growth: "+28%", category: "Frontend",   color: "#ffffff", icon: "▲" },
+  "GraphQL":        { demand: 62, growth: "+14%", category: "API",        color: "#e535ab", icon: "🔗" },
+  "System Design":  { demand: 82, growth: "+11%", category: "Backend",    color: "#00e5ff", icon: "🏗️" },
+  "CSS / Tailwind": { demand: 85, growth: "+9%",  category: "Frontend",   color: "#38bdf8", icon: "🎨" },
+  "Vue.js":         { demand: 68, growth: "+7%",  category: "Frontend",   color: "#42b883", icon: "💚" },
+  "Terraform":      { demand: 75, growth: "+25%", category: "DevOps",     color: "#7b42bc", icon: "🔧" },
+  "CI/CD":          { demand: 90, growth: "+16%", category: "DevOps",     color: "#f87171", icon: "🔄" },
+  "Linux":          { demand: 85, growth: "+8%",  category: "DevOps",     color: "#fcc419", icon: "🐧" },
+  "REST APIs":      { demand: 88, growth: "+10%", category: "Backend",    color: "#34d399", icon: "🔗" },
+  "Redis":          { demand: 65, growth: "+13%", category: "Backend",    color: "#dc2626", icon: "⚡" },
+  "Power BI":       { demand: 68, growth: "+19%", category: "Data",       color: "#f2c811", icon: "📊" },
+  "Tableau":        { demand: 66, growth: "+15%", category: "Data",       color: "#e97627", icon: "📈" },
+  "Excel":          { demand: 78, growth: "+3%",  category: "Data",       color: "#217346", icon: "📑" },
+  "Pandas":         { demand: 92, growth: "+14%", category: "Data",       color: "#150458", icon: "🐼" },
+  "Statistics":     { demand: 75, growth: "+10%", category: "Data",       color: "#8b5cf6", icon: "📐" },
+  "Data Viz":       { demand: 82, growth: "+12%", category: "Data",       color: "#10b981", icon: "📊" },
+  "Machine Learning": { demand: 95, growth: "+35%", category: "AI",       color: "#818cf8", icon: "🤖" },
+  "Deep Learning":  { demand: 88, growth: "+42%", category: "AI",         color: "#6366f1", icon: "🧠" },
+  "PyTorch":        { demand: 85, growth: "+38%", category: "AI",         color: "#ee4c2c", icon: "🔥" },
+  "TensorFlow":     { demand: 83, growth: "+33%", category: "AI",         color: "#ff6f00", icon: "🔶" },
+  "LLMs":           { demand: 80, growth: "+52%", category: "AI",         color: "#a78bfa", icon: "💬" },
+  "MLOps":          { demand: 70, growth: "+45%", category: "AI",         color: "#34d399", icon: "⚙️" },
+  "NLP":            { demand: 78, growth: "+40%", category: "AI",         color: "#c084fc", icon: "📝" },
+  "Data Engineering": { demand: 65, growth: "+28%", category: "Data",     color: "#fbbf24", icon: "🔧" },
+  "Webpack":        { demand: 60, growth: "+5%",  category: "Frontend",   color: "#8dd6f9", icon: "📦" },
+  "Testing":        { demand: 60, growth: "+11%", category: "Frontend",   color: "#94a3b8", icon: "🧪" },
+  "Accessibility":  { demand: 55, growth: "+18%", category: "Frontend",   color: "#10b981", icon: "♿" },
+  "Performance":    { demand: 68, growth: "+14%", category: "Frontend",   color: "#f59e0b", icon: "⚡" },
+  "Monitoring":     { demand: 68, growth: "+20%", category: "DevOps",     color: "#06b6d4", icon: "📡" },
+  "Ansible":        { demand: 62, growth: "+12%", category: "DevOps",     color: "#ee0000", icon: "🔴" },
+  "Jenkins":        { demand: 58, growth: "+8%",  category: "DevOps",     color: "#d24939", icon: "🔨" },
+  "Git":            { demand: 68, growth: "+4%",  category: "Web",        color: "#f05032", icon: "🌿" },
+  "Communication":  { demand: 80, growth: "+6%",  category: "Soft",       color: "#94a3b8", icon: "💬" },
+};
+
+const MD_TRENDING = [
+  { skill: "JavaScript", demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "⚡" },
+  { skill: "Python", demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
+  { skill: "React.js", demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "⚛️" },
+  { skill: "TypeScript", demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "📘" },
+  { skill: "Node.js", demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "🟢" },
+  { skill: "Docker", demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "🐳" },
+  { skill: "AWS", demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "☁️" },
+  { skill: "SQL", demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "🗄️" },
+  { skill: "Kubernetes", demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "⚙️" },
+  { skill: "LLM / AI", demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "🤖" },
+  { skill: "Next.js", demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "▲" },
+  { skill: "GraphQL", demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "🔗" },
+];
+
+const MD_TREND_DATA = [
+  { month: "Jul '24", jobs: 12000, ai: 3200 },
+  { month: "Aug '24", jobs: 14500, ai: 4100 },
+  { month: "Sep '24", jobs: 13800, ai: 4800 },
+  { month: "Oct '24", jobs: 16200, ai: 5900 },
+  { month: "Nov '24", jobs: 15600, ai: 6700 },
+  { month: "Dec '24", jobs: 18900, ai: 8200 },
+  { month: "Jan '25", jobs: 21000, ai: 10500 },
+  { month: "Feb '25", jobs: 23400, ai: 13200 },
+];
+
+// Maps each MD_ROLES skill display name → user skill key + minimum score to "have" it
+// User skills are scored 0–100 in the Skill Assessment page
+const MD_SKILL_MAP = {
+  // Software Engineer
+  "JavaScript":        { key: "JavaScript",     threshold: 40 },
+  "Data Structures":   { key: "DataStructures",  threshold: 40 },
+  "System Design":     { key: "SystemDesign",    threshold: 40 },
+  "React / Vue":       { key: "React",           threshold: 40 },
+  "Node.js":           { key: "JavaScript",      threshold: 70 }, // proxy: strong JS implies Node familiarity
+  "SQL / NoSQL":       { key: "DataStructures",  threshold: 60 }, // proxy
+  "Git & CI/CD":       { key: "ProblemSolving",  threshold: 50 }, // proxy
+  "TypeScript":        { key: "JavaScript",      threshold: 80 }, // proxy: high JS → likely TS
+  // Frontend Developer
+  "React.js":          { key: "React",           threshold: 40 },
+  "CSS / Tailwind":    { key: "CSS",             threshold: 40 },
+  "Next.js":           { key: "React",           threshold: 70 },
+  "Performance Opt.":  { key: "SystemDesign",    threshold: 50 },
+  "Testing (Jest)":    { key: "ProblemSolving",  threshold: 60 },
+  "Accessibility":     { key: "CSS",             threshold: 70 },
+  // Backend Developer
+  "Node.js / Python":  { key: "Python",          threshold: 40 },
+  "REST / GraphQL APIs":{ key: "SystemDesign",   threshold: 40 },
+  "SQL Databases":     { key: "DataStructures",  threshold: 50 },
+  "Docker / K8s":      { key: "SystemDesign",    threshold: 65 },
+  "Redis / Caching":   { key: "SystemDesign",    threshold: 70 },
+  "AWS / GCP":         { key: "SystemDesign",    threshold: 75 },
+  "Security Basics":   { key: "ProblemSolving",  threshold: 60 },
+  // Data Analyst
+  "Python (Pandas)":   { key: "Python",          threshold: 40 },
+  "SQL":               { key: "DataStructures",  threshold: 50 },
+  "Data Visualization":{ key: "Python",          threshold: 60 },
+  "Excel / Sheets":    { key: "Communication",   threshold: 50 },
+  "Statistics":        { key: "ProblemSolving",  threshold: 55 },
+  "Power BI / Tableau":{ key: "Python",          threshold: 70 },
+  "Machine Learning":  { key: "Python",          threshold: 65 },
+  "Communication":     { key: "Communication",   threshold: 40 },
+  // DevOps Engineer
+  "Docker / Kubernetes":{ key: "SystemDesign",   threshold: 50 },
+  "CI/CD Pipelines":   { key: "SystemDesign",    threshold: 55 },
+  "AWS / Azure / GCP": { key: "SystemDesign",    threshold: 65 },
+  "Linux / Shell":     { key: "ProblemSolving",  threshold: 55 },
+  "Terraform / IaC":   { key: "SystemDesign",    threshold: 70 },
+  "Monitoring (Grafana)":{ key: "SystemDesign",  threshold: 75 },
+  "Python / Bash":     { key: "Python",          threshold: 40 },
+  "Security / IAM":    { key: "SystemDesign",    threshold: 80 },
+  // AI/ML Engineer — "Machine Learning" key already defined above (shared with Data Analyst)
+  "Python":            { key: "Python",          threshold: 40 },
+  "Deep Learning / NNs":{ key: "Python",         threshold: 75 },
+  "PyTorch / TensorFlow":{ key: "Python",        threshold: 80 },
+  "LLMs / Prompt Eng.":{ key: "Python",          threshold: 85 },
+  "MLOps":             { key: "SystemDesign",    threshold: 70 },
+  "Statistics / Math": { key: "ProblemSolving",  threshold: 60 },
+  "Data Engineering":  { key: "DataStructures",  threshold: 65 },
+};
+
+// Returns true if the user's skills satisfy the threshold for a given skill display name
+function userHasSkill(userSkills, skillName) {
+  const mapping = MD_SKILL_MAP[skillName];
+  if (!mapping) return false;
+  const score = (userSkills || {})[mapping.key] || 0;
+  return score >= mapping.threshold;
+}
+
+// Animated counter hook — animates from previous value to new target (up or down)
+function useCounter(target, duration = 1200) {
+  const [count, setCount] = useState(target);
+  const prevTarget = useRef(target);
+
+  useEffect(() => {
+    const from = prevTarget.current;
+    prevTarget.current = target;
+    if (from === target) return;
+
+    const startTime = performance.now();
+    const diff = target - from;
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(from + diff * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [target, duration]);
+
+  return count;
+}
+
+// Animated skill bar
+function AnimatedBar({ value, color, delay = 0 }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    setWidth(0); // reset first so re-mount always animates from 0
+    const t = setTimeout(() => setWidth(value), delay + 80);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return (
+    <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{
+        height: "100%", width: `${width}%`, borderRadius: 4,
+        background: `linear-gradient(90deg, ${color}, ${color}bb)`,
+        boxShadow: `0 0 12px ${color}60`,
+        transition: "width 1s cubic-bezier(0.4,0,0.2,1)"
+      }} />
+    </div>
+  );
+}
+
+// Animated percentage number — counts from 0 to value on mount
+function AnimatedNumber({ value, color, suffix = "%" }) {
+  const count = useCounter(value, 900);
+  return (
+    <span className="mono" style={{ fontSize: 20, fontWeight: 800, color }}>
+      {count}{suffix}
+    </span>
+  );
+}
+
+// Circular match indicator
+function CircleMatch({ pct, color, size = 120 }) {
+  const r = (size / 2) - 10;
+  const circ = 2 * Math.PI * r;
+  const [dash, setDash] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setDash((pct / 100) * circ), 300);
+    return () => clearTimeout(t);
+  }, [pct, circ]);
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)", filter: `drop-shadow(0 0 8px ${color})` }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <span className="syne" style={{ fontSize: size * 0.2, fontWeight: 800, color }}>{pct}%</span>
+        <span style={{ fontSize: 10, color: G.muted }}>Match</span>
+      </div>
+    </div>
+  );
+}
+
+// MARKET DEMAND — Premium Dashboard
+function MarketDemand({ onNav, user }) {
+  const [tab, setTab] = useState("trending");
+  const [selectedRole, setSelectedRole] = useState("Software Engineer");
+  const [filterCat, setFilterCat] = useState("All");
+  const [hoveredSkill, setHoveredSkill] = useState(null);
+
+  const userSkills = (user && user.skills) ? user.skills : {};
+  const roleData = MD_ROLES[selectedRole];
+  const roleColor = roleData.color;
+
+  // Compute match % dynamically from user's actual skill scores
+  const enrichedSkills = roleData.skills.map(s => ({
+    ...s,
+    userHas: userHasSkill(userSkills, s.name)
+  }));
+  const matchedSkills = enrichedSkills.filter(s => s.userHas).length;
+  const matchPct = Math.round((matchedSkills / enrichedSkills.length) * 100);
+
+  // Build role-specific trending skills from the master skill database
+  // Priority order: role's own trendingSkills list first, then fill with global top skills
+  const roleTrendingSkills = roleData.trendingSkills
+    .map(name => {
+      const data = MD_ALL_SKILLS[name];
+      if (!data) return null;
+      return { skill: name, ...data };
+    })
+    .filter(Boolean);
+
+  // Derive unique categories from the role's trending skills
+  const roleCategories = ["All", ...Array.from(new Set(roleTrendingSkills.map(s => s.category)))];
+
+  const filteredTrending = filterCat === "All"
+    ? roleTrendingSkills
+    : roleTrendingSkills.filter(s => s.category === filterCat);
+
+  // Reset category filter when role changes
+  const prevRole = useRef(selectedRole);
+  if (prevRole.current !== selectedRole) {
+    prevRole.current = selectedRole;
+    if (filterCat !== "All") setFilterCat("All");
+  }
+
+  const tabs = [
+    { key: "trending", label: "🔥 Trending Skills" },
+    { key: "match", label: "🎯 Your Match" },
+    { key: "role", label: "💼 Role Insights" },
+    { key: "ai", label: "🤖 AI Recommendations" },
+  ];
+
+  // Role-specific monthly postings data
+  const MD_MONTHLY_POSTINGS = {
+    "Software Engineer":  23400,
+    "Frontend Developer": 16800,
+    "Backend Developer":  19200,
+    "Data Analyst":       11500,
+    "DevOps Engineer":    13700,
+    "AI/ML Engineer":     9800,
+  };
+
+  const openingsNum = parseInt(roleData.openings.replace(/[^0-9]/g, ""), 10);
+  const monthlyNum  = MD_MONTHLY_POSTINGS[selectedRole] || 23400;
+
+  // Parse salary avg (e.g. "₹18L") → number in lakhs for delta comparison
+  const parseSalary = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
+  const salaryNum   = parseSalary(roleData.salary.avg);
+
+  // Parse hiring trend (e.g. "+23%") → number for delta comparison
+  const parseTrend  = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
+  const trendNum    = parseTrend(roleData.trendPct);
+
+  // Track previous values to compute deltas on role change
+  const prevOpenings = useRef(openingsNum);
+  const prevMonthly  = useRef(monthlyNum);
+  const prevSalary   = useRef(salaryNum);
+  const prevTrend    = useRef(trendNum);
+  const prevMatch    = useRef(matchPct);
+
+  const [openingsDelta, setOpeningsDelta] = useState(0);
+  const [monthlyDelta,  setMonthlyDelta]  = useState(0);
+  const [salaryDelta,   setSalaryDelta]   = useState(0);
+  const [trendDelta,    setTrendDelta]    = useState(0);
+  const [matchDelta,    setMatchDelta]    = useState(0);
+  // Increments every role change — used as key to re-mount AnimatedBar so bars re-animate from 0
+  const [roleChangeKey, setRoleChangeKey] = useState(0);
+
+  useEffect(() => {
+    setOpeningsDelta(openingsNum - prevOpenings.current);
+    setMonthlyDelta(monthlyNum   - prevMonthly.current);
+    setSalaryDelta(salaryNum     - prevSalary.current);
+    setTrendDelta(trendNum       - prevTrend.current);
+    setMatchDelta(matchPct       - prevMatch.current);
+    setRoleChangeKey(k => k + 1);
+    prevOpenings.current = openingsNum;
+    prevMonthly.current  = monthlyNum;
+    prevSalary.current   = salaryNum;
+    prevTrend.current    = trendNum;
+    prevMatch.current    = matchPct;
+  }, [selectedRole]); // eslint-disable-line
+
+  // Animated salary counter (in lakhs)
+  const c1       = useCounter(openingsNum, 1200);
+  const c2       = useCounter(monthlyNum,  1200);
+  const c3       = useCounter(matchPct,    1000);
+  const cSalary  = useCounter(salaryNum,   1000);
+  const cTrend   = useCounter(trendNum,    1000);
 
   return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Market Demand Analysis</h1>
-        <p style={{ color: G.muted }}>Real-time skill demand data from the tech job market</p>
+    <div className="section-enter" style={{ paddingBottom: 48 }}>
+      {/* ── HEADER ── */}
+      <div style={{
+        position: "relative", borderRadius: 24, overflow: "hidden",
+        background: "linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(124,58,237,0.12) 50%, rgba(255,107,157,0.08) 100%)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        padding: "36px 40px", marginBottom: 32
+      }}>
+        {/* Glow orbs */}
+        <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -30, left: "30%", width: 160, height: 160, background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 24, position: "relative" }}>
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.25)", borderRadius: 20, padding: "4px 14px", marginBottom: 14, fontSize: 11, color: "#22d3ee", fontWeight: 700, letterSpacing: 1 }}>
+              <span style={{ width: 6, height: 6, background: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "pulse 2s infinite" }} />
+              LIVE MARKET DATA · 2025
+            </div>
+            <h1 className="syne" style={{ fontSize: "clamp(24px,3vw,36px)", fontWeight: 800, marginBottom: 10, lineHeight: 1.2 }}>
+              Market Demand{" "}
+              <span style={{ background: "linear-gradient(135deg, #00e5ff, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Analytics
+              </span>
+            </h1>
+            <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.6, maxWidth: 520 }}>
+              Real-time skill demand data, job market trends, and personalized AI recommendations to accelerate your career.
+            </p>
+          </div>
+
+          {/* Role selector */}
+          <div style={{ minWidth: 220 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#94a3b8", marginBottom: 8, letterSpacing: 1 }}>SELECT JOB ROLE</label>
+            <select
+              value={selectedRole}
+              onChange={e => setSelectedRole(e.target.value)}
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 12, padding: "12px 16px", color: "#f0f4ff", fontSize: 14, fontWeight: 600,
+                cursor: "pointer", outline: "none", fontFamily: "inherit",
+                appearance: "none",
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300e5ff' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center"
+              }}
+            >
+              {Object.keys(MD_ROLES).map(r => (
+                <option key={r} value={r} style={{ background: "#1a2347" }}>{MD_ROLES[r].icon} {r}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* KPI strip */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginTop: 28 }}>
+          {[
+            {
+              label: "Open Positions",
+              val: `${c1.toLocaleString()}+`,
+              icon: "💼", color: "#22d3ee",
+              sub: "Tech sector, India",
+              delta: openingsDelta,
+              deltaLabel: openingsDelta !== 0 ? `${openingsDelta > 0 ? "▲" : "▼"} ${Math.abs(openingsDelta).toLocaleString()} vs prev role` : null,
+            },
+            {
+              label: "Monthly Postings",
+              val: c2.toLocaleString(),
+              icon: "📈", color: "#c084fc",
+              sub: "Feb 2025",
+              delta: monthlyDelta,
+              deltaLabel: monthlyDelta !== 0 ? `${monthlyDelta > 0 ? "▲" : "▼"} ${Math.abs(monthlyDelta).toLocaleString()} vs prev role` : null,
+            },
+            {
+              label: "Your Match Score",
+              val: `${c3}%`,
+              icon: "🎯", color: roleColor,
+              sub: selectedRole,
+              delta: matchDelta,
+              deltaLabel: matchDelta !== 0
+                ? `${matchDelta > 0 ? "▲" : "▼"} ${Math.abs(matchDelta)}% vs prev role`
+                : null,
+            },
+            {
+              label: "Avg Salary",
+              val: `₹${cSalary}L`,
+              icon: "💰", color: "#34d399",
+              sub: `${roleData.salary.min} – ${roleData.salary.max}`,
+              delta: salaryDelta,
+              deltaLabel: salaryDelta !== 0
+                ? `${salaryDelta > 0 ? "▲" : "▼"} ₹${Math.abs(salaryDelta)}L avg vs prev role`
+                : null,
+            },
+            {
+              label: "Hiring Trend",
+              val: `+${cTrend}%`,
+              icon: roleData.trend === "increasing" ? "🚀" : "📊",
+              color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
+              sub: "YoY growth",
+              delta: trendDelta,
+              deltaLabel: trendDelta !== 0
+                ? `${trendDelta > 0 ? "▲" : "▼"} ${Math.abs(trendDelta)}% vs prev role`
+                : null,
+            },
+          ].map((kpi, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14, padding: "16px 18px",
+              transition: "all 0.3s ease", cursor: "default"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${kpi.color}40`; e.currentTarget.style.boxShadow = `0 8px 24px ${kpi.color}20`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = ""; }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{kpi.icon}</div>
+              <div className="syne mono" style={{ fontSize: 22, fontWeight: 800, color: kpi.color, lineHeight: 1 }}>{kpi.val}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#f0f4ff", marginTop: 4 }}>{kpi.label}</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{kpi.sub}</div>
+              {kpi.deltaLabel && (
+                <div style={{
+                  marginTop: 8, fontSize: 11, fontWeight: 700,
+                  color: kpi.delta > 0 ? "#34d399" : "#f87171",
+                  background: kpi.delta > 0 ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+                  border: `1px solid ${kpi.delta > 0 ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)"}`,
+                  borderRadius: 6, padding: "3px 8px", display: "inline-block"
+                }}>
+                  {kpi.deltaLabel}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        {[["demand", "Skill Demand"], ["trends", "Job Trends"], ["insights", "Insights"]].map(([k, l]) => (
-          <button key={k} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${tab === k ? G.accent : G.border}`, background: tab === k ? G.accentDim : "transparent", color: tab === k ? G.accent : G.muted, cursor: "pointer", fontSize: 13, fontWeight: 600, transition: "all 0.2s" }}
-            onClick={() => setTab(k)}>{l}</button>
+      {/* ── TABS ── */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{
+            padding: "10px 22px", borderRadius: 10, border: `1px solid ${tab === t.key ? roleColor : "rgba(255,255,255,0.1)"}`,
+            background: tab === t.key ? `${roleColor}18` : "transparent",
+            color: tab === t.key ? roleColor : "#94a3b8",
+            cursor: "pointer", fontSize: 13, fontWeight: 700, transition: "all 0.2s",
+            fontFamily: "inherit",
+            boxShadow: tab === t.key ? `0 0 16px ${roleColor}30` : "none"
+          }}>{t.label}</button>
         ))}
       </div>
 
-      {tab === "demand" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div className="card">
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Skills by Demand</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={MARKET_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-                <XAxis dataKey="skill" tick={{ fill: G.muted, fontSize: 11 }} />
-                <YAxis domain={[60, 100]} tick={{ fill: G.muted, fontSize: 11 }} />
-                <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8, color: G.text }} />
-                <Bar dataKey="demand" fill={G.accent} radius={[4, 4, 0, 0]}
-                  label={{ position: "top", fill: G.muted, fontSize: 10 }} />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* ══════════════════════════════════════════════════════
+          TAB 1 — TRENDING SKILLS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "trending" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Category filter chips — dynamic per role */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {roleCategories.map(cat => (
+              <button key={cat} onClick={() => setFilterCat(cat)} style={{
+                padding: "6px 16px", borderRadius: 20, border: `1px solid ${filterCat === cat ? "#22d3ee" : "rgba(255,255,255,0.1)"}`,
+                background: filterCat === cat ? "rgba(0,229,255,0.12)" : "transparent",
+                color: filterCat === cat ? "#22d3ee" : "#94a3b8",
+                cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.2s", fontFamily: "inherit"
+              }}>{cat}</button>
+            ))}
           </div>
-          <div className="card">
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Demand Index</h3>
-            {MARKET_DATA.map((d, i) => (
-              <div key={i} style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
-                  <span>{d.skill}</span>
-                  <span className="mono" style={{ color: d.demand > 85 ? G.success : d.demand > 75 ? G.accent : G.warning }}>{d.demand}%</span>
+
+          {/* Skills grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {filteredTrending.map((s, i) => (
+              <div key={`${roleChangeKey}-${i}`}
+                onMouseEnter={() => setHoveredSkill(s.skill)}
+                onMouseLeave={() => setHoveredSkill(null)}
+                style={{
+                  background: hoveredSkill === s.skill
+                    ? `linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04))`
+                    : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${hoveredSkill === s.skill ? s.color + "50" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 16, padding: "20px 22px",
+                  transition: "all 0.3s ease",
+                  transform: hoveredSkill === s.skill ? "translateY(-4px) scale(1.02)" : "none",
+                  boxShadow: hoveredSkill === s.skill ? `0 12px 32px ${s.color}20` : "none",
+                  cursor: "default",
+                  backdropFilter: "blur(8px)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{s.skill}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{s.category}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <AnimatedNumber value={s.demand} color={s.color} />
+                    <div style={{
+                      fontSize: 11, fontWeight: 700, color: "#34d399",
+                      background: "rgba(52,211,153,0.1)", borderRadius: 6, padding: "2px 8px", marginTop: 2
+                    }}>{s.growth}</div>
+                  </div>
                 </div>
-                <ProgressBar value={d.demand} color={d.demand > 85 ? G.success : d.demand > 75 ? G.accent : G.warning} />
+                <AnimatedBar value={s.demand} color={s.color} delay={i * 60} />
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11, color: "#94a3b8" }}>
+                  <span>Demand Index</span>
+                  <span style={{ color: s.demand >= 85 ? "#34d399" : s.demand >= 70 ? "#fbbf24" : "#f87171", fontWeight: 600 }}>
+                    {s.demand >= 85 ? "🔥 Very High" : s.demand >= 70 ? "📈 High" : "📊 Moderate"}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {tab === "trends" && (
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Job Postings Trend (Tech Sector)</h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={TREND_DATA}>
-              <defs>
-                <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={G.accent} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={G.accent} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-              <XAxis dataKey="month" tick={{ fill: G.muted, fontSize: 12 }} />
-              <YAxis tick={{ fill: G.muted, fontSize: 12 }} />
-              <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8, color: G.text }} />
-              <Area type="monotone" dataKey="jobs" stroke={G.accent} fill="url(#grad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {tab === "insights" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-          {[
-            { icon: "🔥", title: "Hottest Skill 2025", val: "TypeScript", desc: "76% demand growth YoY. Essential for enterprise projects.", color: G.danger },
-            { icon: "📈", title: "Fastest Growing", val: "AI/ML Fundamentals", desc: "Entry-level ML skills now expected at 34% of tech companies.", color: G.success },
-            { icon: "🎯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: G.warning },
-            { icon: "💼", title: "Highest Paying", val: "Full Stack (React + Node)", desc: "Average salary ₹18–35 LPA for 2–4 years experience.", color: G.accent },
-            { icon: "⚡", title: "Quick Win Skill", val: "CSS/TailwindCSS", desc: "Easy to learn, high ROI for frontend developer roles.", color: G.purple },
-            { icon: "🌐", title: "Remote Job Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: G.muted }
-          ].map((c, i) => (
-            <div key={i} className="stat-card">
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{c.icon}</div>
-              <div style={{ fontSize: 11, color: G.muted, marginBottom: 4, fontWeight: 600 }}>{c.title}</div>
-              <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: c.color, marginBottom: 6 }}>{c.val}</div>
-              <div style={{ fontSize: 12, color: G.muted, lineHeight: 1.5 }}>{c.desc}</div>
+          {/* Bar chart */}
+          <div key={roleChangeKey} style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 20, padding: "28px 24px"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <h3 className="syne" style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
+                  {roleData.icon} {selectedRole} — Skill Demand Index
+                </h3>
+                <p style={{ fontSize: 13, color: "#94a3b8" }}>Top skills ranked by market demand for this role · 2025</p>
+              </div>
             </div>
-          ))}
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={roleTrendingSkills.slice(0, 8)} barGap={4}>
+                <defs>
+                  <linearGradient id="mdGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={roleColor} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={roleColor} stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[40, 100]} tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <RechartsTooltip
+                  contentStyle={{ background: "#1a2347", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#f0f4ff", fontSize: 13 }}
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  formatter={(val, name) => [`${val}% demand`, "Market Demand"]}
+                />
+                <Bar dataKey="demand" fill="url(#mdGrad1)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 2 — YOUR MATCH
+      ══════════════════════════════════════════════════════ */}
+      {tab === "match" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Match overview */}
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "32px 36px" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <CircleMatch pct={matchPct} color={roleColor} size={140} />
+              <div style={{ textAlign: "center" }}>
+                <div className="syne" style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{selectedRole}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                  {matchedSkills}/{enrichedSkills.length} skills matched
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+                {matchPct >= 70 ? "Strong Match! 🎉" : matchPct >= 40 ? "Good Progress 📈" : "Room to Grow 🌱"}
+              </h3>
+              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+                {matchPct >= 70
+                  ? `You already have ${matchedSkills} of the key skills for ${selectedRole}. Focus on the gaps below to become a top candidate.`
+                  : matchPct >= 40
+                  ? `You're on the right track. Building the missing skills will significantly boost your interview success rate.`
+                  : `Start with the high-demand skills below. Even 2–3 additions can dramatically improve your match score.`}
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills You Have</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#34d399" }}>{matchedSkills}</div>
+                </div>
+                <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills to Add</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#f87171" }}>{enrichedSkills.length - matchedSkills}</div>
+                </div>
+                <div style={{ background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Match Score</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: roleColor }}>{matchPct}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Skill comparison list */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+              Skill-by-Skill Comparison — <span style={{ color: roleColor }}>{selectedRole}</span>
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {enrichedSkills.map((s, i) => (
+                <div key={i} style={{
+                  display: "grid", gridTemplateColumns: "1fr auto auto",
+                  alignItems: "center", gap: 16,
+                  padding: "14px 18px", borderRadius: 12,
+                  background: s.userHas ? "rgba(52,211,153,0.05)" : "rgba(248,113,113,0.04)",
+                  border: `1px solid ${s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.12)"}`,
+                  transition: "all 0.2s"
+                }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                        background: s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+                        color: s.userHas ? "#34d399" : "#f87171"
+                      }}>{s.userHas ? "✓ You have this" : "✗ Missing"}</span>
+                    </div>
+                    <AnimatedBar value={s.demand} color={s.userHas ? "#34d399" : "#f87171"} delay={i * 80} />
+                  </div>
+                  <div className="mono" style={{ fontSize: 16, fontWeight: 800, color: s.userHas ? "#34d399" : "#f87171", minWidth: 48, textAlign: "right" }}>
+                    {s.demand}%
+                  </div>
+                  <div style={{ fontSize: 20 }}>{s.userHas ? "✅" : "❌"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Missing skills callout */}
+          {enrichedSkills.filter(s => !s.userHas).length > 0 && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(248,113,113,0.08), rgba(251,191,36,0.06))",
+              border: "1px solid rgba(248,113,113,0.2)", borderRadius: 16, padding: "22px 24px"
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 12 }}>
+                🎯 Priority Skills to Add
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {enrichedSkills.filter(s => !s.userHas).sort((a, b) => b.demand - a.demand).map((s, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10, padding: "8px 14px", fontSize: 13
+                  }}>
+                    <span style={{ fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                    <span className="mono" style={{ fontSize: 11, color: "#f87171", fontWeight: 700 }}>{s.demand}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 3 — ROLE INSIGHTS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "role" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Role header card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${roleColor}12, ${roleColor}06)`,
+            border: `1px solid ${roleColor}30`, borderRadius: 20, padding: "32px 36px",
+            position: "relative", overflow: "hidden"
+          }}>
+            <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, background: `radial-gradient(circle, ${roleColor}20 0%, transparent 70%)`, borderRadius: "50%" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
+              <div style={{ fontSize: 52 }}>{roleData.icon}</div>
+              <div>
+                <h2 className="syne" style={{ fontSize: 26, fontWeight: 800, color: "#f0f4ff", marginBottom: 4 }}>{selectedRole}</h2>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
+                    background: roleData.trend === "increasing" ? "rgba(52,211,153,0.12)" : "rgba(251,191,36,0.12)",
+                    border: `1px solid ${roleData.trend === "increasing" ? "rgba(52,211,153,0.3)" : "rgba(251,191,36,0.3)"}`,
+                    borderRadius: 8, padding: "3px 10px" }}>
+                    {roleData.trend === "increasing" ? "🚀 Hiring Increasing" : "📊 Stable Demand"}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: roleColor, background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 8, padding: "3px 10px" }}>
+                    {roleData.trendPct} YoY
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "3px 10px" }}>
+                    {roleData.openings} openings
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Salary range */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              {[
+                { label: "Entry Level", val: roleData.salary.min, sub: "0–2 years" },
+                { label: "Average CTC", val: roleData.salary.avg, sub: "2–5 years", highlight: true },
+                { label: "Senior Level", val: roleData.salary.max, sub: "5+ years" },
+              ].map((s, i) => (
+                <div key={i} style={{
+                  background: s.highlight ? `${roleColor}18` : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${s.highlight ? roleColor + "40" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 14, padding: "18px 20px", textAlign: "center"
+                }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6, fontWeight: 600 }}>{s.label}</div>
+                  <div className="syne" style={{ fontSize: 24, fontWeight: 800, color: s.highlight ? roleColor : "#f0f4ff" }}>{s.val}</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Required skills ranked */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Required Skills — Ranked by Demand</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[...enrichedSkills].sort((a, b) => b.demand - a.demand).map((s, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 14 }}>
+                  <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: i < 3 ? roleColor : "#94a3b8" }}>#{i + 1}</div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                      <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: roleColor }}>{s.demand}%</span>
+                    </div>
+                    <AnimatedBar value={s.demand} color={i < 3 ? roleColor : "#94a3b8"} delay={i * 70} />
+                  </div>
+                  <div style={{ fontSize: 16 }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "⭐"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hiring trend chart */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Hiring Trend — Tech Sector</h3>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Total job postings vs AI/ML roles (Jul 2024 – Feb 2025)</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={MD_TREND_DATA}>
+                <defs>
+                  <linearGradient id="mdTrendGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={roleColor} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={roleColor} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="mdTrendGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <RechartsTooltip contentStyle={{ background: "#1a2347", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#f0f4ff", fontSize: 13 }} />
+                <Area type="monotone" dataKey="jobs" name="All Tech Jobs" stroke={roleColor} fill="url(#mdTrendGrad1)" strokeWidth={2.5} dot={false} />
+                <Area type="monotone" dataKey="ai" name="AI/ML Roles" stroke="#818cf8" fill="url(#mdTrendGrad2)" strokeWidth={2} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div style={{ display: "flex", gap: 20, marginTop: 12, justifyContent: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}>
+                <div style={{ width: 24, height: 3, background: roleColor, borderRadius: 2 }} />
+                All Tech Jobs
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}>
+                <div style={{ width: 24, height: 3, background: "#818cf8", borderRadius: 2 }} />
+                AI/ML Roles
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 4 — AI RECOMMENDATIONS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "ai" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* AI header */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(129,140,248,0.1), rgba(192,132,252,0.08))",
+            border: "1px solid rgba(129,140,248,0.25)", borderRadius: 20, padding: "28px 32px",
+            display: "flex", alignItems: "center", gap: 20
+          }}>
+            <div style={{ fontSize: 52, animation: "float 3s ease-in-out infinite" }}>🤖</div>
+            <div>
+              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
+                AI Career Advisor
+              </h3>
+              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
+                Personalized recommendations for <strong style={{ color: roleColor }}>{selectedRole}</strong> based on current market demand and your profile gaps.
+              </p>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+            {roleData.aiRecs.map((rec, i) => {
+              const typeColors = { skill: "#22d3ee", project: "#c084fc", resume: "#fbbf24" };
+              const typeLabels = { skill: "SKILL TO ADD", project: "PROJECT IDEA", resume: "RESUME TIP" };
+              const c = typeColors[rec.type] || "#94a3b8";
+              return (
+                <div key={i} style={{
+                  background: `${c}08`, border: `1px solid ${c}25`,
+                  borderRadius: 16, padding: "22px 22px",
+                  transition: "all 0.3s ease", cursor: "default"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 12px 32px ${c}20`; e.currentTarget.style.borderColor = `${c}50`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = `${c}25`; }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                    <span style={{ fontSize: 26 }}>{rec.icon}</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: c, background: `${c}15`, border: `1px solid ${c}30`, borderRadius: 6, padding: "3px 10px", letterSpacing: 0.8 }}>
+                      {typeLabels[rec.type]}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 14, color: "#f0f4ff", lineHeight: 1.7 }}>{rec.text}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* General market insights */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📊 Market Intelligence — 2025</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              {[
+                { icon: "🔥", title: "Hottest Skill", val: "TypeScript", desc: "+22% demand growth YoY. Now required at 80% of frontend roles.", color: "#f87171" },
+                { icon: "🚀", title: "Fastest Growing", val: "LLM / AI Engineering", desc: "+47% YoY. Entry-level AI skills expected at 34% of tech companies.", color: "#34d399" },
+                { icon: "🎯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: "#fbbf24" },
+                { icon: "💼", title: "Highest Paying", val: "DevOps / Cloud", desc: "Average ₹24L. Kubernetes + AWS combo commands premium offers.", color: "#22d3ee" },
+                { icon: "⚡", title: "Quick Win", val: "Docker Basics", desc: "2-week learning curve, required in 78% of backend job postings.", color: "#c084fc" },
+                { icon: "🌐", title: "Remote Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: "#818cf8" },
+              ].map((c, i) => (
+                <div key={i} style={{
+                  background: `${c.color}08`, border: `1px solid ${c.color}20`,
+                  borderRadius: 14, padding: "18px 18px",
+                  transition: "all 0.3s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${c.color}40`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = `${c.color}20`; }}
+                >
+                  <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>{c.title.toUpperCase()}</div>
+                  <div className="syne" style={{ fontSize: 16, fontWeight: 800, color: c.color, marginBottom: 6 }}>{c.val}</div>
+                  <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }}>{c.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(255,107,157,0.1), rgba(124,58,237,0.1))",
+            border: "1px solid rgba(255,107,157,0.2)", borderRadius: 16, padding: "24px 28px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16
+          }}>
+            <div>
+              <div className="syne" style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Ready to close the skill gap?</div>
+              <p style={{ fontSize: 13, color: "#94a3b8" }}>Update your resume with the skills you've added and track your progress.</p>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn-primary" style={{ fontSize: 13, padding: "10px 22px" }} onClick={() => onNav("resume")}>
+                📄 Update Resume
+              </button>
+              <button className="btn-outline" style={{ fontSize: 13, padding: "9px 22px" }} onClick={() => onNav("assessment")}>
+                🎯 Re-assess Skills
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
 
 // RESUME BUILDER — delegates to the premium standalone component
 function ResumeBuilder({ user }) {
@@ -2595,7 +3536,7 @@ export default function App() {
             {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
             {appPage === "dsa" && <DSAGame />}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
-            {appPage === "market" && <MarketDemand onNav={setAppPage} />}
+            {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
             {appPage === "assistant" && <AIAssistant user={user} />}
             {appPage === "leaderboard" && <Leaderboard />}
