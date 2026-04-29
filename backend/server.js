@@ -15,6 +15,11 @@ const cors = require("cors");          // CORS middleware
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Story Mode routes
+const storyRoutes = require("./storyRoutes");
+// Career Match routes
+const careerRoutes = require("./careerRoutes");
 const JWT_SECRET = process.env.JWT_SECRET || "rejexiq_dev_secret_2025";
 
 // ── IN-MEMORY DATABASE (for demo — replace with MongoDB in production) ──────
@@ -95,6 +100,11 @@ function generateReport(userSkills) {
 }
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
+
+// Story Mode routes
+app.use("/api", storyRoutes);
+// Career Match routes
+app.use("/api/career", careerRoutes);
 
 // Root — demonstrates Express routing
 app.get("/api", (req, res) => {

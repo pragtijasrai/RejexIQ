@@ -1,6 +1,8 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
+import CareerMatch from "./CareerMatch.jsx";
+const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
 import ControlFlow from "./ControlFlow.jsx";
@@ -1120,6 +1122,7 @@ function Sidebar({ active, onNav, user, onLogout }) {
     { key: "profile", icon: "👤", label: "Profile" },
     { key: "assessment", icon: "🎯", label: "Skill Assessment" },
     { key: "dsa",  icon: "📚", label: "DSA Tutorial" },
+    { key: "story", icon: "⚔️", label: "Story Mode" },
     { key: "career", icon: "🏆", label: "Career Match" },
     { key: "market", icon: "📈", label: "Market Demand" },
     { key: "resume", icon: "📄", label: "Resume Builder" },
@@ -1658,135 +1661,6 @@ function SkillAssessment({ user, onSave, onNav }) {
         onClick={handleSave} disabled={loading}>
         {loading ? <><LoadingSpinner size={18} /> Calculating...</> : "Generate Career Report →"}
       </button>
-    </div>
-  );
-}
-
-// CAREER MATCH
-function CareerMatch({ user, onNav }) {
-  const [selectedRole, setSelectedRole] = useState("fullstack");
-  const skills = user.skills || {};
-  const hasSkills = Object.keys(skills).length > 0;
-
-  if (!hasSkills) {
-    return (
-      <div className="section-enter" style={{ textAlign: "center", paddingTop: 60 }}>
-        <div style={{ fontSize: 48, marginBottom: 20 }}>🏆</div>
-        <h2 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>Complete Assessment First</h2>
-        <p style={{ color: G.muted, marginBottom: 24 }}>Take the skill assessment to see your career matches and personalized recommendations.</p>
-        <button className="btn-primary" onClick={() => onNav("assessment")}>Go to Assessment →</button>
-      </div>
-    );
-  }
-
-  const best = getBestRole(skills);
-  const gaps = getSkillGap(skills, selectedRole);
-  const readinessScore = calcReadiness(skills, selectedRole);
-
-  const gapData = gaps.map(g => ({ name: g.skill, required: g.required, yours: g.user }));
-
-  const roadmap = gaps.slice(0, 4).map((g, i) => ({
-    step: i + 1,
-    title: `Improve ${g.skill}`,
-    desc: g.skill === "JavaScript" ? "Practice ES6+, async/await, closures" :
-      g.skill === "React" ? "Build 3 real React projects with hooks" :
-      g.skill === "SystemDesign" ? "Study system design patterns and scalability" :
-      g.skill === "DataStructures" ? "Solve 50 LeetCode problems (Easy → Medium)" :
-      `Study and practice ${g.skill} fundamentals`,
-    gap: g.gap
-  }));
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Career Recommendations</h1>
-        <p style={{ color: G.muted }}>Personalized analysis based on your skill profile</p>
-      </div>
-
-      {/* Best match banner */}
-      <div className="gradient-border" style={{ padding: 28, marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-        <div>
-          <div style={{ fontSize: 12, color: G.muted, marginBottom: 4 }}>YOUR BEST ROLE MATCH</div>
-          <div style={{ fontSize: 32, marginBottom: 4 }}>{ROLES[best.key]?.icon}</div>
-          <h2 className="syne" style={{ fontSize: 24, fontWeight: 800 }}>{ROLES[best.key]?.label}</h2>
-          <p style={{ color: G.muted, marginTop: 4 }}>You are {best.score}% ready for this role</p>
-        </div>
-        <ScoreRing score={best.score} color={ROLES[best.key]?.color} size={120} label="Readiness" />
-      </div>
-
-      {/* Role selector */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
-        {Object.entries(ROLES).map(([key, role]) => (
-          <button key={key}
-            style={{
-              padding: "8px 16px", borderRadius: 8, border: `1px solid ${selectedRole === key ? role.color : G.border}`,
-              background: selectedRole === key ? `${role.color}20` : "transparent",
-              color: selectedRole === key ? role.color : G.muted, cursor: "pointer", fontSize: 13, fontWeight: 600,
-              transition: "all 0.2s"
-            }}
-            onClick={() => setSelectedRole(key)}>
-            {role.icon} {role.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-        {/* Gap analysis */}
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Skill Gap Analysis</h3>
-          <p style={{ fontSize: 12, color: G.muted, marginBottom: 16 }}>Your scores vs required for {ROLES[selectedRole]?.label}</p>
-          {gapData.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 20 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-              <p style={{ color: G.success }}>You meet all requirements for this role!</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={gapData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fill: G.muted, fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fill: G.muted, fontSize: 11 }} width={90} />
-                <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8 }} />
-                <Bar dataKey="required" fill={`${G.danger}60`} name="Required" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="yours" fill={G.accent} name="Yours" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Readiness */}
-        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-          <ScoreRing score={readinessScore} color={ROLES[selectedRole]?.color} size={150} label={ROLES[selectedRole]?.label} />
-          <div style={{ textAlign: "center" }}>
-            <p style={{ color: G.muted, fontSize: 14 }}>
-              {readinessScore >= 80 ? "🟢 Excellent — You're ready to apply!" :
-               readinessScore >= 60 ? "🟡 Good — A few improvements needed" :
-               "🔴 Needs work — Follow the roadmap below"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Learning Roadmap */}
-      {roadmap.length > 0 && (
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📍 Personalized Learning Roadmap</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {roadmap.map((r, i) => (
-              <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                <div style={{ width: 36, height: 36, background: G.accentDim, border: `1px solid rgba(0,229,255,0.3)`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span className="syne" style={{ fontSize: 14, fontWeight: 700, color: G.accent }}>{r.step}</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{r.title}</div>
-                  <div style={{ fontSize: 13, color: G.muted }}>{r.desc}</div>
-                  <div style={{ fontSize: 11, color: G.danger, marginTop: 4 }}>Gap: {r.gap} points to bridge</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -2594,6 +2468,13 @@ export default function App() {
             {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
             {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
             {appPage === "dsa" && <DSAGame />}
+            {appPage === "story" && (
+              <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+                  <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
+                </div>
+              </Suspense>
+            )}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
