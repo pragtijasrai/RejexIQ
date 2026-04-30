@@ -45,26 +45,6 @@ const EyeIcon = ({ open }) =>
     </svg>
   );
 
-// ─── Google Icon ─────────────────────────────────────────────────────────────
-const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-  </svg>
-);
-
-// ─── Microsoft Icon ──────────────────────────────────────────────────────────
-const MicrosoftIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24">
-    <rect x="1" y="1" width="10" height="10" fill="#f25022" />
-    <rect x="13" y="1" width="10" height="10" fill="#7fba00" />
-    <rect x="1" y="13" width="10" height="10" fill="#00a4ef" />
-    <rect x="13" y="13" width="10" height="10" fill="#ffb900" />
-  </svg>
-);
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
   const [mode, setMode] = useState(initialMode || "signin"); // "signin" | "signup"
@@ -138,8 +118,6 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
       }
     }
   };
-
-  const handleOAuth = (provider) => showToast(`Redirecting to ${provider} OAuth…`, "info");
 
   const handleBlur = (field) => {
     setTouched((t) => ({ ...t, [field]: true }));
@@ -325,7 +303,7 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
         .auth-form-wrap {
           flex: 1;
           background: var(--white);
-          padding: 44px 44px 36px;
+          padding: 28px 36px 24px;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -335,26 +313,26 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
 
         .form-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 2.2rem; font-weight: 500;
-          color: var(--gray-800); margin-bottom: 6px;
+          font-size: 2rem; font-weight: 500;
+          color: var(--gray-800); margin-bottom: 4px;
           letter-spacing: -0.03em;
         }
-        .form-subtitle { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 28px; }
+        .form-subtitle { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 16px; }
         .form-subtitle a { color: var(--green-mid); text-decoration: none; font-weight: 500; cursor: pointer; }
         .form-subtitle a:hover { text-decoration: underline; }
 
         /* ── Fields ── */
-        .field-wrap { margin-bottom: 16px; position: relative; }
+        .field-wrap { margin-bottom: 10px; position: relative; }
         .field-label {
-          display: block; font-size: 0.74rem; font-weight: 500;
-          color: var(--gray-600); margin-bottom: 5px; letter-spacing: 0.04em;
+          display: block; font-size: 0.72rem; font-weight: 500;
+          color: var(--gray-600); margin-bottom: 4px; letter-spacing: 0.04em;
           text-transform: uppercase;
         }
         .field-input {
-          width: 100%; padding: 11px 14px;
+          width: 100%; padding: 9px 12px;
           border: 1.5px solid var(--gray-200);
-          border-radius: 12px; font-family: 'DM Sans', sans-serif;
-          font-size: 0.88rem; color: var(--gray-800);
+          border-radius: 10px; font-family: 'DM Sans', sans-serif;
+          font-size: 0.87rem; color: var(--gray-800);
           background: var(--gray-100);
           box-shadow: var(--shadow-input);
           transition: all 0.2s ease; outline: none;
@@ -374,7 +352,7 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
         .field-error::before { content: "⚠"; font-size: 0.68rem; }
 
         /* ── Password Strength Bar ── */
-        .strength-bar-wrap { margin-top: 6px; }
+        .strength-bar-wrap { margin-top: 4px; }
         .strength-bar-track {
           height: 3px; border-radius: 2px; background: var(--gray-200); overflow: hidden;
         }
@@ -382,7 +360,7 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
           height: 100%; border-radius: 2px;
           transition: width 0.4s ease, background 0.4s ease;
         }
-        .strength-label { font-size: 0.7rem; margin-top: 3px; font-weight: 500; }
+        .strength-label { font-size: 0.7rem; margin-top: 2px; font-weight: 500; }
 
         /* ── Name row ── */
         .field-row { display: flex; gap: 12px; }
@@ -390,12 +368,12 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
 
         /* ── Submit ── */
         .btn-submit {
-          width: 100%; padding: 13px;
+          width: 100%; padding: 11px;
           background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
           color: white; font-family: 'DM Sans', sans-serif;
           font-size: 0.88rem; font-weight: 500; letter-spacing: 0.04em;
-          border: none; border-radius: 14px; cursor: pointer;
-          transition: all 0.25s ease; margin-top: 8px;
+          border: none; border-radius: 12px; cursor: pointer;
+          transition: all 0.25s ease; margin-top: 4px;
           position: relative; overflow: hidden;
         }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,48,40,0.28); }
@@ -413,30 +391,9 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Divider ── */
-        .divider {
-          display: flex; align-items: center; gap: 12px;
-          margin: 18px 0; color: var(--gray-400); font-size: 0.75rem;
-        }
-        .divider::before, .divider::after {
-          content: ''; flex: 1; height: 1px; background: var(--gray-200);
-        }
-
-        /* ── OAuth ── */
-        .oauth-row { display: flex; gap: 10px; }
-        .oauth-btn {
-          flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-          padding: 10px 14px; border: 1.5px solid var(--gray-200);
-          border-radius: 12px; background: white; cursor: pointer;
-          font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
-          color: var(--gray-700); transition: all 0.2s ease;
-          box-shadow: var(--shadow-input);
-        }
-        .oauth-btn:hover { border-color: var(--gray-400); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-
         /* ── Forgot ── */
         .forgot-link {
-          display: block; text-align: center; margin-top: 14px;
+          display: block; text-align: center; margin-top: 8px;
           font-size: 0.78rem; color: var(--green-mid); text-decoration: none;
           cursor: pointer; font-weight: 500;
         }
@@ -445,7 +402,7 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
         /* ── Terms ── */
         .terms-text {
           font-size: 0.7rem; color: var(--gray-400); text-align: center;
-          margin-top: 12px; line-height: 1.5;
+          margin-top: 8px; line-height: 1.5;
         }
         .terms-text a { color: var(--green-mid); text-decoration: none; }
 
@@ -647,17 +604,6 @@ export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
                 Forgot login or password?
               </a>
             )}
-
-            <div className="divider">or {mode === "signin" ? "log in" : "sign up"} with</div>
-
-            <div className="oauth-row">
-              <button className="oauth-btn" onClick={() => handleOAuth("Google")}>
-                <GoogleIcon /> Google
-              </button>
-              <button className="oauth-btn" onClick={() => handleOAuth("Microsoft")}>
-                <MicrosoftIcon /> Microsoft
-              </button>
-            </div>
 
             {mode === "signup" && (
               <div className="terms-text">

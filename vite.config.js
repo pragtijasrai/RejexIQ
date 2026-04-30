@@ -12,5 +12,7 @@ export default defineConfig({
         changeOrigin: true
       }
     }
-  }
+  },
+  // Ensure /auth/callback is served by the SPA
+  appType: 'spa'
 })
