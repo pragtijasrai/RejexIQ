@@ -1,5 +1,6 @@
-
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import NewAuthPage from "./AuthPage.jsx";
+import NewProfilePage from "./ProfilePage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
 const StoryMode = lazy(() => import("./StoryMode.jsx"));
@@ -506,8 +507,8 @@ function ScoreRing({ score, size = 140, color = G.accent, label = "" }) {
   return (
     <div className="score-ring" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={G.border} strokeWidth={10} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={G.border} strokeWidth={10} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={10}
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1.2s ease", filter: `drop-shadow(0 0 8px ${color})` }} />
       </svg>
@@ -799,320 +800,9 @@ function LandingPage({ onNav, onDemo }) {
   );
 }
 
-// AUTH PAGES - Multi-Stage Registration
+// AUTH PAGE — uses the new standalone AuthPage component
 function AuthPage({ type, onLogin, onNav }) {
-  const [stage, setStage] = useState(1);
-  const [form, setForm] = useState({
-    // Stage 1: Basic Info
-    name: "", email: "", username: "", password: "", confirm: "",
-    // Stage 2: Education
-    education: "", university: "", graduationYear: "", major: "",
-    // Stage 3: Skills
-    skills: {},
-    // Stage 4: Projects & Links
-    github: "", linkedin: "", portfolio: "", projects: "",
-    // Stage 5: Additional
-    bio: "", experience: "", interests: ""
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [pwStrength, setPwStrength] = useState({ score: 0 });
-
-  const isLogin = type === "login";
-  const totalStages = isLogin ? 1 : 5;
-
-  function validateStage() {
-    const e = {};
-    if (isLogin || stage === 1) {
-      if (!isLogin && !form.name.trim()) e.name = "Name is required";
-      if (!isLogin && !form.username.trim()) e.username = "Username is required";
-      const emailErr = validateEmail(form.email);
-      if (emailErr) e.email = emailErr;
-      const pwErr = validatePassword(form.password);
-      if (pwErr) e.password = pwErr;
-      if (!isLogin && form.password !== form.confirm) e.confirm = "Passwords do not match";
-    }
-    if (stage === 2 && !isLogin) {
-      if (!form.education) e.education = "Education level is required";
-      if (!form.university.trim()) e.university = "University/School name is required";
-    }
-    return e;
-  }
-
-  function handleNext() {
-    const e = validateStage();
-    setErrors(e);
-    if (Object.keys(e).length > 0) return;
-    
-    if (isLogin || stage === totalStages) {
-      setLoading(true);
-      setTimeout(() => {
-        const userData = { 
-          ...form,
-          name: form.name || form.email.split("@")[0],
-          assessmentDone: false 
-        };
-        setLoading(false);
-        onLogin(userData);
-      }, 1200);
-    } else {
-      setStage(stage + 1);
-    }
-  }
-
-  function handleBack() {
-    if (stage > 1) setStage(stage - 1);
-  }
-
-  const stageInfo = [
-    { title: "Basic Information", icon: "👤", desc: "Let's start with the basics" },
-    { title: "Education Details", icon: "🎓", desc: "Tell us about your education" },
-    { title: "Your Skills", icon: "💡", desc: "What are you good at?" },
-    { title: "Projects & Links", icon: "🔗", desc: "Show us your work" },
-    { title: "About You", icon: "✨", desc: "Final touches" }
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: `linear-gradient(135deg, ${G.bg} 0%, #1a1f3a 100%)` }}>
-      <div style={{ position: "fixed", top: "20%", left: "5%", width: 300, height: 300, background: `radial-gradient(circle, ${G.accent}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(40px)" }} />
-      <div style={{ position: "fixed", bottom: "20%", right: "5%", width: 400, height: 400, background: `radial-gradient(circle, ${G.purple}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(40px)" }} />
-
-      <div style={{ width: "100%", maxWidth: 520, position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div className="syne" style={{ fontSize: 32, fontWeight: 800, marginBottom: 12 }}>
-            <span style={{ background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Rejex</span>IQ
-          </div>
-          <h1 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-            {isLogin ? "Welcome Back!" : stageInfo[stage - 1].title}
-          </h1>
-          <p style={{ color: G.muted, fontSize: 14 }}>
-            {isLogin ? "Sign in to continue your journey" : stageInfo[stage - 1].desc}
-          </p>
-        </div>
-
-        {/* Progress Bar for Signup */}
-        {!isLogin && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-              {stageInfo.map((s, i) => (
-                <div key={i} style={{ textAlign: "center", flex: 1, cursor: i + 1 <= stage ? "pointer" : "default" }}
-                  onClick={() => i + 1 <= stage && setStage(i + 1)}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    background: i + 1 === stage ? `linear-gradient(135deg, ${G.accent}, ${G.purple})` : i + 1 < stage ? G.surface : G.surface,
-                    border: `2px solid ${i + 1 === stage ? G.accent : i + 1 < stage ? G.purple : G.border}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 8px", fontSize: 18,
-                    transition: "all 0.3s ease",
-                    opacity: i + 1 <= stage ? 1 : 0.5
-                  }}>
-                    {s.icon}
-                  </div>
-                  <div style={{ fontSize: 10, color: i + 1 === stage ? G.accent : i + 1 < stage ? G.purple : G.muted, fontWeight: 600 }}>
-                    Step {i + 1}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 4, background: G.border, borderRadius: 2, overflow: "hidden" }}>
-              <div style={{
-                height: "100%",
-                width: `${(stage / totalStages) * 100}%`,
-                background: `linear-gradient(90deg, ${G.accent}, ${G.purple})`,
-                transition: "width 0.3s ease"
-              }} />
-            </div>
-          </div>
-        )}
-
-        <div className="card" style={{ padding: 40, background: `${G.card}dd`, backdropFilter: "blur(20px)", border: `1px solid ${G.border}` }}>
-          {/* Stage 1: Basic Info */}
-          {(isLogin || stage === 1) && (
-            <div className="fade-in">
-              {!isLogin && (
-                <>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Full Name *</label>
-                    <input className={`input-field ${errors.name ? "error" : ""}`} placeholder="John Doe"
-                      value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                    {errors.name && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.name}</p>}
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Username *</label>
-                    <input className={`input-field ${errors.username ? "error" : ""}`} placeholder="johndoe"
-                      value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/\s/g, "") })} />
-                    {errors.username && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.username}</p>}
-                  </div>
-                </>
-              )}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Email Address *</label>
-                <input className={`input-field ${errors.email ? "error" : ""}`} type="email" placeholder="you@example.com"
-                  value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                {errors.email && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
-              </div>
-              <div style={{ marginBottom: !isLogin ? 8 : 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Password *</label>
-                <input className={`input-field ${errors.password ? "error" : ""}`} type="password" placeholder="Min 6 characters"
-                  value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setPwStrength(passwordStrength(e.target.value)); }} />
-                {errors.password && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.password}</p>}
-              </div>
-              {!isLogin && form.password && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                    {[1,2,3,4].map(i => (
-                      <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwStrength.score ? pwStrength.color : G.border, transition: "background 0.3s" }} />
-                    ))}
-                  </div>
-                  <span style={{ fontSize: 11, color: pwStrength.color }}>{pwStrength.label}</span>
-                </div>
-              )}
-              {!isLogin && (
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Confirm Password *</label>
-                  <input className={`input-field ${errors.confirm ? "error" : ""}`} type="password" placeholder="Repeat password"
-                    value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} />
-                  {errors.confirm && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.confirm}</p>}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Stage 2: Education */}
-          {!isLogin && stage === 2 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Education Level *</label>
-                <select className={`input-field ${errors.education ? "error" : ""}`}
-                  value={form.education} onChange={e => setForm({ ...form, education: e.target.value })}>
-                  <option value="">Select your education level</option>
-                  <option value="high-school">High School</option>
-                  <option value="diploma">Diploma</option>
-                  <option value="bachelors">Bachelor's Degree</option>
-                  <option value="masters">Master's Degree</option>
-                  <option value="phd">PhD</option>
-                </select>
-                {errors.education && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.education}</p>}
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>University/School *</label>
-                <input className={`input-field ${errors.university ? "error" : ""}`} placeholder="Your institution name"
-                  value={form.university} onChange={e => setForm({ ...form, university: e.target.value })} />
-                {errors.university && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.university}</p>}
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Graduation Year</label>
-                  <input className="input-field" type="number" placeholder="2024"
-                    value={form.graduationYear} onChange={e => setForm({ ...form, graduationYear: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Major/Field</label>
-                  <input className="input-field" placeholder="Computer Science"
-                    value={form.major} onChange={e => setForm({ ...form, major: e.target.value })} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Stage 3: Skills */}
-          {!isLogin && stage === 3 && (
-            <div className="fade-in">
-              <p style={{ color: G.muted, fontSize: 14, marginBottom: 20 }}>
-                Select your skill levels (you can update these later in the assessment)
-              </p>
-              {SKILL_KEYS.slice(0, 5).map(skill => (
-                <div key={skill} style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: G.text }}>{SKILL_ICONS[skill]} {skill}</label>
-                    <span className="mono" style={{ fontSize: 14, color: G.accent }}>{form.skills[skill] || 50}</span>
-                  </div>
-                  <input type="range" className="slider-custom" min={0} max={100}
-                    value={form.skills[skill] || 50}
-                    onChange={e => setForm({ ...form, skills: { ...form.skills, [skill]: Number(e.target.value) } })}
-                    style={{ background: `linear-gradient(90deg, ${G.accent} ${form.skills[skill] || 50}%, ${G.border} ${form.skills[skill] || 50}%)` }} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Stage 4: Projects & Links */}
-          {!isLogin && stage === 4 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>GitHub Profile</label>
-                <input className="input-field" placeholder="https://github.com/yourusername"
-                  value={form.github} onChange={e => setForm({ ...form, github: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>LinkedIn Profile</label>
-                <input className="input-field" placeholder="https://linkedin.com/in/yourusername"
-                  value={form.linkedin} onChange={e => setForm({ ...form, linkedin: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Portfolio Website</label>
-                <input className="input-field" placeholder="https://yourportfolio.com"
-                  value={form.portfolio} onChange={e => setForm({ ...form, portfolio: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Notable Projects</label>
-                <textarea className="input-field" rows={4} placeholder="Describe your best projects (one per line)"
-                  value={form.projects} onChange={e => setForm({ ...form, projects: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {/* Stage 5: Additional Info */}
-          {!isLogin && stage === 5 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Bio</label>
-                <textarea className="input-field" rows={3} placeholder="Tell us about yourself..."
-                  value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Years of Experience</label>
-                <select className="input-field" value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })}>
-                  <option value="">Select experience level</option>
-                  <option value="0">No experience (Student)</option>
-                  <option value="1">Less than 1 year</option>
-                  <option value="2">1-2 years</option>
-                  <option value="3">3-5 years</option>
-                  <option value="5+">5+ years</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Interests & Goals</label>
-                <textarea className="input-field" rows={3} placeholder="What are you interested in? What are your career goals?"
-                  value={form.interests} onChange={e => setForm({ ...form, interests: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-            <button className="btn-primary" style={{ width: "100%", padding: 14, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              onClick={handleNext} disabled={loading}>
-              {loading ? <><LoadingSpinner size={18} /> Processing...</> : 
-                (isLogin ? "Sign In" : stage === totalStages ? "Complete Registration" : "Next")}
-            </button>
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: G.muted }}>
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <span style={{ color: G.accent, cursor: "pointer", fontWeight: 600 }}
-              onClick={() => { onNav(isLogin ? "signup" : "login"); setStage(1); }}>
-              {isLogin ? "Sign Up" : "Log In"}
-            </span>
-          </div>
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <button className="btn-ghost" onClick={() => onNav("home")}>← Back to Home</button>
-        </div>
-      </div>
-    </div>
-  );
+  return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
 
 // SIDEBAR
@@ -1121,7 +811,7 @@ function Sidebar({ active, onNav, user, onLogout }) {
     { key: "dashboard", icon: "🏠", label: "Dashboard" },
     { key: "profile", icon: "👤", label: "Profile" },
     { key: "assessment", icon: "🎯", label: "Skill Assessment" },
-    { key: "dsa",  icon: "📚", label: "DSA Tutorial" },
+    { key: "dsa", icon: "📚", label: "DSA Tutorial" },
     { key: "story", icon: "⚔️", label: "Story Mode" },
     { key: "career", icon: "🏆", label: "Career Match" },
     { key: "market", icon: "📈", label: "Market Demand" },
@@ -1177,257 +867,9 @@ function Sidebar({ active, onNav, user, onLogout }) {
   );
 }
 
-// PROFILE PAGE
+// PROFILE PAGE — uses the new standalone ProfilePage component
 function ProfilePage({ user, onUpdateUser, onNav }) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    name: user.name || "",
-    username: user.username || "",
-    email: user.email || "",
-    bio: user.bio || "",
-    university: user.university || "",
-    major: user.major || "",
-    graduationYear: user.graduationYear || "",
-    github: user.github || "",
-    linkedin: user.linkedin || "",
-    portfolio: user.portfolio || "",
-    experience: user.experience || ""
-  });
-  const [profilePic, setProfilePic] = useState(user.profilePic || null);
-  const [uploading, setUploading] = useState(false);
-
-  function handleSave() {
-    onUpdateUser({ ...form, profilePic });
-    setEditing(false);
-  }
-
-  function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (file) {
-      setUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePic(reader.result);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
-          My Profile
-        </h1>
-        <p style={{ color: G.muted }}>Manage your account settings and personal information</p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 32 }}>
-        {/* Left Column - Profile Picture */}
-        <div>
-          <div className="card" style={{ padding: 24, textAlign: "center" }}>
-            <div style={{ position: "relative", width: 200, height: 200, margin: "0 auto 20px" }}>
-              {profilePic ? (
-                <img src={profilePic} alt="Profile" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: `3px solid ${G.accent}` }} />
-              ) : (
-                <div style={{
-                  width: "100%", height: "100%", borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 72, fontWeight: 800, color: "#fff"
-                }}>
-                  {user.name?.[0]?.toUpperCase() || "U"}
-                </div>
-              )}
-              {editing && (
-                <label style={{
-                  position: "absolute", bottom: 10, right: 10,
-                  width: 40, height: 40, borderRadius: "50%",
-                  background: G.accent, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", fontSize: 20, border: `2px solid ${G.card}`
-                }}>
-                  📷
-                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
-                </label>
-              )}
-            </div>
-            <h2 className="syne" style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{user.name}</h2>
-            <p style={{ color: G.muted, fontSize: 14, marginBottom: 4 }}>@{user.username || "username"}</p>
-            <p style={{ color: G.muted, fontSize: 13 }}>{user.email}</p>
-            
-            {!editing && (
-              <>
-                <button className="btn-primary" style={{ width: "100%", marginTop: 20 }} onClick={() => setEditing(true)}>
-                  Edit Profile
-                </button>
-                <button className="btn-outline" style={{ width: "100%", marginTop: 8, fontSize: 12 }} 
-                  onClick={() => {
-                    const dataStr = JSON.stringify(user, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `rejexiq-backup-${Date.now()}.json`;
-                    link.click();
-                  }}>
-                  📥 Export Data
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Quick Stats */}
-          <div className="card" style={{ padding: 20, marginTop: 16 }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Quick Stats</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Skills Assessed</span>
-                <span className="mono" style={{ color: G.accent, fontWeight: 600 }}>{Object.keys(user.skills || {}).length}/8</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Profile Complete</span>
-                <span className="mono" style={{ color: G.success, fontWeight: 600 }}>
-                  {Math.round(([user.name, user.email, user.bio, user.university, user.github].filter(Boolean).length / 5) * 100)}%
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Member Since</span>
-                <span style={{ color: G.text, fontSize: 14 }}>2025</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Details */}
-        <div>
-          <div className="card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <h3 className="syne" style={{ fontSize: 20, fontWeight: 700 }}>Personal Information</h3>
-              {editing && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn-ghost" onClick={() => { setEditing(false); setForm({ name: user.name, username: user.username, email: user.email, bio: user.bio, university: user.university, major: user.major, graduationYear: user.graduationYear, github: user.github, linkedin: user.linkedin, portfolio: user.portfolio, experience: user.experience }); }}>
-                    Cancel
-                  </button>
-                  <button className="btn-primary" onClick={handleSave}>Save Changes</button>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Full Name</label>
-                {editing ? (
-                  <input className="input-field" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>{user.name || "Not set"}</p>
-                )}
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Username</label>
-                {editing ? (
-                  <input className="input-field" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>@{user.username || "Not set"}</p>
-                )}
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Email</label>
-                {editing ? (
-                  <input className="input-field" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>{user.email}</p>
-                )}
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Bio</label>
-                {editing ? (
-                  <textarea className="input-field" rows={3} value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} placeholder="Tell us about yourself..." />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text, lineHeight: 1.6 }}>{user.bio || "No bio added yet"}</p>
-                )}
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${G.border}`, marginTop: 32, paddingTop: 24 }}>
-              <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Education</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>University/School</label>
-                  {editing ? (
-                    <input className="input-field" value={form.university} onChange={e => setForm({ ...form, university: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.university || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Major</label>
-                  {editing ? (
-                    <input className="input-field" value={form.major} onChange={e => setForm({ ...form, major: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.major || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Graduation Year</label>
-                  {editing ? (
-                    <input className="input-field" value={form.graduationYear} onChange={e => setForm({ ...form, graduationYear: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.graduationYear || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Experience</label>
-                  {editing ? (
-                    <select className="input-field" value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })}>
-                      <option value="">Select</option>
-                      <option value="0">No experience</option>
-                      <option value="1">Less than 1 year</option>
-                      <option value="2">1-2 years</option>
-                      <option value="3">3-5 years</option>
-                      <option value="5+">5+ years</option>
-                    </select>
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.experience || "Not set"}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${G.border}`, marginTop: 32, paddingTop: 24 }}>
-              <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Links & Social</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>GitHub</label>
-                  {editing ? (
-                    <input className="input-field" value={form.github} onChange={e => setForm({ ...form, github: e.target.value })} placeholder="https://github.com/username" />
-                  ) : (
-                    user.github ? <a href={user.github} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.github}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>LinkedIn</label>
-                  {editing ? (
-                    <input className="input-field" value={form.linkedin} onChange={e => setForm({ ...form, linkedin: e.target.value })} placeholder="https://linkedin.com/in/username" />
-                  ) : (
-                    user.linkedin ? <a href={user.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.linkedin}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Portfolio</label>
-                  {editing ? (
-                    <input className="input-field" value={form.portfolio} onChange={e => setForm({ ...form, portfolio: e.target.value })} placeholder="https://yourportfolio.com" />
-                  ) : (
-                    user.portfolio ? <a href={user.portfolio} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.portfolio}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <NewProfilePage user={user} onUpdateUser={onUpdateUser} onNav={onNav} />;
 }
 
 // DASHBOARD
@@ -1669,93 +1111,575 @@ function SkillAssessment({ user, onSave, onNav }) {
 function MarketDemand({ onNav }) {
   const [tab, setTab] = useState("demand");
 
+
   return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Market Demand Analysis</h1>
-        <p style={{ color: G.muted }}>Real-time skill demand data from the tech job market</p>
+    <div className="section-enter" style={{ paddingBottom: 48 }}>
+      {/* ── HEADER ── */}
+      <div style={{
+        position: "relative", borderRadius: 24, overflow: "hidden",
+        background: "linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(124,58,237,0.12) 50%, rgba(255,107,157,0.08) 100%)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        padding: "36px 40px", marginBottom: 32
+      }}>
+        {/* Glow orbs */}
+        <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -30, left: "30%", width: 160, height: 160, background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 24, position: "relative" }}>
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.25)", borderRadius: 20, padding: "4px 14px", marginBottom: 14, fontSize: 11, color: "#22d3ee", fontWeight: 700, letterSpacing: 1 }}>
+              <span style={{ width: 6, height: 6, background: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "pulse 2s infinite" }} />
+              LIVE MARKET DATA · 2025
+            </div>
+            <h1 className="syne" style={{ fontSize: "clamp(24px,3vw,36px)", fontWeight: 800, marginBottom: 10, lineHeight: 1.2 }}>
+              Market Demand{" "}
+              <span style={{ background: "linear-gradient(135deg, #00e5ff, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Analytics
+              </span>
+            </h1>
+            <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.6, maxWidth: 520 }}>
+              Real-time skill demand data, job market trends, and personalized AI recommendations to accelerate your career.
+            </p>
+          </div>
+
+          {/* Role selector */}
+          <div style={{ minWidth: 220 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#94a3b8", marginBottom: 8, letterSpacing: 1 }}>SELECT JOB ROLE</label>
+            <select
+              value={selectedRole}
+              onChange={e => setSelectedRole(e.target.value)}
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 12, padding: "12px 16px", color: "#f0f4ff", fontSize: 14, fontWeight: 600,
+                cursor: "pointer", outline: "none", fontFamily: "inherit",
+                appearance: "none",
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300e5ff' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center"
+              }}
+            >
+              {Object.keys(MD_ROLES).map(r => (
+                <option key={r} value={r} style={{ background: "#1a2347" }}>{MD_ROLES[r].icon} {r}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* KPI strip */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginTop: 28 }}>
+          {[
+            {
+              label: "Open Positions",
+              val: `${c1.toLocaleString()}+`,
+              icon: "💼", color: "#22d3ee",
+              sub: "Tech sector, India",
+              delta: openingsDelta,
+              deltaLabel: openingsDelta !== 0 ? `${openingsDelta > 0 ? "▲" : "▼"} ${Math.abs(openingsDelta).toLocaleString()} vs prev role` : null,
+            },
+            {
+              label: "Monthly Postings",
+              val: c2.toLocaleString(),
+              icon: "📈", color: "#c084fc",
+              sub: "Feb 2025",
+              delta: monthlyDelta,
+              deltaLabel: monthlyDelta !== 0 ? `${monthlyDelta > 0 ? "▲" : "▼"} ${Math.abs(monthlyDelta).toLocaleString()} vs prev role` : null,
+            },
+            {
+              label: "Your Match Score",
+              val: `${c3}%`,
+              icon: "🎯", color: roleColor,
+              sub: selectedRole,
+              delta: matchDelta,
+              deltaLabel: matchDelta !== 0
+                ? `${matchDelta > 0 ? "▲" : "▼"} ${Math.abs(matchDelta)}% vs prev role`
+                : null,
+            },
+            {
+              label: "Avg Salary",
+              val: `₹${cSalary}L`,
+              icon: "💰", color: "#34d399",
+              sub: `${roleData.salary.min} – ${roleData.salary.max}`,
+              delta: salaryDelta,
+              deltaLabel: salaryDelta !== 0
+                ? `${salaryDelta > 0 ? "▲" : "▼"} ₹${Math.abs(salaryDelta)}L avg vs prev role`
+                : null,
+            },
+            {
+              label: "Hiring Trend",
+              val: `+${cTrend}%`,
+              icon: roleData.trend === "increasing" ? "🚀" : "📊",
+              color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
+              sub: "YoY growth",
+              delta: trendDelta,
+              deltaLabel: trendDelta !== 0
+                ? `${trendDelta > 0 ? "▲" : "▼"} ${Math.abs(trendDelta)}% vs prev role`
+                : null,
+            },
+          ].map((kpi, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14, padding: "16px 18px",
+              transition: "all 0.3s ease", cursor: "default"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${kpi.color}40`; e.currentTarget.style.boxShadow = `0 8px 24px ${kpi.color}20`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = ""; }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{kpi.icon}</div>
+              <div className="syne mono" style={{ fontSize: 22, fontWeight: 800, color: kpi.color, lineHeight: 1 }}>{kpi.val}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#f0f4ff", marginTop: 4 }}>{kpi.label}</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{kpi.sub}</div>
+              {kpi.deltaLabel && (
+                <div style={{
+                  marginTop: 8, fontSize: 11, fontWeight: 700,
+                  color: kpi.delta > 0 ? "#34d399" : "#f87171",
+                  background: kpi.delta > 0 ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+                  border: `1px solid ${kpi.delta > 0 ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)"}`,
+                  borderRadius: 6, padding: "3px 8px", display: "inline-block"
+                }}>
+                  {kpi.deltaLabel}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        {[["demand", "Skill Demand"], ["trends", "Job Trends"], ["insights", "Insights"]].map(([k, l]) => (
-          <button key={k} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${tab === k ? G.accent : G.border}`, background: tab === k ? G.accentDim : "transparent", color: tab === k ? G.accent : G.muted, cursor: "pointer", fontSize: 13, fontWeight: 600, transition: "all 0.2s" }}
-            onClick={() => setTab(k)}>{l}</button>
+      {/* ── TABS ── */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{
+            padding: "10px 22px", borderRadius: 10, border: `1px solid ${tab === t.key ? roleColor : "rgba(255,255,255,0.1)"}`,
+            background: tab === t.key ? `${roleColor}18` : "transparent",
+            color: tab === t.key ? roleColor : "#94a3b8",
+            cursor: "pointer", fontSize: 13, fontWeight: 700, transition: "all 0.2s",
+            fontFamily: "inherit",
+            boxShadow: tab === t.key ? `0 0 16px ${roleColor}30` : "none"
+          }}>{t.label}</button>
         ))}
       </div>
 
-      {tab === "demand" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div className="card">
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Skills by Demand</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={MARKET_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-                <XAxis dataKey="skill" tick={{ fill: G.muted, fontSize: 11 }} />
-                <YAxis domain={[60, 100]} tick={{ fill: G.muted, fontSize: 11 }} />
-                <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8, color: G.text }} />
-                <Bar dataKey="demand" fill={G.accent} radius={[4, 4, 0, 0]}
-                  label={{ position: "top", fill: G.muted, fontSize: 10 }} />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* ══════════════════════════════════════════════════════
+          TAB 1 — TRENDING SKILLS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "trending" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Category filter chips — dynamic per role */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {roleCategories.map(cat => (
+              <button key={cat} onClick={() => setFilterCat(cat)} style={{
+                padding: "6px 16px", borderRadius: 20, border: `1px solid ${filterCat === cat ? "#22d3ee" : "rgba(255,255,255,0.1)"}`,
+                background: filterCat === cat ? "rgba(0,229,255,0.12)" : "transparent",
+                color: filterCat === cat ? "#22d3ee" : "#94a3b8",
+                cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.2s", fontFamily: "inherit"
+              }}>{cat}</button>
+            ))}
           </div>
-          <div className="card">
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Demand Index</h3>
-            {MARKET_DATA.map((d, i) => (
-              <div key={i} style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
-                  <span>{d.skill}</span>
-                  <span className="mono" style={{ color: d.demand > 85 ? G.success : d.demand > 75 ? G.accent : G.warning }}>{d.demand}%</span>
+
+          {/* Skills grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {filteredTrending.map((s, i) => (
+              <div key={`${roleChangeKey}-${i}`}
+                onMouseEnter={() => setHoveredSkill(s.skill)}
+                onMouseLeave={() => setHoveredSkill(null)}
+                style={{
+                  background: hoveredSkill === s.skill
+                    ? `linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04))`
+                    : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${hoveredSkill === s.skill ? s.color + "50" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 16, padding: "20px 22px",
+                  transition: "all 0.3s ease",
+                  transform: hoveredSkill === s.skill ? "translateY(-4px) scale(1.02)" : "none",
+                  boxShadow: hoveredSkill === s.skill ? `0 12px 32px ${s.color}20` : "none",
+                  cursor: "default",
+                  backdropFilter: "blur(8px)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 24 }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{s.skill}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{s.category}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <AnimatedNumber value={s.demand} color={s.color} />
+                    <div style={{
+                      fontSize: 11, fontWeight: 700, color: "#34d399",
+                      background: "rgba(52,211,153,0.1)", borderRadius: 6, padding: "2px 8px", marginTop: 2
+                    }}>{s.growth}</div>
+                  </div>
                 </div>
-                <ProgressBar value={d.demand} color={d.demand > 85 ? G.success : d.demand > 75 ? G.accent : G.warning} />
+                <AnimatedBar value={s.demand} color={s.color} delay={i * 60} />
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11, color: "#94a3b8" }}>
+                  <span>Demand Index</span>
+                  <span style={{ color: s.demand >= 85 ? "#34d399" : s.demand >= 70 ? "#fbbf24" : "#f87171", fontWeight: 600 }}>
+                    {s.demand >= 85 ? "🔥 Very High" : s.demand >= 70 ? "📈 High" : "📊 Moderate"}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {tab === "trends" && (
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Job Postings Trend (Tech Sector)</h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={TREND_DATA}>
-              <defs>
-                <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={G.accent} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={G.accent} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-              <XAxis dataKey="month" tick={{ fill: G.muted, fontSize: 12 }} />
-              <YAxis tick={{ fill: G.muted, fontSize: 12 }} />
-              <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8, color: G.text }} />
-              <Area type="monotone" dataKey="jobs" stroke={G.accent} fill="url(#grad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {tab === "insights" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-          {[
-            { icon: "🔥", title: "Hottest Skill 2025", val: "TypeScript", desc: "76% demand growth YoY. Essential for enterprise projects.", color: G.danger },
-            { icon: "📈", title: "Fastest Growing", val: "AI/ML Fundamentals", desc: "Entry-level ML skills now expected at 34% of tech companies.", color: G.success },
-            { icon: "🎯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: G.warning },
-            { icon: "💼", title: "Highest Paying", val: "Full Stack (React + Node)", desc: "Average salary ₹18–35 LPA for 2–4 years experience.", color: G.accent },
-            { icon: "⚡", title: "Quick Win Skill", val: "CSS/TailwindCSS", desc: "Easy to learn, high ROI for frontend developer roles.", color: G.purple },
-            { icon: "🌐", title: "Remote Job Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: G.muted }
-          ].map((c, i) => (
-            <div key={i} className="stat-card">
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{c.icon}</div>
-              <div style={{ fontSize: 11, color: G.muted, marginBottom: 4, fontWeight: 600 }}>{c.title}</div>
-              <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: c.color, marginBottom: 6 }}>{c.val}</div>
-              <div style={{ fontSize: 12, color: G.muted, lineHeight: 1.5 }}>{c.desc}</div>
+          {/* Bar chart */}
+          <div key={roleChangeKey} style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 20, padding: "28px 24px"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <h3 className="syne" style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
+                  {roleData.icon} {selectedRole} — Skill Demand Index
+                </h3>
+                <p style={{ fontSize: 13, color: "#94a3b8" }}>Top skills ranked by market demand for this role · 2025</p>
+              </div>
             </div>
-          ))}
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={roleTrendingSkills.slice(0, 8)} barGap={4}>
+                <defs>
+                  <linearGradient id="mdGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={roleColor} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={roleColor} stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[40, 100]} tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <RechartsTooltip
+                  contentStyle={{ background: "#1a2347", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#f0f4ff", fontSize: 13 }}
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  formatter={(val, name) => [`${val}% demand`, "Market Demand"]}
+                />
+                <Bar dataKey="demand" fill="url(#mdGrad1)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 2 — YOUR MATCH
+      ══════════════════════════════════════════════════════ */}
+      {tab === "match" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Match overview */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "32px 36px"
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <CircleMatch pct={matchPct} color={roleColor} size={140} />
+              <div style={{ textAlign: "center" }}>
+                <div className="syne" style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{selectedRole}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                  {matchedSkills}/{enrichedSkills.length} skills matched
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+                {matchPct >= 70 ? "Strong Match! 🎉" : matchPct >= 40 ? "Good Progress 📈" : "Room to Grow 🌱"}
+              </h3>
+              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+                {matchPct >= 70
+                  ? `You already have ${matchedSkills} of the key skills for ${selectedRole}. Focus on the gaps below to become a top candidate.`
+                  : matchPct >= 40
+                    ? `You're on the right track. Building the missing skills will significantly boost your interview success rate.`
+                    : `Start with the high-demand skills below. Even 2–3 additions can dramatically improve your match score.`}
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills You Have</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#34d399" }}>{matchedSkills}</div>
+                </div>
+                <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills to Add</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#f87171" }}>{enrichedSkills.length - matchedSkills}</div>
+                </div>
+                <div style={{ background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 10, padding: "10px 18px" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Match Score</div>
+                  <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: roleColor }}>{matchPct}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Skill comparison list */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+              Skill-by-Skill Comparison — <span style={{ color: roleColor }}>{selectedRole}</span>
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {enrichedSkills.map((s, i) => (
+                <div key={i} style={{
+                  display: "grid", gridTemplateColumns: "1fr auto auto",
+                  alignItems: "center", gap: 16,
+                  padding: "14px 18px", borderRadius: 12,
+                  background: s.userHas ? "rgba(52,211,153,0.05)" : "rgba(248,113,113,0.04)",
+                  border: `1px solid ${s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.12)"}`,
+                  transition: "all 0.2s"
+                }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                        background: s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+                        color: s.userHas ? "#34d399" : "#f87171"
+                      }}>{s.userHas ? "✓ You have this" : "✗ Missing"}</span>
+                    </div>
+                    <AnimatedBar value={s.demand} color={s.userHas ? "#34d399" : "#f87171"} delay={i * 80} />
+                  </div>
+                  <div className="mono" style={{ fontSize: 16, fontWeight: 800, color: s.userHas ? "#34d399" : "#f87171", minWidth: 48, textAlign: "right" }}>
+                    {s.demand}%
+                  </div>
+                  <div style={{ fontSize: 20 }}>{s.userHas ? "✅" : "❌"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Missing skills callout */}
+          {enrichedSkills.filter(s => !s.userHas).length > 0 && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(248,113,113,0.08), rgba(251,191,36,0.06))",
+              border: "1px solid rgba(248,113,113,0.2)", borderRadius: 16, padding: "22px 24px"
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 12 }}>
+                🎯 Priority Skills to Add
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {enrichedSkills.filter(s => !s.userHas).sort((a, b) => b.demand - a.demand).map((s, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10, padding: "8px 14px", fontSize: 13
+                  }}>
+                    <span style={{ fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                    <span className="mono" style={{ fontSize: 11, color: "#f87171", fontWeight: 700 }}>{s.demand}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 3 — ROLE INSIGHTS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "role" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Role header card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${roleColor}12, ${roleColor}06)`,
+            border: `1px solid ${roleColor}30`, borderRadius: 20, padding: "32px 36px",
+            position: "relative", overflow: "hidden"
+          }}>
+            <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, background: `radial-gradient(circle, ${roleColor}20 0%, transparent 70%)`, borderRadius: "50%" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
+              <div style={{ fontSize: 52 }}>{roleData.icon}</div>
+              <div>
+                <h2 className="syne" style={{ fontSize: 26, fontWeight: 800, color: "#f0f4ff", marginBottom: 4 }}>{selectedRole}</h2>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
+                    background: roleData.trend === "increasing" ? "rgba(52,211,153,0.12)" : "rgba(251,191,36,0.12)",
+                    border: `1px solid ${roleData.trend === "increasing" ? "rgba(52,211,153,0.3)" : "rgba(251,191,36,0.3)"}`,
+                    borderRadius: 8, padding: "3px 10px"
+                  }}>
+                    {roleData.trend === "increasing" ? "🚀 Hiring Increasing" : "📊 Stable Demand"}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: roleColor, background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 8, padding: "3px 10px" }}>
+                    {roleData.trendPct} YoY
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "3px 10px" }}>
+                    {roleData.openings} openings
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Salary range */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              {[
+                { label: "Entry Level", val: roleData.salary.min, sub: "0–2 years" },
+                { label: "Average CTC", val: roleData.salary.avg, sub: "2–5 years", highlight: true },
+                { label: "Senior Level", val: roleData.salary.max, sub: "5+ years" },
+              ].map((s, i) => (
+                <div key={i} style={{
+                  background: s.highlight ? `${roleColor}18` : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${s.highlight ? roleColor + "40" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 14, padding: "18px 20px", textAlign: "center"
+                }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6, fontWeight: 600 }}>{s.label}</div>
+                  <div className="syne" style={{ fontSize: 24, fontWeight: 800, color: s.highlight ? roleColor : "#f0f4ff" }}>{s.val}</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Required skills ranked */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Required Skills — Ranked by Demand</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[...enrichedSkills].sort((a, b) => b.demand - a.demand).map((s, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 14 }}>
+                  <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: i < 3 ? roleColor : "#94a3b8" }}>#{i + 1}</div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                      <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: roleColor }}>{s.demand}%</span>
+                    </div>
+                    <AnimatedBar value={s.demand} color={i < 3 ? roleColor : "#94a3b8"} delay={i * 70} />
+                  </div>
+                  <div style={{ fontSize: 16 }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "⭐"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hiring trend chart */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Hiring Trend — Tech Sector</h3>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Total job postings vs AI/ML roles (Jul 2024 – Feb 2025)</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={MD_TREND_DATA}>
+                <defs>
+                  <linearGradient id="mdTrendGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={roleColor} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={roleColor} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="mdTrendGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <RechartsTooltip contentStyle={{ background: "#1a2347", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#f0f4ff", fontSize: 13 }} />
+                <Area type="monotone" dataKey="jobs" name="All Tech Jobs" stroke={roleColor} fill="url(#mdTrendGrad1)" strokeWidth={2.5} dot={false} />
+                <Area type="monotone" dataKey="ai" name="AI/ML Roles" stroke="#818cf8" fill="url(#mdTrendGrad2)" strokeWidth={2} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div style={{ display: "flex", gap: 20, marginTop: 12, justifyContent: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}>
+                <div style={{ width: 24, height: 3, background: roleColor, borderRadius: 2 }} />
+                All Tech Jobs
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}>
+                <div style={{ width: 24, height: 3, background: "#818cf8", borderRadius: 2 }} />
+                AI/ML Roles
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          TAB 4 — AI RECOMMENDATIONS
+      ══════════════════════════════════════════════════════ */}
+      {tab === "ai" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* AI header */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(129,140,248,0.1), rgba(192,132,252,0.08))",
+            border: "1px solid rgba(129,140,248,0.25)", borderRadius: 20, padding: "28px 32px",
+            display: "flex", alignItems: "center", gap: 20
+          }}>
+            <div style={{ fontSize: 52, animation: "float 3s ease-in-out infinite" }}>🤖</div>
+            <div>
+              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
+                AI Career Advisor
+              </h3>
+              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
+                Personalized recommendations for <strong style={{ color: roleColor }}>{selectedRole}</strong> based on current market demand and your profile gaps.
+              </p>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+            {roleData.aiRecs.map((rec, i) => {
+              const typeColors = { skill: "#22d3ee", project: "#c084fc", resume: "#fbbf24" };
+              const typeLabels = { skill: "SKILL TO ADD", project: "PROJECT IDEA", resume: "RESUME TIP" };
+              const c = typeColors[rec.type] || "#94a3b8";
+              return (
+                <div key={i} style={{
+                  background: `${c}08`, border: `1px solid ${c}25`,
+                  borderRadius: 16, padding: "22px 22px",
+                  transition: "all 0.3s ease", cursor: "default"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 12px 32px ${c}20`; e.currentTarget.style.borderColor = `${c}50`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = `${c}25`; }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                    <span style={{ fontSize: 26 }}>{rec.icon}</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: c, background: `${c}15`, border: `1px solid ${c}30`, borderRadius: 6, padding: "3px 10px", letterSpacing: 0.8 }}>
+                      {typeLabels[rec.type]}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 14, color: "#f0f4ff", lineHeight: 1.7 }}>{rec.text}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* General market insights */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📊 Market Intelligence — 2025</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              {[
+                { icon: "🔥", title: "Hottest Skill", val: "TypeScript", desc: "+22% demand growth YoY. Now required at 80% of frontend roles.", color: "#f87171" },
+                { icon: "🚀", title: "Fastest Growing", val: "LLM / AI Engineering", desc: "+47% YoY. Entry-level AI skills expected at 34% of tech companies.", color: "#34d399" },
+                { icon: "🎯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: "#fbbf24" },
+                { icon: "💼", title: "Highest Paying", val: "DevOps / Cloud", desc: "Average ₹24L. Kubernetes + AWS combo commands premium offers.", color: "#22d3ee" },
+                { icon: "⚡", title: "Quick Win", val: "Docker Basics", desc: "2-week learning curve, required in 78% of backend job postings.", color: "#c084fc" },
+                { icon: "🌐", title: "Remote Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: "#818cf8" },
+              ].map((c, i) => (
+                <div key={i} style={{
+                  background: `${c.color}08`, border: `1px solid ${c.color}20`,
+                  borderRadius: 14, padding: "18px 18px",
+                  transition: "all 0.3s ease"
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = `${c.color}40`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = `${c.color}20`; }}
+                >
+                  <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>{c.title.toUpperCase()}</div>
+                  <div className="syne" style={{ fontSize: 16, fontWeight: 800, color: c.color, marginBottom: 6 }}>{c.val}</div>
+                  <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }}>{c.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(255,107,157,0.1), rgba(124,58,237,0.1))",
+            border: "1px solid rgba(255,107,157,0.2)", borderRadius: 16, padding: "24px 28px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16
+          }}>
+            <div>
+              <div className="syne" style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Ready to close the skill gap?</div>
+              <p style={{ fontSize: 13, color: "#94a3b8" }}>Update your resume with the skills you've added and track your progress.</p>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn-primary" style={{ fontSize: 13, padding: "10px 22px" }} onClick={() => onNav("resume")}>
+                📄 Update Resume
+              </button>
+              <button className="btn-outline" style={{ fontSize: 13, padding: "9px 22px" }} onClick={() => onNav("assessment")}>
+                🎯 Re-assess Skills
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
 
 // RESUME BUILDER — delegates to the premium standalone component
 function ResumeBuilder({ user }) {
@@ -2101,14 +2025,14 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
   async function send(text) {
     const q = text || input;
     if (!q.trim()) return;
-    
+
     const newMsgs = [...messages, { role: "user", text: q }];
     setMessages(newMsgs);
     setInput("");
     setLoading(true);
 
     const response = await callGeminiAPI(q);
-    
+
     setMessages([...newMsgs, { role: "assistant", text: response }]);
     setLoading(false);
     setTimeout(() => msgRef.current?.scrollTo({ top: msgRef.current.scrollHeight, behavior: "smooth" }), 100);
@@ -2128,7 +2052,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
           <p style={{ color: G.muted, marginBottom: 24, lineHeight: 1.6 }}>
             To use the AI Career Assistant, you need a free Google Gemini API key.
           </p>
-          
+
           <div style={{ background: G.surface, padding: 20, borderRadius: 12, marginBottom: 24, textAlign: "left" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>How to get your API key:</h3>
             <ol style={{ color: G.muted, fontSize: 14, lineHeight: 1.8, paddingLeft: 20 }}>
@@ -2144,10 +2068,10 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted, textAlign: "left" }}>
               Gemini API Key
             </label>
-            <input 
-              className="input-field" 
+            <input
+              className="input-field"
               type="password"
-              placeholder="AIza..." 
+              placeholder="AIza..."
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
               onKeyPress={e => e.key === "Enter" && saveApiKey()}
@@ -2206,7 +2130,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 20 }}>🤖</span>
                 <div className="chat-bubble" style={{ display: "flex", gap: 4 }}>
-                  {[0,1,2].map(i => <span key={i} className="pulse-anim" style={{ width: 8, height: 8, background: G.accent, borderRadius: "50%", display: "inline-block", animationDelay: `${i * 0.2}s` }} />)}
+                  {[0, 1, 2].map(i => <span key={i} className="pulse-anim" style={{ width: 8, height: 8, background: G.accent, borderRadius: "50%", display: "inline-block", animationDelay: `${i * 0.2}s` }} />)}
                 </div>
               </div>
             )}
@@ -2393,7 +2317,7 @@ export default function App() {
       if (dest === "home") { setPage("home"); return; }
       if (dest === "login" || dest === "signup") { setPage(dest); return; }
       // Allow assessment without login
-      if (dest === "assessment") { 
+      if (dest === "assessment") {
         if (user) { setAppPage(dest); setPage("app"); }
         else { setPage("assessment"); }
         return;
@@ -2439,13 +2363,13 @@ export default function App() {
             </div>
           </nav>
           <div style={{ paddingTop: 100, paddingLeft: 40, paddingRight: 40, maxWidth: 1400, margin: "0 auto" }}>
-            <SkillAssessment 
-              user={{ skills: {} }} 
+            <SkillAssessment
+              user={{ skills: {} }}
               onSave={(skills) => {
                 alert("Assessment complete! Login to save your progress and unlock all features.");
                 navigate("signup");
-              }} 
-              onNav={navigate} 
+              }}
+              onNav={navigate}
             />
           </div>
         </div>
@@ -2476,7 +2400,7 @@ export default function App() {
               </Suspense>
             )}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
-            {appPage === "market" && <MarketDemand onNav={setAppPage} />}
+            {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
             {appPage === "assistant" && <AIAssistant user={user} />}
             {appPage === "leaderboard" && <Leaderboard />}

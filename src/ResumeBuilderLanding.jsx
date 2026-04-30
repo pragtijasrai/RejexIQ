@@ -193,10 +193,12 @@ function Hero({ onBuild }) {
           {/* LEFT */}
           <div>
             <br></br>
-            <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6}} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold mb-6">
-              <motion.span animate={{scale:[1,1.4,1]}} transition={{duration:2,repeat:Infinity}} className="w-2 h-2 rounded-full bg-indigo-400 inline-block"/>
+            <div className="flex justify-start mb-6">
+            <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6}} className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0"}}>
+              <motion.span animate={{scale:[1,1.4,1]}} transition={{duration:2,repeat:Infinity}} className="w-2 h-2 rounded-full bg-indigo-400 inline-block flex-shrink-0"/>
               AI-Powered Resume Builder
-            </motion.div><br></br>
+            </motion.div>
+          </div>
            
             <motion.h1 initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.1}} className="text-5xl lg:text-7xl font-black text-white leading-[1.1] tracking-tight mb-2">
               Create a CV that<br/>
@@ -222,21 +224,21 @@ function Hero({ onBuild }) {
             {/* CTA - Only Create New CV */}
             <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6,delay:0.4}} className="mt-6 mb-6">
               <br></br><motion.button whileHover={{scale:1.05,boxShadow:"0 20px 50px rgba(99,102,241,0.6)"}} whileTap={{scale:0.97}} onClick={onBuild}
-                className="px-12 py-6 rounded-2xl text-white font-bold text-lg transition-all"
-                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:"0 8px 24px rgba(99,102,241,0.4)"}}>
-                ✨ Create New CV
+                className="inline-flex items-center gap-2 rounded-2xl text-white font-bold text-lg transition-all"
+                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:"0 8px 24px rgba(99,102,241,0.4)",padding:"8px 18px",width:"fit-content"}}>
+                ✨ Create New CV    
               </motion.button>
             </motion.div>
             <br></br>
             {/* Company logos */}
             <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.6,delay:0.5}} className="mt-6">
               <p className="text-xs text-slate-500 font-semibold uppercase tracking-widest mb-4">Trusted by candidates at</p>
-              <div className="flex flex-wrap gap-3 mt-1">
+              <div className="flex flex-nowrap gap-3 mt-1 overflow-x-auto pb-1" style={{scrollbarWidth:"none"}}>
                 {COMPANIES.map((c,i)=>(
                   <motion.div key={c} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.5+i*0.04}}
                     whileHover={{scale:1.1,background:"rgba(255,255,255,0.1)",color:"#fff"}}
-                    className="px-4 py-2 rounded-xl border border-white/10 text-slate-400 text-sm font-bold transition-all cursor-default"
-                    style={{background:"rgba(255,255,255,0.04)"}}>
+                    className="rounded-full border border-white/10 text-slate-400 text-sm font-bold transition-all cursor-default"
+                    style={{background:"rgba(255,255,255,0.04)",padding:"8px 18px"}}>
                     {c}
                   </motion.div>
                 ))}
@@ -297,7 +299,9 @@ function Features() {
       <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-15 pointer-events-none" style={{background:"radial-gradient(circle,#8b5cf6,transparent)"}}/>
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-12">
-          <br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold mb-6">⚡ Why Choose Us</div>
+          <br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>⚡ Why Choose Us</div>
+          </div>
           <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight  overflow-hidden text-ellipsis">
             <span style={{background:"linear-gradient(135deg,#818cf8,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Everything you need to land the job</span>
           </h2>
@@ -307,8 +311,8 @@ function Features() {
           {FEATURES.map((f,i)=>(
             <motion.div key={i} initial="hidden" animate={iv?"visible":"hidden"} custom={i} variants={FU}
               whileHover={{y:-12,rotateX:3,rotateY:-3,boxShadow:`0 30px 60px ${f.color}44`}}
-              className="group relative p-10 rounded-3xl border border-white/8 backdrop-blur-sm transition-all duration-300"
-              style={{background:"rgba(255,255,255,0.04)"}}>
+              className="group relative rounded-3xl border border-white/8 backdrop-blur-sm transition-all duration-300"
+              style={{background:"rgba(255,255,255,0.04)",padding:"40px 32px"}}>
               <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background:`radial-gradient(circle at top left,${f.color}12,transparent)`}}/>
               <div className="relative flex flex-col h-full">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl mb-7 transition-transform duration-300 group-hover:scale-110" style={{background:f.bg,border:`1px solid ${f.color}40`}}>{f.icon}</div>
@@ -344,7 +348,9 @@ function HowItWorks({ onBuild }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div>
             <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU}>
-              <br></br><br></br><br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-semibold mb-6">🗺️ Simple Process</div>
+              <br></br><br></br><br></br><br></br><br></br><br></br><div className="flex justify-start mb-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0"}}>🗺️ Simple Process</div>
+              </div>
               <h2 className="text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
                 Build your resume in<br/>
                 <span style={{background:"linear-gradient(135deg,#a78bfa,#818cf8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>3 easy steps</span>
@@ -365,8 +371,8 @@ function HowItWorks({ onBuild }) {
             </div>
             <motion.div initial="hidden" animate={iv?"visible":"hidden"} custom={4} variants={FU} className="mt-14">
               <motion.button whileHover={{scale:1.05,boxShadow:"0 20px 40px rgba(99,102,241,0.4)"}} whileTap={{scale:0.95}} onClick={onBuild}
-                className="px-10 py-4 rounded-2xl text-white font-bold text-lg shadow-xl transition-all"
-                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>Start Building Now →</motion.button><br></br>
+                className="inline-flex items-center gap-2 rounded-2xl text-white font-bold text-lg shadow-xl transition-all"
+                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",padding:"8px 18px",width:"fit-content"}}>Start Building Now →</motion.button><br></br>
             </motion.div>
           </div>
           <motion.div initial={{opacity:0,x:40}} animate={iv?{opacity:1,x:0}:{}} transition={{duration:0.8,delay:0.3}} className="hidden lg:flex items-center justify-center">
@@ -435,7 +441,7 @@ const TEMPLATE_DESIGNS = [
   { id:"newspaper",     name:"Newspaper",     cat:"Editorial",    badge:"📰 Press",    accent:"#dc2626", dark:"#b91c1c", layout:"elegant"   },
 ];
 
-const TMPL_CATS = ["All","Professional","Corporate","Design","Technology","Clean","Traditional","Luxury","Marketing","Healthcare","Education","Futuristic","Vintage"];
+const TMPL_CATS = ["All","Professional","Corporate","Design","Technology","Clean","Traditional","Luxury","Marketing","Healthcare","Education","Futuristic"];
 <br></br>
 // Mini resume preview renderer
 function MiniResume({ t }) {
@@ -626,7 +632,9 @@ function TemplatesSection({ onSelect }) {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         {/* Header */}
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-10">
-          <br></br><br></br> <br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm font-semibold mb-6">🎨 Professional Templates</div>
+          <br></br><br></br> <br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🎨 Professional Templates</div>
+          </div>
           <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight">
             Choose your<br/>
             <span style={{ background:"linear-gradient(135deg,#fb7185,#f43f5e)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>perfect template</span>
@@ -639,8 +647,9 @@ function TemplatesSection({ onSelect }) {
           {TMPL_CATS.map(cat => (
             <motion.button key={cat} whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
               onClick={() => { setActiveCat(cat); setShowAll(false); }}
-              className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+              className="rounded-full text-sm font-semibold transition-all duration-200"
               style={{
+                padding:"8px 18px",
                 background: activeCat === cat ? "linear-gradient(135deg,#6366f1,#8b5cf6)" : "rgba(255,255,255,0.06)",
                 color: activeCat === cat ? "#fff" : "rgba(255,255,255,0.5)",
                 border: activeCat === cat ? "1px solid #6366f1" : "1px solid rgba(255,255,255,0.1)",
@@ -697,10 +706,10 @@ function TemplatesSection({ onSelect }) {
                   </div>
 
                   {/* Footer */}
-                  <div className="p-4 pt-2" style={{ background:"rgba(0,0,0,0.3)" }}>
+                  <div style={{ background:"rgba(0,0,0,0.3)", padding:"8px 16px 16px 16px" }}>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-sm font-bold text-white">{t.name}</h3>
-                      <span className="text-xs text-white/40 font-medium">{t.cat}</span>
+                      <h3 className="text-sm font-bold text-white">&nbsp;{t.name}</h3>
+                      <span className="text-xs text-white/40 font-medium">&nbsp;{t.cat}&nbsp;</span>
                     </div>
                     <motion.button
                       whileHover={{ scale:1.03, boxShadow:`0 8px 20px ${t.accent}55` }}
@@ -723,7 +732,8 @@ function TemplatesSection({ onSelect }) {
               whileHover={{ scale:1.05, boxShadow:"0 20px 40px rgba(99,102,241,0.4)" }}
               whileTap={{ scale:0.95 }}
               onClick={() => setShowAll(s => !s)}
-              className="px-10 py-4 rounded-2xl font-bold text-lg border-2 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 hover:text-white transition-all inline-flex items-center gap-3">
+              className="rounded-2xl font-bold text-lg border-2 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 hover:text-white transition-all inline-flex items-center gap-3 mx-auto"
+              style={{width:"fit-content",maxWidth:"calc(100% - 40px)",padding:"8px 18px"}}>
               {showAll ? (
                 <><span>Show Less</span><motion.span animate={{ rotate:180 }} className="inline-block">↓</motion.span></>
               ) : (
@@ -1178,11 +1188,15 @@ function TemplatesSection({ onSelect }) {
       <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-12">
-          <br></br><br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold mb-6">🎯 ATS Score Checker</div>
-          <h2 className="text-3xl lg:text-5xl font-black text-white mb-8 leading-tight whitespace-nowrap">
-            Check your <span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span>
+          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🎯 ATS Score Checker</div>
+          </div>
+          <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight">
+            Check your<br/><span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span>
           </h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto" style={{lineHeight:"1.85"}}>Upload your resume — get ATS score, line-by-line AI improvements, and download the fixed version.</p>
+          <br/>
+          <p className="text-xl text-slate-400 max-w-3xl mx-auto whitespace-nowrap" style={{lineHeight:"1.85"}}>Upload your resume — get ATS score, line-by-line AI improvements, and download the fixed version.</p>
+          <br/>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -1514,7 +1528,9 @@ function AITools({ onBuild }) {
       <div className="absolute top-1/4 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-15 pointer-events-none -translate-x-1/2" style={{background:"radial-gradient(ellipse,#6366f1,transparent)"}}/>
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-14">
-          <br></br><br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold mb-6">🤖 AI-Powered Features</div>
+          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🤖 AI-Powered Features</div>
+          </div>
           <h2 className="text-4xl lg:text-6xl font-black text-white mb-8 leading-tight">
             Let AI write your<br/>
             <span style={{background:"linear-gradient(135deg,#818cf8,#67e8f9)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume content</span>
@@ -1523,10 +1539,10 @@ function AITools({ onBuild }) {
         </motion.div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <motion.div initial="hidden" animate={iv?"visible":"hidden"} custom={1} variants={FU}>
-            <div className="glass-card p-8 rounded-3xl">
+            <div className="glass-card rounded-3xl" style={{padding:"36px 32px"}}>
               <div className="form-field mb-8">
-                <label className="block text-xs font-semibold text-slate-300 mb-3 uppercase tracking-widest">Your Role</label>
-                <select value={role} onChange={e=>setRole(e.target.value)} className="w-full rounded-xl px-4 py-3 text-white text-sm outline-none border border-white/10 bg-white/10 focus:border-indigo-400 transition-all cursor-pointer">
+                <label className="block text-xs font-semibold text-slate-300 mb-3 uppercase tracking-widest">&nbsp;Your Role</label>
+                <select value={role} onChange={e=>setRole(e.target.value)} className="w-full rounded-xl text-white text-sm outline-none border border-white/10 bg-white/10 focus:border-indigo-400 transition-all cursor-pointer" style={{padding:"12px 16px"}}>
                   {["Software Engineer","Product Manager","Data Scientist","UX Designer","Marketing Lead","DevOps Engineer"].map(r=><option key={r} value={r} style={{background:"#1e1b4b"}}>{r}</option>)}
                 </select>
               </div>
@@ -1555,7 +1571,7 @@ function AITools({ onBuild }) {
             <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.97}} onClick={onBuild} className="w-full mt-6 py-4 rounded-2xl font-bold text-lg border-2 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 hover:text-white transition-all">Open Full Resume Builder →</motion.button>
           </motion.div>
           <motion.div initial="hidden" animate={iv?"visible":"hidden"} custom={2} variants={FU}>
-            <div className="glass-card p-8 rounded-3xl min-h-[400px] flex flex-col">
+            <div className="glass-card rounded-3xl min-h-[400px] flex flex-col" style={{padding:"36px 32px"}}>
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-3 h-3 rounded-full bg-rose-400"/><div className="w-3 h-3 rounded-full bg-amber-400"/><div className="w-3 h-3 rounded-full bg-emerald-400"/>
                 <span className="ml-2 text-xs text-slate-500 font-mono">ai-output.txt</span>
@@ -1689,12 +1705,14 @@ function AITools({ onBuild }) {
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-14">
-          <br></br><br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-semibold mb-6">💎 Pricing Plans</div>
+          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>💎 Pricing Plans</div>
+          </div>
           <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight">Simple, transparent<br/><span style={{background:"linear-gradient(135deg,#a78bfa,#818cf8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>pricing</span></h2>
-          <br></br><br></br><p className="text-lg text-slate-400 max-w-xl mx-auto mb-8">Start free. Upgrade when you need more power.</p>
-          <div className="inline-flex items-center gap-1 p-1.5 rounded-xl border border-white/10" style={{background:"rgba(255,255,255,0.05)"}}>
+          <br></br><p className="text-lg text-slate-400 max-w-xl mx-auto mb-8">Start free. Upgrade when you need more power.</p>
+          <div className="inline-flex items-center gap-1 p-1.5 rounded-xl border border-white/10 mx-auto" style={{background:"rgba(255,255,255,0.05)",width:"fit-content",maxWidth:"calc(100% - 40px)",margin:"0 auto"}}>
             {["monthly","yearly"].map(b=>(
-              <button key={b} onClick={()=>setBilling(b)} className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all" style={{background:billing===b?"linear-gradient(135deg,#6366f1,#8b5cf6)":"transparent",color:billing===b?"#fff":"rgba(255,255,255,0.5)"}}>
+              <button key={b} onClick={()=>setBilling(b)} className="rounded-lg text-sm font-semibold transition-all" style={{background:billing===b?"linear-gradient(135deg,#6366f1,#8b5cf6)":"transparent",color:billing===b?"#fff":"rgba(255,255,255,0.5)",padding:"6px 14px"}}>
                 {b==="monthly"?"Monthly":"Yearly (Save 25%)"}
               </button>
             ))}
@@ -1709,7 +1727,7 @@ function AITools({ onBuild }) {
               className="relative glass-card transition-all duration-300 overflow-hidden"
               style={{background:plan.popular?"rgba(99,102,241,0.15)":"rgba(255,255,255,0.06)",border:plan.popular?"1px solid rgba(99,102,241,0.6)":"1px solid rgba(255,255,255,0.15)"}}>
               {plan.popular&&<div className="absolute top-0 left-0 right-0 h-1" style={{background:"linear-gradient(90deg,#6366f1,#06b6d4)"}}/>}
-              {plan.badge&&<div className="absolute top-5 right-5 px-4 py-1.5 rounded-full text-xs font-bold text-white" style={{background:plan.color+"dd"}}>{plan.badge}</div>}
+              {plan.badge&&<div className="absolute top-5 right-5 rounded-full text-xs font-bold text-white" style={{background:plan.color+"dd",padding:"4px 10px"}}>{plan.badge}</div>}
               <div className="p-7 flex flex-col h-full">
                 <div className="mb-8">
                   <h3 className="text-2xl font-black text-white mb-3">{plan.name}</h3>
@@ -1720,8 +1738,8 @@ function AITools({ onBuild }) {
                 </div>
                 <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.97}}
                   onClick={()=>plan.free?onBuild():setModal(plan)}
-                  className="w-full py-3.5 rounded-2xl font-bold text-white mb-8 transition-all"
-                  style={{background:plan.popular?"linear-gradient(135deg,"+plan.color+",#06b6d4)":plan.color+"44",border:plan.popular?"none":"1px solid "+plan.color+"66"}}>
+                  className="w-full rounded-2xl font-bold text-white mb-8 transition-all"
+                  style={{background:plan.popular?"linear-gradient(135deg,"+plan.color+",#06b6d4)":plan.color+"44",border:plan.popular?"none":"1px solid "+plan.color+"66",paddingTop:"8px",paddingBottom:"8px",paddingLeft:"18px",paddingRight:"18px"}}>
                   {plan.cta}
                 </motion.button>
                 <div className="space-y-3.5 flex-1">
@@ -1744,15 +1762,17 @@ function FooterCTA({ onBuild }) {
       <div className="absolute top-1/2 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-20 pointer-events-none -translate-x-1/2 -translate-y-1/2" style={{background:"radial-gradient(ellipse,#6366f1,transparent)"}}/>
       <div className="relative z-10 text-center px-6">
         <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}}>
-          <br></br><br></br><br></br><br></br><br></br><div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold mb-8">🚀 Get Started Today</div>
+          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🚀 Get Started Today</div>
+          </div>
           <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight">
             Ready to land your<br/>
             <span style={{background:"linear-gradient(135deg,#818cf8,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>dream job?</span>
           </h2>
-          <br></br><p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">Join 500,000+ professionals who built their resume with us.</p>
+          <br></br><p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">Join 500,000+ professionals who built their resume with us.</p><br></br>
           <motion.button whileHover={{scale:1.05,boxShadow:"0 20px 60px rgba(99,102,241,0.5)"}} whileTap={{scale:0.95}} onClick={onBuild}
-            className="px-12 py-5 rounded-2xl text-white font-black text-xl shadow-2xl transition-all"
-            style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>✨ Build My Resume — It's Free</motion.button><br></br>
+            className="rounded-2xl text-white font-black text-xl shadow-2xl transition-all inline-flex items-center gap-2 mx-auto"
+            style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",width:"fit-content",maxWidth:"calc(100% - 40px)",padding:"8px 18px"}}>✨ Build My Resume — It's Free</motion.button><br></br>
           <br></br><div className="flex justify-center gap-10 mt-14">
             {[["500K+","Resumes Created"],["92%","ATS Pass Rate"],["4.9★","User Rating"]].map(([v,l])=>(
               <div key={l} className="text-center"><div className="text-2xl font-black text-white">{v}</div><div className="text-xs text-slate-400 font-medium mt-1">{l}</div></div>
