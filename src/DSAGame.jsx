@@ -1,67 +1,66 @@
 import { useState, useEffect, useRef } from "react";
 import DSAHub from "./DSAHub.jsx";
-import DailyChallenge from "./DailyChallenge.jsx";
 
 const LEVELS = [
-  { min:0,    max:199,  name:"Beginner",   icon:"🌱", color:"#74b9ff" },
-  { min:200,  max:499,  name:"Apprentice", icon:"⚡", color:"#55efc4" },
-  { min:500,  max:899,  name:"Coder",      icon:"💻", color:"#6c63ff" },
-  { min:900,  max:1399, name:"Developer",  icon:"🔥", color:"#ffd166" },
-  { min:1400, max:1999, name:"Engineer",   icon:"🚀", color:"#ff9f43" },
-  { min:2000, max:9999, name:"DSA Master", icon:"👑", color:"#ff6b6b" },
+  { min: 0, max: 199, name: "Beginner", icon: "🌱", color: "#74b9ff" },
+  { min: 200, max: 499, name: "Apprentice", icon: "⚡", color: "#55efc4" },
+  { min: 500, max: 899, name: "Coder", icon: "💻", color: "#6c63ff" },
+  { min: 900, max: 1399, name: "Developer", icon: "🔥", color: "#ffd166" },
+  { min: 1400, max: 1999, name: "Engineer", icon: "🚀", color: "#ff9f43" },
+  { min: 2000, max: 9999, name: "DSA Master", icon: "👑", color: "#ff6b6b" },
 ];
 
 const TOPICS_META = [
-  { id:"basics",    label:"Programming Basics",  icon:"💻", color:"#6c63ff", xp:100 },
-  { id:"complex",   label:"Complexity Analysis", icon:"📐", color:"#4ecdc4", xp:100 },
-  { id:"arrays",    label:"Arrays",              icon:"🗂️", color:"#43e97b", xp:100 },
-  { id:"strings",   label:"Strings",             icon:"🔤", color:"#ffd166", xp:100 },
-  { id:"recursion", label:"Recursion",           icon:"🔄", color:"#ff9f43", xp:100 },
-  { id:"control",   label:"Control Flow",        icon:"🔁", color:"#ff6b6b", xp:100 },
-  { id:"ll",        label:"Linked Lists",        icon:"🔗", color:"#a29bfe", xp:100 },
-  { id:"stack",     label:"Stack",               icon:"📦", color:"#fd79a8", xp:100 },
-  { id:"queue",     label:"Queue",               icon:"🚶", color:"#55efc4", xp:100 },
-  { id:"trees",     label:"Trees",               icon:"🌳", color:"#00b894", xp:120 },
-  { id:"bst",       label:"Binary Search Tree",  icon:"🔍", color:"#0984e3", xp:120 },
-  { id:"heap",      label:"Heap",                icon:"⛰️", color:"#e17055", xp:120 },
-  { id:"hashing",   label:"Hashing",             icon:"#️⃣", color:"#fdcb6e", xp:120 },
-  { id:"graphs",    label:"Graphs",              icon:"🕸️", color:"#74b9ff", xp:150 },
-  { id:"bfs",       label:"BFS",                 icon:"🌊", color:"#00cec9", xp:150 },
-  { id:"dfs",       label:"DFS",                 icon:"🏔️", color:"#6c5ce7", xp:150 },
-  { id:"backtrack", label:"Backtracking",        icon:"↩️", color:"#e84393", xp:150 },
-  { id:"greedy",    label:"Greedy",              icon:"💰", color:"#f9ca24", xp:150 },
-  { id:"dp",        label:"Dynamic Programming", icon:"🧩", color:"#badc58", xp:200 },
+  { id: "basics", label: "Programming Basics", icon: "💻", color: "#6c63ff", xp: 100 },
+  { id: "complex", label: "Complexity Analysis", icon: "📐", color: "#4ecdc4", xp: 100 },
+  { id: "arrays", label: "Arrays", icon: "🗂️", color: "#43e97b", xp: 100 },
+  { id: "strings", label: "Strings", icon: "🔤", color: "#ffd166", xp: 100 },
+  { id: "recursion", label: "Recursion", icon: "🔄", color: "#ff9f43", xp: 100 },
+  { id: "control", label: "Control Flow", icon: "🔁", color: "#ff6b6b", xp: 100 },
+  { id: "ll", label: "Linked Lists", icon: "🔗", color: "#a29bfe", xp: 100 },
+  { id: "stack", label: "Stack", icon: "📦", color: "#fd79a8", xp: 100 },
+  { id: "queue", label: "Queue", icon: "🚶", color: "#55efc4", xp: 100 },
+  { id: "trees", label: "Trees", icon: "🌳", color: "#00b894", xp: 120 },
+  { id: "bst", label: "Binary Search Tree", icon: "🔍", color: "#0984e3", xp: 120 },
+  { id: "heap", label: "Heap", icon: "⛰️", color: "#e17055", xp: 120 },
+  { id: "hashing", label: "Hashing", icon: "#️⃣", color: "#fdcb6e", xp: 120 },
+  { id: "graphs", label: "Graphs", icon: "🕸️", color: "#74b9ff", xp: 150 },
+  { id: "bfs", label: "BFS", icon: "🌊", color: "#00cec9", xp: 150 },
+  { id: "dfs", label: "DFS", icon: "🏔️", color: "#6c5ce7", xp: 150 },
+  { id: "backtrack", label: "Backtracking", icon: "↩️", color: "#e84393", xp: 150 },
+  { id: "greedy", label: "Greedy", icon: "💰", color: "#f9ca24", xp: 150 },
+  { id: "dp", label: "Dynamic Programming", icon: "🧩", color: "#badc58", xp: 200 },
 ];
 
 const ACHIEVEMENTS = [
-  { id:"first_topic", icon:"🎯", title:"First Step",    desc:"Complete your first topic",        xp:50  },
-  { id:"five_done",   icon:"⭐", title:"Getting Warm",  desc:"Complete 5 topics",                xp:100 },
-  { id:"half_done",   icon:"🌟", title:"Halfway There", desc:"Complete 10 topics",               xp:150 },
-  { id:"all_done",    icon:"👑", title:"DSA Master",    desc:"Complete all 19 topics",           xp:500 },
-  { id:"speed_run",   icon:"⚡", title:"Speed Learner", desc:"Complete 3 topics in one session", xp:100 },
-  { id:"quiz_ace",    icon:"🎓", title:"Quiz Ace",      desc:"Answer daily challenge correctly",  xp:75  },
-  { id:"night_owl",   icon:"🦉", title:"Night Owl",     desc:"Study after 10 PM",                xp:30  },
-  { id:"early_bird",  icon:"🌅", title:"Early Bird",    desc:"Study before 8 AM",                xp:30  },
+  { id: "first_topic", icon: "🎯", title: "First Step", desc: "Complete your first topic", xp: 50 },
+  { id: "five_done", icon: "⭐", title: "Getting Warm", desc: "Complete 5 topics", xp: 100 },
+  { id: "half_done", icon: "🌟", title: "Halfway There", desc: "Complete 10 topics", xp: 150 },
+  { id: "all_done", icon: "👑", title: "DSA Master", desc: "Complete all 19 topics", xp: 500 },
+  { id: "speed_run", icon: "⚡", title: "Speed Learner", desc: "Complete 3 topics in one session", xp: 100 },
+  { id: "quiz_ace", icon: "🎓", title: "Quiz Ace", desc: "Answer daily challenge correctly", xp: 75 },
+  { id: "night_owl", icon: "🦉", title: "Night Owl", desc: "Study after 10 PM", xp: 30 },
+  { id: "early_bird", icon: "🌅", title: "Early Bird", desc: "Study before 8 AM", xp: 30 },
 ];
 
 const DAILY_CHALLENGES = [
-  { q:"What is the time complexity of binary search?", opts:["O(n)","O(log n)","O(n^2)","O(1)"], ans:1, xp:30 },
-  { q:"Which data structure uses LIFO order?", opts:["Queue","Array","Stack","Linked List"], ans:2, xp:20 },
-  { q:"What does BFS use internally?", opts:["Stack","Queue","Heap","Array"], ans:1, xp:25 },
-  { q:"Merge sort worst case time complexity?", opts:["O(n^2)","O(n)","O(n log n)","O(log n)"], ans:2, xp:30 },
-  { q:"In a BST, where is the smallest element?", opts:["Root","Rightmost","Leftmost","Any leaf"], ans:2, xp:25 },
-  { q:"Hash table average lookup time?", opts:["O(n)","O(log n)","O(1)","O(n^2)"], ans:2, xp:20 },
-  { q:"Fibonacci DP reduces time from O(2^n) to?", opts:["O(n^2)","O(n log n)","O(n)","O(log n)"], ans:2, xp:35 },
+  { q: "What is the time complexity of binary search?", opts: ["O(n)", "O(log n)", "O(n^2)", "O(1)"], ans: 1, xp: 30 },
+  { q: "Which data structure uses LIFO order?", opts: ["Queue", "Array", "Stack", "Linked List"], ans: 2, xp: 20 },
+  { q: "What does BFS use internally?", opts: ["Stack", "Queue", "Heap", "Array"], ans: 1, xp: 25 },
+  { q: "Merge sort worst case time complexity?", opts: ["O(n^2)", "O(n)", "O(n log n)", "O(log n)"], ans: 2, xp: 30 },
+  { q: "In a BST, where is the smallest element?", opts: ["Root", "Rightmost", "Leftmost", "Any leaf"], ans: 2, xp: 25 },
+  { q: "Hash table average lookup time?", opts: ["O(n)", "O(log n)", "O(1)", "O(n^2)"], ans: 2, xp: 20 },
+  { q: "Fibonacci DP reduces time from O(2^n) to?", opts: ["O(n^2)", "O(n log n)", "O(n)", "O(log n)"], ans: 2, xp: 35 },
 ];
 
 const FAKE_LB = [
-  { name:"Arjun S.",  xp:2840, avatar:"🧑‍💻" },
-  { name:"Priya M.",  xp:2610, avatar:"👩‍💻" },
-  { name:"Rahul K.",  xp:2390, avatar:"🧑‍🎓" },
-  { name:"Sneha R.",  xp:2100, avatar:"👩‍🎓" },
-  { name:"You",       xp:0,    avatar:"⭐", isMe:true },
-  { name:"Vikram P.", xp:1650, avatar:"🧑‍💻" },
-  { name:"Ananya T.", xp:1420, avatar:"👩‍💻" },
+  { name: "Arjun S.", xp: 2840, avatar: "🧑‍💻" },
+  { name: "Priya M.", xp: 2610, avatar: "👩‍💻" },
+  { name: "Rahul K.", xp: 2390, avatar: "🧑‍🎓" },
+  { name: "Sneha R.", xp: 2100, avatar: "👩‍🎓" },
+  { name: "You", xp: 0, avatar: "⭐", isMe: true },
+  { name: "Vikram P.", xp: 1650, avatar: "🧑‍💻" },
+  { name: "Ananya T.", xp: 1420, avatar: "👩‍💻" },
 ];
 
 function getLevel(xp) {
@@ -289,22 +288,22 @@ const CERT_CSS = `
 
 // ── Confetti ──
 function Confetti() {
-  const pieces = Array.from({length:60}, (_,i) => ({
-    id:i,
-    left: Math.random()*100,
-    color: ["#6c63ff","#4ecdc4","#43e97b","#ffd166","#ff6b6b","#fd79a8","#a29bfe"][i%7],
-    delay: Math.random()*2,
-    duration: 2.5 + Math.random()*2,
-    size: 6 + Math.random()*8,
+  const pieces = Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    color: ["#6c63ff", "#4ecdc4", "#43e97b", "#ffd166", "#ff6b6b", "#fd79a8", "#a29bfe"][i % 7],
+    delay: Math.random() * 2,
+    duration: 2.5 + Math.random() * 2,
+    size: 6 + Math.random() * 8,
   }));
   return (
     <>
       {pieces.map(p => (
         <div key={p.id} className="confetti-piece" style={{
-          left:`${p.left}%`, top:"-20px",
-          background:p.color, width:p.size, height:p.size,
-          animationDelay:`${p.delay}s`, animationDuration:`${p.duration}s`,
-        }}/>
+          left: `${p.left}%`, top: "-20px",
+          background: p.color, width: p.size, height: p.size,
+          animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s`,
+        }} />
       ))}
     </>
   );
@@ -313,15 +312,15 @@ function Confetti() {
 // ── Certificate ──
 function Certificate({ xp, completed, onClose }) {
   const totalTopics = completed.length;
-  const today = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const certId = "DSA-" + Date.now().toString(36).toUpperCase();
 
   return (
-    <div className="cert-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
+    <div className="cert-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <Confetti />
       <div className="cert-wrap">
         <button className="cert-close" onClick={onClose}>✕</button>
-        <div className="cert-top-bar"/>
+        <div className="cert-top-bar" />
         <div className="cert-body">
           <div className="cert-logo">🎓 RejexIQ</div>
           <div className="cert-headline">Certificate of Completion</div>
@@ -337,9 +336,9 @@ function Certificate({ xp, completed, onClose }) {
           </div>
 
           <div className="cert-topics">
-            {["Programming Basics","Complexity Analysis","Arrays","Strings","Recursion",
-              "Control Flow","Linked Lists","Stack","Queue","Trees","BST","Heap",
-              "Hashing","Graphs","BFS","DFS","Backtracking","Greedy","Dynamic Programming"
+            {["Programming Basics", "Complexity Analysis", "Arrays", "Strings", "Recursion",
+              "Control Flow", "Linked Lists", "Stack", "Queue", "Trees", "BST", "Heap",
+              "Hashing", "Graphs", "BFS", "DFS", "Backtracking", "Greedy", "Dynamic Programming"
             ].map(t => <span key={t} className="cert-topic-pill">{t}</span>)}
           </div>
 
@@ -360,7 +359,7 @@ function Certificate({ xp, completed, onClose }) {
 
           <div className="cert-seal">👑</div>
 
-          <div style={{marginBottom:20}}>
+          <div style={{ marginBottom: 20 }}>
             <button className="cert-download" onClick={() => window.print()}>⬇ Download Certificate</button>
             <button className="cert-share" onClick={() => navigator.clipboard?.writeText(`I just completed the DSA course on RejexIQ! 🎓 #DSA #Coding`)}>
               🔗 Share
@@ -371,7 +370,7 @@ function Certificate({ xp, completed, onClose }) {
             Issued on {today} &nbsp;·&nbsp; Certificate ID: {certId}
           </div>
         </div>
-        <div className="cert-bottom-bar"/>
+        <div className="cert-bottom-bar" />
       </div>
     </div>
   );
@@ -460,13 +459,13 @@ export default function DSAGame() {
 
   const leaderboard = FAKE_LB.map(e => e.isMe ? { ...e, xp } : e)
     .sort((a, b) => b.xp - a.xp);
-  const rankIcons = ["🥇","🥈","🥉"];
+  const rankIcons = ["🥇", "🥈", "🥉"];
 
   const tabs = [
-    { id:"learn",       label:"📚 Learn" },
-    { id:"challenge",   label:"⚡ Daily Challenge" },
-    { id:"achievements",label:"🏆 Achievements" },
-    { id:"leaderboard", label:"🥇 Leaderboard" },
+    { id: "learn", label: "📚 Learn" },
+    { id: "challenge", label: "⚡ Daily Challenge" },
+    { id: "achievements", label: "🏆 Achievements" },
+    { id: "leaderboard", label: "🥇 Leaderboard" },
   ];
 
   return (
@@ -492,9 +491,9 @@ export default function DSAGame() {
         <div className="game-chip">🏆 {earned.length} achievements</div>
         {allDone && (
           <button onClick={() => setShowCert(true)} style={{
-            padding:"5px 14px", borderRadius:20, border:"1.5px solid #ffd166",
-            background:"rgba(255,209,102,.12)", color:"#ffd166",
-            fontSize:12, fontWeight:700, cursor:"pointer"
+            padding: "5px 14px", borderRadius: 20, border: "1.5px solid #ffd166",
+            background: "rgba(255,209,102,.12)", color: "#ffd166",
+            fontSize: 12, fontWeight: 700, cursor: "pointer"
           }}>🎓 View Certificate</button>
         )}
       </div>
@@ -521,7 +520,11 @@ export default function DSAGame() {
       {/* Daily Challenge Tab */}
       {tab === "challenge" && (
         <div className="game-section">
-          <DailyChallenge onXPEarned={(amount) => { addXp(amount); }} />
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "#9090a8" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🚧</div>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#e0e0f0" }}>Coming Soon</div>
+            <div style={{ fontSize: 14 }}>Daily challenges are under construction. Check back soon!</div>
+          </div>
         </div>
       )}
 
