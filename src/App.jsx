@@ -1107,10 +1107,426 @@ function SkillAssessment({ user, onSave, onNav }) {
   );
 }
 
-// MARKET DEMAND
-function MarketDemand({ onNav }) {
-  const [tab, setTab] = useState("demand");
+// ─── MARKET DEMAND DATA ───────────────────────────────────────────────────────
 
+const MD_ROLES = {
+  "Software Engineer": {
+    icon: "💻", color: "#00e5ff",
+    salary: { min: "₹8L", max: "₹35L", avg: "₹18L" },
+    trend: "increasing", trendPct: "+23%",
+    openings: "42,000+",
+    trendingSkills: ["JavaScript", "TypeScript", "React.js", "Node.js", "System Design", "Docker", "AWS", "SQL", "Git", "REST APIs"],
+    skills: [
+      { name: "JavaScript", demand: 92, userHas: true },
+      { name: "Data Structures", demand: 88, userHas: true },
+      { name: "System Design", demand: 82, userHas: false },
+      { name: "React / Vue", demand: 78, userHas: true },
+      { name: "Node.js", demand: 74, userHas: false },
+      { name: "SQL / NoSQL", demand: 70, userHas: false },
+      { name: "Git & CI/CD", demand: 68, userHas: true },
+      { name: "TypeScript", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Learn System Design fundamentals — it's asked in 82% of SWE interviews." },
+      { type: "skill", icon: "🟢", text: "Add Node.js to your stack. Full-stack ability increases offers by 40%." },
+      { type: "project", icon: "🛠️", text: "Build a REST API with authentication — demonstrates backend readiness." },
+      { type: "resume", icon: "📄", text: "Quantify your impact: 'Reduced load time by 40%' beats 'Improved performance'." },
+    ]
+  },
+  "Frontend Developer": {
+    icon: "🎨", color: "#c084fc",
+    salary: { min: "₹6L", max: "₹28L", avg: "₹14L" },
+    trend: "increasing", trendPct: "+18%",
+    openings: "28,000+",
+    trendingSkills: ["React.js", "JavaScript", "TypeScript", "Next.js", "CSS / Tailwind", "Vue.js", "Webpack", "Testing", "Accessibility", "Performance"],
+    skills: [
+      { name: "React.js", demand: 94, userHas: true },
+      { name: "JavaScript", demand: 92, userHas: true },
+      { name: "CSS / Tailwind", demand: 88, userHas: true },
+      { name: "TypeScript", demand: 80, userHas: false },
+      { name: "Next.js", demand: 74, userHas: false },
+      { name: "Performance Opt.", demand: 68, userHas: false },
+      { name: "Testing (Jest)", demand: 60, userHas: false },
+      { name: "Accessibility", demand: 55, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "TypeScript is now required at 80% of frontend roles — prioritize it." },
+      { type: "skill", icon: "🟢", text: "Next.js expertise can increase your salary band by ₹3–5L." },
+      { type: "project", icon: "🛠️", text: "Build a portfolio with Lighthouse score 90+ to stand out." },
+      { type: "resume", icon: "📄", text: "List specific component libraries and bundle size optimizations." },
+    ]
+  },
+  "Backend Developer": {
+    icon: "⚙️", color: "#34d399",
+    salary: { min: "₹8L", max: "₹40L", avg: "₹20L" },
+    trend: "increasing", trendPct: "+21%",
+    openings: "35,000+",
+    trendingSkills: ["Node.js", "Python", "SQL", "REST APIs", "GraphQL", "Docker", "Kubernetes", "AWS", "Redis", "System Design"],
+    skills: [
+      { name: "Node.js / Python", demand: 90, userHas: false },
+      { name: "REST / GraphQL APIs", demand: 88, userHas: false },
+      { name: "SQL Databases", demand: 85, userHas: false },
+      { name: "System Design", demand: 82, userHas: false },
+      { name: "Docker / K8s", demand: 72, userHas: false },
+      { name: "Redis / Caching", demand: 65, userHas: false },
+      { name: "AWS / GCP", demand: 70, userHas: false },
+      { name: "Security Basics", demand: 60, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Master SQL — it's tested in 85% of backend interviews." },
+      { type: "skill", icon: "🟢", text: "Docker knowledge is now a baseline expectation, not a bonus." },
+      { type: "project", icon: "🛠️", text: "Build a microservices project with auth, caching, and a database." },
+      { type: "resume", icon: "📄", text: "Highlight API throughput numbers and database query optimizations." },
+    ]
+  },
+  "Data Analyst": {
+    icon: "📊", color: "#fbbf24",
+    salary: { min: "₹5L", max: "₹22L", avg: "₹11L" },
+    trend: "stable", trendPct: "+9%",
+    openings: "18,000+",
+    trendingSkills: ["Python", "SQL", "Excel", "Power BI", "Tableau", "Statistics", "Data Viz", "Pandas", "Machine Learning", "Communication"],
+    skills: [
+      { name: "Python (Pandas)", demand: 92, userHas: false },
+      { name: "SQL", demand: 90, userHas: false },
+      { name: "Data Visualization", demand: 82, userHas: false },
+      { name: "Excel / Sheets", demand: 78, userHas: false },
+      { name: "Statistics", demand: 75, userHas: false },
+      { name: "Power BI / Tableau", demand: 68, userHas: false },
+      { name: "Machine Learning", demand: 55, userHas: false },
+      { name: "Communication", demand: 80, userHas: true },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Python + Pandas is the #1 skill gap for aspiring data analysts." },
+      { type: "skill", icon: "🟢", text: "Learn Power BI — it's requested in 68% of analyst job postings." },
+      { type: "project", icon: "🛠️", text: "Create a public Kaggle notebook with EDA and visualizations." },
+      { type: "resume", icon: "📄", text: "Mention specific datasets, tools, and business insights you derived." },
+    ]
+  },
+  "DevOps Engineer": {
+    icon: "🚀", color: "#f87171",
+    salary: { min: "₹10L", max: "₹45L", avg: "₹24L" },
+    trend: "increasing", trendPct: "+31%",
+    openings: "22,000+",
+    trendingSkills: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Linux", "Python", "Monitoring", "Ansible", "Jenkins"],
+    skills: [
+      { name: "Docker / Kubernetes", demand: 94, userHas: false },
+      { name: "CI/CD Pipelines", demand: 90, userHas: false },
+      { name: "AWS / Azure / GCP", demand: 88, userHas: false },
+      { name: "Linux / Shell", demand: 85, userHas: false },
+      { name: "Terraform / IaC", demand: 75, userHas: false },
+      { name: "Monitoring (Grafana)", demand: 68, userHas: false },
+      { name: "Python / Bash", demand: 72, userHas: false },
+      { name: "Security / IAM", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Kubernetes is the fastest-growing DevOps skill — get certified." },
+      { type: "skill", icon: "🟢", text: "Terraform (IaC) is now expected at senior DevOps roles." },
+      { type: "project", icon: "🛠️", text: "Deploy a full-stack app on AWS with CI/CD and monitoring." },
+      { type: "resume", icon: "📄", text: "Highlight uptime improvements, deployment frequency, and cost savings." },
+    ]
+  },
+  "AI/ML Engineer": {
+    icon: "🤖", color: "#818cf8",
+    salary: { min: "₹12L", max: "₹60L", avg: "₹28L" },
+    trend: "increasing", trendPct: "+47%",
+    openings: "15,000+",
+    trendingSkills: ["Python", "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "LLMs", "MLOps", "Statistics", "Data Engineering", "NLP"],
+    skills: [
+      { name: "Python", demand: 98, userHas: false },
+      { name: "Machine Learning", demand: 95, userHas: false },
+      { name: "Deep Learning / NNs", demand: 88, userHas: false },
+      { name: "PyTorch / TensorFlow", demand: 85, userHas: false },
+      { name: "LLMs / Prompt Eng.", demand: 80, userHas: false },
+      { name: "MLOps", demand: 70, userHas: false },
+      { name: "Statistics / Math", demand: 82, userHas: false },
+      { name: "Data Engineering", demand: 65, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "LLM fine-tuning and prompt engineering are the hottest skills of 2025." },
+      { type: "skill", icon: "🟢", text: "MLOps knowledge separates junior from senior ML engineers." },
+      { type: "project", icon: "🛠️", text: "Build and deploy a fine-tuned model on HuggingFace with a demo." },
+      { type: "resume", icon: "📄", text: "Include model accuracy metrics, dataset sizes, and inference speed." },
+    ]
+  }
+};
+
+const MD_ALL_SKILLS = {
+  "JavaScript": { demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "⚡" },
+  "Python": { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
+  "React.js": { demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "⚛️" },
+  "TypeScript": { demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "📘" },
+  "Node.js": { demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "🟢" },
+  "Docker": { demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "🐳" },
+  "AWS": { demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "☁️" },
+  "SQL": { demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "🗄️" },
+  "Kubernetes": { demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "⚙️" },
+  "LLM / AI": { demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Next.js": { demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "▲" },
+  "GraphQL": { demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "🔗" },
+  "System Design": { demand: 82, growth: "+11%", category: "Backend", color: "#00e5ff", icon: "🏗️" },
+  "CSS / Tailwind": { demand: 85, growth: "+9%", category: "Frontend", color: "#38bdf8", icon: "🎨" },
+  "Vue.js": { demand: 68, growth: "+7%", category: "Frontend", color: "#42b883", icon: "💚" },
+  "Terraform": { demand: 75, growth: "+25%", category: "DevOps", color: "#7b42bc", icon: "🔧" },
+  "CI/CD": { demand: 90, growth: "+16%", category: "DevOps", color: "#f87171", icon: "🔄" },
+  "Linux": { demand: 85, growth: "+8%", category: "DevOps", color: "#fcc419", icon: "🐧" },
+  "REST APIs": { demand: 88, growth: "+10%", category: "Backend", color: "#34d399", icon: "🔗" },
+  "Redis": { demand: 65, growth: "+13%", category: "Backend", color: "#dc2626", icon: "⚡" },
+  "Power BI": { demand: 68, growth: "+19%", category: "Data", color: "#f2c811", icon: "📊" },
+  "Tableau": { demand: 66, growth: "+15%", category: "Data", color: "#e97627", icon: "📈" },
+  "Excel": { demand: 78, growth: "+3%", category: "Data", color: "#217346", icon: "📑" },
+  "Pandas": { demand: 92, growth: "+14%", category: "Data", color: "#150458", icon: "🐼" },
+  "Statistics": { demand: 75, growth: "+10%", category: "Data", color: "#8b5cf6", icon: "📐" },
+  "Data Viz": { demand: 82, growth: "+12%", category: "Data", color: "#10b981", icon: "📊" },
+  "Machine Learning": { demand: 95, growth: "+35%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Deep Learning": { demand: 88, growth: "+42%", category: "AI", color: "#6366f1", icon: "🧠" },
+  "PyTorch": { demand: 85, growth: "+38%", category: "AI", color: "#ee4c2c", icon: "🔥" },
+  "TensorFlow": { demand: 83, growth: "+33%", category: "AI", color: "#ff6f00", icon: "🔶" },
+  "LLMs": { demand: 80, growth: "+52%", category: "AI", color: "#a78bfa", icon: "💬" },
+  "MLOps": { demand: 70, growth: "+45%", category: "AI", color: "#34d399", icon: "⚙️" },
+  "NLP": { demand: 78, growth: "+40%", category: "AI", color: "#c084fc", icon: "📝" },
+  "Data Engineering": { demand: 65, growth: "+28%", category: "Data", color: "#fbbf24", icon: "🔧" },
+  "Webpack": { demand: 60, growth: "+5%", category: "Frontend", color: "#8dd6f9", icon: "📦" },
+  "Testing": { demand: 60, growth: "+11%", category: "Frontend", color: "#94a3b8", icon: "🧪" },
+  "Accessibility": { demand: 55, growth: "+18%", category: "Frontend", color: "#10b981", icon: "♿" },
+  "Performance": { demand: 68, growth: "+14%", category: "Frontend", color: "#f59e0b", icon: "⚡" },
+  "Monitoring": { demand: 68, growth: "+20%", category: "DevOps", color: "#06b6d4", icon: "📡" },
+  "Ansible": { demand: 62, growth: "+12%", category: "DevOps", color: "#ee0000", icon: "🔴" },
+  "Jenkins": { demand: 58, growth: "+8%", category: "DevOps", color: "#d24939", icon: "🔨" },
+  "Git": { demand: 68, growth: "+4%", category: "Web", color: "#f05032", icon: "🌿" },
+  "Communication": { demand: 80, growth: "+6%", category: "Soft", color: "#94a3b8", icon: "💬" },
+};
+
+const MD_TREND_DATA = [
+  { month: "Jul '24", jobs: 12000, ai: 3200 },
+  { month: "Aug '24", jobs: 14500, ai: 4100 },
+  { month: "Sep '24", jobs: 13800, ai: 4800 },
+  { month: "Oct '24", jobs: 16200, ai: 5900 },
+  { month: "Nov '24", jobs: 15600, ai: 6700 },
+  { month: "Dec '24", jobs: 18900, ai: 8200 },
+  { month: "Jan '25", jobs: 21000, ai: 10500 },
+  { month: "Feb '25", jobs: 23400, ai: 13200 },
+];
+
+const MD_SKILL_MAP = {
+  "JavaScript": { key: "JavaScript", threshold: 40 },
+  "Data Structures": { key: "DataStructures", threshold: 40 },
+  "System Design": { key: "SystemDesign", threshold: 40 },
+  "React / Vue": { key: "React", threshold: 40 },
+  "Node.js": { key: "JavaScript", threshold: 70 },
+  "SQL / NoSQL": { key: "DataStructures", threshold: 60 },
+  "Git & CI/CD": { key: "ProblemSolving", threshold: 50 },
+  "TypeScript": { key: "JavaScript", threshold: 80 },
+  "React.js": { key: "React", threshold: 40 },
+  "CSS / Tailwind": { key: "CSS", threshold: 40 },
+  "Next.js": { key: "React", threshold: 70 },
+  "Performance Opt.": { key: "SystemDesign", threshold: 50 },
+  "Testing (Jest)": { key: "ProblemSolving", threshold: 60 },
+  "Accessibility": { key: "CSS", threshold: 70 },
+  "Node.js / Python": { key: "Python", threshold: 40 },
+  "REST / GraphQL APIs": { key: "SystemDesign", threshold: 40 },
+  "SQL Databases": { key: "DataStructures", threshold: 50 },
+  "Docker / K8s": { key: "SystemDesign", threshold: 65 },
+  "Redis / Caching": { key: "SystemDesign", threshold: 70 },
+  "AWS / GCP": { key: "SystemDesign", threshold: 75 },
+  "Security Basics": { key: "ProblemSolving", threshold: 60 },
+  "Python (Pandas)": { key: "Python", threshold: 40 },
+  "SQL": { key: "DataStructures", threshold: 50 },
+  "Data Visualization": { key: "Python", threshold: 60 },
+  "Excel / Sheets": { key: "Communication", threshold: 50 },
+  "Statistics": { key: "ProblemSolving", threshold: 55 },
+  "Power BI / Tableau": { key: "Python", threshold: 70 },
+  "Machine Learning": { key: "Python", threshold: 65 },
+  "Communication": { key: "Communication", threshold: 40 },
+  "Docker / Kubernetes": { key: "SystemDesign", threshold: 50 },
+  "CI/CD Pipelines": { key: "SystemDesign", threshold: 55 },
+  "AWS / Azure / GCP": { key: "SystemDesign", threshold: 65 },
+  "Linux / Shell": { key: "ProblemSolving", threshold: 55 },
+  "Terraform / IaC": { key: "SystemDesign", threshold: 70 },
+  "Monitoring (Grafana)": { key: "SystemDesign", threshold: 75 },
+  "Python / Bash": { key: "Python", threshold: 40 },
+  "Security / IAM": { key: "SystemDesign", threshold: 80 },
+  "Python": { key: "Python", threshold: 40 },
+  "Deep Learning / NNs": { key: "Python", threshold: 75 },
+  "PyTorch / TensorFlow": { key: "Python", threshold: 80 },
+  "LLMs / Prompt Eng.": { key: "Python", threshold: 85 },
+  "MLOps": { key: "SystemDesign", threshold: 70 },
+  "Statistics / Math": { key: "ProblemSolving", threshold: 60 },
+  "Data Engineering": { key: "DataStructures", threshold: 65 },
+};
+
+function userHasSkill(userSkills, skillName) {
+  const mapping = MD_SKILL_MAP[skillName];
+  if (!mapping) return false;
+  const score = (userSkills || {})[mapping.key] || 0;
+  return score >= mapping.threshold;
+}
+
+function useCounter(target, duration = 1200) {
+  const [count, setCount] = useState(target);
+  const prevTarget = useRef(target);
+  useEffect(() => {
+    const from = prevTarget.current;
+    prevTarget.current = target;
+    if (from === target) return;
+    const startTime = performance.now();
+    const diff = target - from;
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(from + diff * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [target, duration]);
+  return count;
+}
+
+function AnimatedBar({ value, color, delay = 0 }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    setWidth(0);
+    const t = setTimeout(() => setWidth(value), delay + 80);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return (
+    <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{
+        height: "100%", width: `${width}%`, borderRadius: 4,
+        background: `linear-gradient(90deg, ${color}, ${color}bb)`,
+        boxShadow: `0 0 12px ${color}60`,
+        transition: "width 1s cubic-bezier(0.4,0,0.2,1)"
+      }} />
+    </div>
+  );
+}
+
+function AnimatedNumber({ value, color, suffix = "%" }) {
+  const count = useCounter(value, 900);
+  return (
+    <span className="mono" style={{ fontSize: 20, fontWeight: 800, color }}>
+      {count}{suffix}
+    </span>
+  );
+}
+
+function CircleMatch({ pct, color, size = 120 }) {
+  const r = (size / 2) - 10;
+  const circ = 2 * Math.PI * r;
+  const [dash, setDash] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setDash((pct / 100) * circ), 300);
+    return () => clearTimeout(t);
+  }, [pct, circ]);
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={10}
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)", filter: `drop-shadow(0 0 8px ${color})` }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <span className="syne" style={{ fontSize: size * 0.2, fontWeight: 800, color }}>{pct}%</span>
+        <span style={{ fontSize: 10, color: G.muted }}>Match</span>
+      </div>
+    </div>
+  );
+}
+
+// MARKET DEMAND — Premium Dashboard
+function MarketDemand({ onNav, user }) {
+  const [tab, setTab] = useState("trending");
+  const [selectedRole, setSelectedRole] = useState("Software Engineer");
+  const [filterCat, setFilterCat] = useState("All");
+  const [hoveredSkill, setHoveredSkill] = useState(null);
+
+  const userSkills = (user && user.skills) ? user.skills : {};
+  const roleData = MD_ROLES[selectedRole];
+  const roleColor = roleData.color;
+
+  const enrichedSkills = roleData.skills.map(s => ({
+    ...s,
+    userHas: userHasSkill(userSkills, s.name)
+  }));
+  const matchedSkills = enrichedSkills.filter(s => s.userHas).length;
+  const matchPct = Math.round((matchedSkills / enrichedSkills.length) * 100);
+
+  const roleTrendingSkills = roleData.trendingSkills
+    .map(name => {
+      const data = MD_ALL_SKILLS[name];
+      if (!data) return null;
+      return { skill: name, ...data };
+    })
+    .filter(Boolean);
+
+  const roleCategories = ["All", ...Array.from(new Set(roleTrendingSkills.map(s => s.category)))];
+
+  const filteredTrending = filterCat === "All"
+    ? roleTrendingSkills
+    : roleTrendingSkills.filter(s => s.category === filterCat);
+
+  const prevRole = useRef(selectedRole);
+  if (prevRole.current !== selectedRole) {
+    prevRole.current = selectedRole;
+    if (filterCat !== "All") setFilterCat("All");
+  }
+
+  const tabs = [
+    { key: "trending", label: "🔥 Trending Skills" },
+    { key: "match", label: "🎯 Your Match" },
+    { key: "role", label: "💼 Role Insights" },
+    { key: "ai", label: "🤖 AI Recommendations" },
+  ];
+
+  const MD_MONTHLY_POSTINGS = {
+    "Software Engineer": 23400,
+    "Frontend Developer": 16800,
+    "Backend Developer": 19200,
+    "Data Analyst": 11500,
+    "DevOps Engineer": 13700,
+    "AI/ML Engineer": 9800,
+  };
+
+  const openingsNum = parseInt(roleData.openings.replace(/[^0-9]/g, ""), 10);
+  const monthlyNum = MD_MONTHLY_POSTINGS[selectedRole] || 23400;
+  const parseSalary = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
+  const salaryNum = parseSalary(roleData.salary.avg);
+  const parseTrend = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
+  const trendNum = parseTrend(roleData.trendPct);
+
+  const prevOpenings = useRef(openingsNum);
+  const prevMonthly = useRef(monthlyNum);
+  const prevSalary = useRef(salaryNum);
+  const prevTrend = useRef(trendNum);
+  const prevMatch = useRef(matchPct);
+
+  const [openingsDelta, setOpeningsDelta] = useState(0);
+  const [monthlyDelta, setMonthlyDelta] = useState(0);
+  const [salaryDelta, setSalaryDelta] = useState(0);
+  const [trendDelta, setTrendDelta] = useState(0);
+  const [matchDelta, setMatchDelta] = useState(0);
+  const [roleChangeKey, setRoleChangeKey] = useState(0);
+
+  useEffect(() => {
+    setOpeningsDelta(openingsNum - prevOpenings.current);
+    setMonthlyDelta(monthlyNum - prevMonthly.current);
+    setSalaryDelta(salaryNum - prevSalary.current);
+    setTrendDelta(trendNum - prevTrend.current);
+    setMatchDelta(matchPct - prevMatch.current);
+    setRoleChangeKey(k => k + 1);
+    prevOpenings.current = openingsNum;
+    prevMonthly.current = monthlyNum;
+    prevSalary.current = salaryNum;
+    prevTrend.current = trendNum;
+    prevMatch.current = matchPct;
+  }, [selectedRole]); // eslint-disable-line
+
+  const c1 = useCounter(openingsNum, 1200);
+  const c2 = useCounter(monthlyNum, 1200);
+  const c3 = useCounter(matchPct, 1000);
+  const cSalary = useCounter(salaryNum, 1000);
+  const cTrend = useCounter(trendNum, 1000);
 
   return (
     <div className="section-enter" style={{ paddingBottom: 48 }}>
