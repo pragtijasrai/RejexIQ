@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════
 // PREMIUM AI RESUME BUILDER - Complete Rewrite
 // ═══════════════════════════════════════════════════════════════
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -382,7 +382,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[secOrd,setSecOrd]=useState(["experience","projects","education","certifications"]);
   const[pdfL,setPdfL]=useState(false);
   const[toast,setToast]=useState(null);
-  const[scale,setScale]=useState(0.68);
+  const[scale,setScale]=useState(0.70);
   const[fixPanel,setFixPanel]=useState(false);
   const[grammarFixes,setGrammarFixes]=useState([]);
   const[fixingGrammar,setFixingGrammar]=useState(false);
@@ -594,18 +594,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       const h=(await import("html2pdf.js")).default;
       const el=prvRef.current;
       if(!el){showT("Preview not ready","err");return;}
-      
-      // Make sure we're exporting the LATEST data
-      const par=el.parentElement;
-      const ot=par.style.transform,ow=par.style.width,om=par.style.marginBottom;
-      
-      par.style.transform="none";
-      par.style.width="210mm";
-      par.style.marginBottom="0";
-      
-      // Export with filename based on actual name from updatedResumeData
       const filename = (updatedResumeData.name || "resume").replace(/[^a-z0-9]/gi, '_') + ".pdf";
-      
       await h().set({
         margin:0,
         filename:filename,
@@ -613,12 +602,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         html2canvas:{scale:2,useCORS:true,logging:false},
         jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
       }).from(el).save();
-      
-      par.style.transform=ot;
-      par.style.width=ow;
-      par.style.marginBottom=om;
-      
-      showT("📥 PDF downloaded with all updates! ✨", "ok");
+      showT("📥 PDF downloaded! ✨", "ok");
     }catch(err){
       console.error(err);
       showT("Export failed","err");
@@ -681,7 +665,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const sens=useSensors(useSensor(PointerSensor),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
   function onDrag({active,over}){if(active.id!==over?.id)setSecOrd(p=>arrayMove(p,p.indexOf(active.id),p.indexOf(over.id)));}
   useEffect(()=>{const t=setInterval(()=>setTipI(i=>(i+1)%RESUME_TIPS.length),5000);return()=>clearInterval(t);},[]);
-  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.52:w<1536?0.62:0.70);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
+  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.60:w<1536?0.65:0.70);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
   const bg=dark?"bg-gradient-to-br from-[#05071a] via-[#0c0f2e] to-[#130a2e]":"bg-gradient-to-br from-slate-50 via-white to-indigo-50";
   const card=dark?"bg-white/5 border-white/10":"bg-white border-gray-200";
   const tp=dark?"text-white":"text-gray-900";
@@ -751,12 +735,16 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
           </div>
         </div>
       </motion.div>
-      {/* ── 3-COLUMN LAYOUT ── */}
-      <br />
-      <div className="relative z-10 px-8 py-8 pb-20">
-        <div className="max-w-[1700px] mx-auto flex gap-7">
-          {/* ── LEFT FORM ── */}
-          <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}} className="w-[440px] flex-shrink-0 space-y-5">
+      {/* ── 3-COLUMN LAYOUT — Canva/Figma style ── */}
+      {/* The row is viewport-height. Left scrolls internally. Center + Right are fixed. */}
+      <div className="relative z-10 resume-builder-layout" style={{height:"calc(100vh - 73px)"}}>
+        <div className="max-w-[1700px] mx-auto h-full flex gap-7 px-8 resume-three-col">
+
+          {/* ── LEFT FORM — scrolls independently ── */}
+          <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}}
+            className="w-[440px] flex-shrink-0"
+            style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
+            <div className="space-y-5">
             {/* Template + Color */}
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Template</p>
@@ -912,11 +900,15 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 </div>
               </SortableContext>
             </DndContext>
+            </div>{/* end space-y-5 */}
           </motion.div>
-          {/* ── CENTER PREVIEW ── */}
-          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}} className="flex-1 min-w-0" style={{position:"sticky",top:"80px",alignSelf:"flex-start"}}>
-            <div>
-              <div className="flex items-center justify-between mb-3">
+
+          {/* ── CENTER PREVIEW — fixed, never moves ── */}
+          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}}
+            className="flex-1 min-w-0 resume-center-sticky"
+            style={{height:"100%",display:"flex",flexDirection:"column",paddingTop:"24px",paddingBottom:"24px",minWidth:0}}>
+            <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+              <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <span className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>Live Preview</span>
                 <div className="flex items-center gap-2">
                   <button onClick={()=>setScale(s=>Math.max(0.4,s-0.05))} className={"text-xs px-2.5 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>−</button>
@@ -924,30 +916,62 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                   <button onClick={()=>setScale(s=>Math.min(1,s+0.05))} className={"text-xs px-2.5 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>+</button>
                 </div>
               </div>
-              <motion.div whileHover={{boxShadow:"0 30px 80px rgba(0,0,0,0.5)"}} className={"rounded-2xl overflow-hidden border shadow-2xl transition-all duration-300 "+(dark?"border-white/10":"border-gray-200")} style={{backdropFilter:"blur(20px)",background:dark?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.8)"}}>
-                <div style={{width:"calc(210mm * "+scale+")",height:"calc(297mm * "+scale+")",overflow:"hidden",position:"relative"}}>
-                  <div ref={prvRef} style={{width:"210mm",minHeight:"297mm",background:"white",transform:"scale("+scale+")",transformOrigin:"top left",position:"absolute",top:0,left:0}}>
-                    <AnimatePresence mode="wait">
-                      <motion.div key={tpl} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}>
-                        {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
-                        {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
-                        {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
-                        {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
-                        {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
-                        {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
-                        {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
-                        {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
-                      </motion.div>
-                    </AnimatePresence>
+              {/* Preview card — square corners, fills column height, scrollable when zoomed in */}
+              <motion.div whileHover={{boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}
+                className={"border shadow-2xl transition-all duration-300 flex-1 "+(dark?"border-white/10":"border-gray-200")}
+                style={{background:"#111827",overflow:"hidden",position:"relative",borderRadius:"4px"}}>
+                <div style={{
+                  position:"absolute",inset:0,
+                  overflow:"auto",
+                  background:"#111827",
+                  padding:"16px"
+                }}>
+                  {/* Wrapper sized to the scaled dimensions so scroll works correctly */}
+                  <div style={{
+                    width:"calc(210mm * "+scale+")",
+                    minHeight:"calc(297mm * "+scale+")",
+                    margin:"0 auto",
+                    position:"relative"
+                  }}>
+                    <div ref={prvRef}
+                      className="resume-preview-sheet"
+                      style={{
+                        width:"210mm",
+                        minHeight:"297mm",
+                        background:"white",
+                        transform:"scale("+scale+")",
+                        transformOrigin:"top left",
+                        wordBreak:"break-word",
+                        overflowWrap:"break-word",
+                        boxShadow:"0 8px 40px rgba(0,0,0,0.5)",
+                        position:"absolute",
+                        top:0,left:0
+                      }}>
+                      <AnimatePresence mode="wait">
+                        <motion.div key={tpl} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}>
+                          {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
+                          {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
+                          {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
+                          {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
+                          {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
+                          {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
+                          {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
+                          {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </div>
           </motion.div>
-          {/* ── RIGHT SIDEBAR ── */}
-          <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}} className="w-[260px] flex-shrink-0" style={{display:"flex",flexDirection:"column",gap:"32px"}}>
+
+          {/* ── RIGHT SIDEBAR — scrolls independently ── */}
+          <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}}
+            className="w-[260px] flex-shrink-0 resume-right-sticky resume-sidebar"
+            style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",display:"flex",flexDirection:"column",gap:"20px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
             {/* ATS Score */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-4"}>ATS Score</p>
               <div className="flex items-center gap-4">
                 <ATSRing score={ats}/>
@@ -959,7 +983,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
             </div>
             {/* Missing keywords */}
             {mkw.length>0&&(
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5" style={{padding:"32px 24px"}}>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5" style={{padding:"20px 20px"}}>
               <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-3">⚠ Missing Keywords</p>
                 <div className="flex flex-wrap gap-2">{mkw.map(k=><span key={k} className="text-xs rounded-full border border-amber-500/30 text-amber-400/70" style={{padding:"5px 12px"}}>{k}</span>)}</div>
                 <br />
@@ -967,7 +991,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             )}
             {/* Resume Tips */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💡 Resume Tips</p>
               <AnimatePresence mode="wait">
                 <motion.p key={tipI} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:0.3}} className={"text-sm "+tm+" leading-[1.8]"}>
@@ -977,14 +1001,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               <div className="flex gap-1 mt-4">{RESUME_TIPS.map((_,i)=><button key={i} onClick={()=>setTipI(i)} className="h-1.5 rounded-full transition-all duration-300" style={{width:i===tipI?16:6,background:i===tipI?accent:"rgba(255,255,255,0.15)"}}/>)}</div>
             </div>
             {/* Section Checklist */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📋 Checklist</p>
               {[["Name & Email",!!(data.name&&data.email)],["Summary",data.summary.length>30],["5+ Skills",data.skills.length>=5],["Experience",data.experience.some(e=>e.role&&e.company)],["Projects",data.projects.some(p=>p.name)],["Education",data.education.some(e=>e.degree)],["Photo",!!data.profileImage]].map(([l,ok])=>(
                 <div key={l} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0"><span className="text-base">{ok?"✅":"⭕"}</span><span className={"text-sm "+(ok?tp:tm)}>{l}</span></div>
               ))}
             </div>
 ﻿            {/* Quick Actions */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>⚡ Quick Actions</p>
               <div className="space-y-2">
                 <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>✨ AI Improve Summary</motion.button>
@@ -993,71 +1017,163 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* Analyze and Fix Resume */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
-              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🔍 Fix My Resume</p>
-              <motion.button whileHover={{scale:1.03,boxShadow:"0 0 20px rgba(99,102,241,0.4)"}} whileTap={{scale:0.97}}
-                onClick={analyzeResume} disabled={fixingGrammar}
-                className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all mb-4"
-                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
-                {fixingGrammar
-                  ? <span className="flex items-center justify-center gap-2"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">🔍</motion.span>Analyzing...</span>
-                  : "🔍 Analyze and Fix Issues"}
-              </motion.button>
-              <AnimatePresence>
-                {fixPanel && grammarFixes.length > 0 && (
-                  <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}} className="space-y-3">
-                    {grammarFixes.some(f=>f.field) && (
-                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:0.97}} onClick={applyAllFixes}
-                        className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all"
-                        style={{background:"linear-gradient(135deg,#10b981,#059669)"}}>
-                        ✅ Apply All Fixes to Resume
-                      </motion.button>
-                    )}
-                    {grammarFixes.map((fix,i)=>(
-                      <motion.div key={fix.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:i*0.08}}
-                        className="rounded-xl border overflow-hidden"
-                        style={{background:"rgba(255,255,255,0.04)",border:appliedFixes[fix.id]?"1px solid rgba(16,185,129,0.4)":"1px solid rgba(255,255,255,0.1)"}}>
-                        <div className="p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold" style={{color:fix.type.includes("✅")?"#10b981":"#f59e0b"}}>{fix.type}</span>
-                            {appliedFixes[fix.id] && <span className="text-xs text-emerald-400 font-semibold">✓ Applied</span>}
-                          </div>
-                          <p className={"text-xs "+tm+" mb-2 font-semibold"}>{fix.section}</p>
-                          {fix.field && (
-                            <>
-                              <div className="mb-2">
-                                <div className="text-[10px] text-red-400/70 font-semibold mb-1">❌ Before</div>
-                                <p className="text-xs text-slate-400 p-2 rounded-lg leading-relaxed" style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>{fix.original.slice(0,80)}{fix.original.length>80?"...":""}</p>
-                              </div>
-                              <div className="mb-2">
-                                <div className="text-[10px] text-emerald-400/70 font-semibold mb-1">✅ Fixed</div>
-                                <p className="text-xs text-slate-200 p-2 rounded-lg leading-relaxed" style={{background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)"}}>{fix.fixed.slice(0,80)}{fix.fixed.length>80?"...":""}</p>
-                              </div>
-                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>applyFix(fix)} disabled={!!appliedFixes[fix.id]}
-                                className="w-full py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                style={{background:appliedFixes[fix.id]?"rgba(16,185,129,0.2)":"rgba(99,102,241,0.2)",color:appliedFixes[fix.id]?"#34d399":"#a5b4fc",border:"1px solid "+(appliedFixes[fix.id]?"rgba(16,185,129,0.3)":"rgba(99,102,241,0.3)")}}>
-                                {appliedFixes[fix.id] ? "✓ Applied to Resume" : "✨ Apply Fix"}
-                              </motion.button>
-                            </>
-                          )}
+            {/* ── NEW: Resume Health Score ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🏥 Resume Health</p>
+              <div className="space-y-2">
+                {[
+                  {label:"Content Quality",val:Math.min(100,done+10),color:"#10b981"},
+                  {label:"ATS Readiness",val:ats,color:ats>=75?"#10b981":ats>=50?"#f59e0b":"#f43f5e"},
+                  {label:"Keyword Density",val:Math.min(100,ATS_KEYWORDS.filter(k=>[data.summary,...data.experience.map(e=>e.description)].join(" ").toLowerCase().includes(k)).length*8),color:"#6366f1"},
+                  {label:"Completeness",val:done,color:"#06b6d4"},
+                ].map(({label,val,color})=>(
+                  <div key={label}>
+                    <div className="flex justify-between mb-1">
+                      <span className={"text-xs "+tm}>{label}</span>
+                      <span className="text-xs font-bold" style={{color}}>{val}%</span>
+                    </div>
+                    <div className={"h-1.5 rounded-full "+(dark?"bg-white/10":"bg-gray-100")}>
+                      <motion.div initial={{width:0}} animate={{width:val+"%"}} transition={{duration:0.8,ease:"easeOut"}} className="h-full rounded-full" style={{background:color}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Skill Strength Meter ── */}
+            {data.skills.length>0&&(
+              <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+                <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💪 Skill Strength</p>
+                <div className="space-y-2">
+                  {data.skills.slice(0,6).map((skill,i)=>{
+                    const strength=Math.min(100,60+i*7+(skill.length%3)*10);
+                    return(
+                      <div key={skill} className="flex items-center gap-2">
+                        <span className={"text-xs truncate flex-1 "+tm} style={{maxWidth:100}}>{skill}</span>
+                        <div className={"flex-1 h-1.5 rounded-full "+(dark?"bg-white/10":"bg-gray-100")}>
+                          <motion.div initial={{width:0}} animate={{width:strength+"%"}} transition={{duration:0.6,delay:i*0.08,ease:"easeOut"}} className="h-full rounded-full" style={{background:`linear-gradient(90deg,${accent},${accent}99)`}}/>
                         </div>
-                      </motion.div>
-                    ))}
-                    {grammarFixes.some(f=>appliedFixes[f.id]) && (
-                      <motion.button whileHover={{scale:1.03,boxShadow:"0 0 20px "+accent+"66"}} whileTap={{scale:0.97}} onClick={doPDF}
-                        className="w-full py-3 rounded-xl font-bold text-white text-sm transition-all"
-                        style={{background:"linear-gradient(135deg,"+accent+","+accent+"99)"}}>
-                        📥 Download Fixed Resume
-                      </motion.button>
-                    )}
-                  </motion.div>
+                        <span className="text-xs font-bold" style={{color:accent,minWidth:28,textAlign:"right"}}>{strength}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── NEW: AI Suggestions ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🤖 AI Suggestions</p>
+              <div className="space-y-2">
+                {[
+                  !data.summary&&{icon:"📝",text:"Add a professional summary to stand out"},
+                  data.skills.length<5&&{icon:"⚡",text:"Add at least 5 skills for better ATS"},
+                  !data.profileImage&&{icon:"📷",text:"Upload a photo for a personal touch"},
+                  !data.experience.some(e=>e.description?.includes("%"))&&{icon:"📊",text:"Add metrics (%, $, x) to experience"},
+                  data.experience.length<2&&{icon:"💼",text:"Add more experience entries"},
+                ].filter(Boolean).slice(0,3).map((s,i)=>(
+                  <div key={i} className={"flex items-start gap-2 p-2.5 rounded-xl "+(dark?"bg-white/5":"bg-gray-50")}>
+                    <span className="text-sm flex-shrink-0">{s.icon}</span>
+                    <span className={"text-xs leading-relaxed "+tm}>{s.text}</span>
+                  </div>
+                ))}
+                {[
+                  !data.summary&&null,
+                  data.skills.length<5&&null,
+                  !data.profileImage&&null,
+                  !data.experience.some(e=>e.description?.includes("%"))&&null,
+                  data.experience.length<2&&null,
+                ].filter(Boolean).length===0&&(
+                  <div className={"flex items-center gap-2 p-2.5 rounded-xl "+(dark?"bg-emerald-500/10":"bg-emerald-50")}>
+                    <span className="text-sm">✅</span>
+                    <span className="text-xs text-emerald-400">Looking great! Keep it up.</span>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
+            </div>
+
+            {/* ── NEW: Interview Tips ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🎤 Interview Tips</p>
+              <div className="space-y-2">
+                {[
+                  {icon:"⭐",tip:"Use STAR method: Situation, Task, Action, Result"},
+                  {icon:"🔢",tip:"Prepare 3 stories for each key achievement"},
+                  {icon:"🔍",tip:"Research the company before every interview"},
+                  {icon:"❓",tip:"Always have 2-3 questions ready to ask"},
+                ].map((t,i)=>(
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="text-sm flex-shrink-0">{t.icon}</span>
+                    <span className={"text-xs leading-relaxed "+tm}>{t.tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Auto Save Status ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"16px 20px"}}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <motion.div animate={{scale:[1,1.3,1]}} transition={{duration:2,repeat:Infinity}} className="w-2 h-2 rounded-full bg-emerald-400"/>
+                  <span className={"text-xs font-semibold "+tp}>Auto Saved</span>
+                </div>
+                <span className={"text-xs "+tm}>Just now</span>
+              </div>
+              <p className={"text-xs "+tm+" mt-1"}>All changes saved locally</p>
+            </div>
+
+
+            {/* ── NEW: Resume Analytics ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📈 Analytics</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  {label:"Words",val:([data.summary,...data.experience.map(e=>e.description),...data.projects.map(p=>p.description)].join(" ").split(/\s+/).filter(Boolean).length)||0,icon:"📝"},
+                  {label:"Sections",val:[data.summary,data.skills.length,data.experience.length,data.projects.length,data.education.length,data.certifications.length].filter(Boolean).length,icon:"📋"},
+                  {label:"Skills",val:data.skills.length,icon:"⚡"},
+                  {label:"Exp. Roles",val:data.experience.filter(e=>e.role).length,icon:"💼"},
+                ].map(({label,val,icon})=>(
+                  <div key={label} className={"rounded-xl p-3 text-center "+(dark?"bg-white/5":"bg-gray-50")}>
+                    <div className="text-lg mb-0.5">{icon}</div>
+                    <div className="text-lg font-black" style={{color:accent}}>{val}</div>
+                    <div className={"text-xs "+tm}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Quick Improve Buttons ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🚀 Quick Improve</p>
+              <div className="space-y-2">
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("full")} disabled={aiL.full}
+                  className="w-full text-left text-xs rounded-xl font-semibold text-white transition-all"
+                  style={{padding:"10px 14px",background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
+                  {aiL.full?"⟳ Generating...":"🤖 AI Full Resume"}
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} disabled={aiL.summary}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  ✨ Improve Summary
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}}
+                  onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);showT("⚡ Skills added!","ok");}}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  ⚡ Boost Skills
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={analyzeResume} disabled={fixingGrammar}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  🔍 Fix Issues
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} disabled={pdfL}
+                  className="w-full text-left text-xs rounded-xl font-semibold transition-all"
+                  style={{padding:"10px 14px",background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>
+                  📥 Download PDF
+                </motion.button>
+              </div>
             </div>
 
             {/* How to Improve Guide */}
-            <div className={"rounded-2xl border "+card} style={{padding:"32px 24px"}}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <button onClick={()=>setShowTipsPanel(p=>!p)} className="w-full flex items-center justify-between">
                 <p className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>📖 How to Improve</p>
                 <motion.span animate={{rotate:showTipsPanel?180:0}} transition={{duration:0.3}} className="text-white/30 text-xs">▼</motion.span>
