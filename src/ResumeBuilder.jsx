@@ -382,7 +382,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[secOrd,setSecOrd]=useState(["experience","projects","education","certifications"]);
   const[pdfL,setPdfL]=useState(false);
   const[toast,setToast]=useState(null);
-  const[scale,setScale]=useState(0.70);
+  const[scale,setScale]=useState(0.75);
   const[fixPanel,setFixPanel]=useState(false);
   const[grammarFixes,setGrammarFixes]=useState([]);
   const[fixingGrammar,setFixingGrammar]=useState(false);
@@ -391,6 +391,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[uploadedFileName,setUploadedFileName]=useState(null);
   const[isParsingResume,setIsParsingResume]=useState(false);
   const prvRef=useRef(null);
+  const pdfRef=useRef(null);
   const imgRef=useRef(null);
   const fileInputRef=useRef(null);
 
@@ -591,21 +592,51 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   async function doPDF(){
     setPdfL(true);
     try{
-      const h=(await import("html2pdf.js")).default;
-      const el=prvRef.current;
-      if(!el){showT("Preview not ready","err");return;}
-      const filename = (updatedResumeData.name || "resume").replace(/[^a-z0-9]/gi, '_') + ".pdf";
-      await h().set({
-        margin:0,
-        filename:filename,
-        image:{type:"jpeg",quality:0.98},
-        html2canvas:{scale:2,useCORS:true,logging:false},
-        jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-      }).from(el).save();
-      showT("📥 PDF downloaded! ✨", "ok");
+      const el = pdfRef.current;
+      if(!el){showT("Preview not ready","err");setPdfL(false);return;}
+
+      // Wait for any pending renders
+      await new Promise(r=>setTimeout(r,300));
+
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(el,{
+        scale:2,
+        useCORS:true,
+        logging:false,
+        backgroundColor:"#ffffff",
+        width:794, // A4 at 96dpi
+        windowWidth:794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p","mm","a4");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+
+      // If content is taller than one page, add multiple pages
+      const pageH = pdf.internal.pageSize.getHeight();
+      if(pdfH <= pageH){
+        pdf.addImage(imgData,"PNG",0,0,pdfW,pdfH);
+      } else {
+        let yPos = 0;
+        let remaining = pdfH;
+        let page = 0;
+        while(remaining > 0){
+          if(page > 0) pdf.addPage();
+          pdf.addImage(imgData,"PNG",0,-page*pageH,pdfW,pdfH);
+          remaining -= pageH;
+          page++;
+        }
+      }
+
+      const filename = (updatedResumeData.name||"resume").replace(/[^a-z0-9]/gi,"_")+".pdf";
+      pdf.save(filename);
+      showT("📥 PDF downloaded! ✨","ok");
     }catch(err){
       console.error(err);
-      showT("Export failed","err");
+      showT("Export failed — "+err.message,"err");
     }finally{
       setPdfL(false);
     }
@@ -665,7 +696,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const sens=useSensors(useSensor(PointerSensor),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
   function onDrag({active,over}){if(active.id!==over?.id)setSecOrd(p=>arrayMove(p,p.indexOf(active.id),p.indexOf(over.id)));}
   useEffect(()=>{const t=setInterval(()=>setTipI(i=>(i+1)%RESUME_TIPS.length),5000);return()=>clearInterval(t);},[]);
-  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.60:w<1536?0.65:0.70);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
+  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.62:w<1536?0.70:0.75);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
   const bg=dark?"bg-gradient-to-br from-[#05071a] via-[#0c0f2e] to-[#130a2e]":"bg-gradient-to-br from-slate-50 via-white to-indigo-50";
   const card=dark?"bg-white/5 border-white/10":"bg-white border-gray-200";
   const tp=dark?"text-white":"text-gray-900";
@@ -920,18 +951,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               <motion.div whileHover={{boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}
                 className={"border shadow-2xl transition-all duration-300 flex-1 "+(dark?"border-white/10":"border-gray-200")}
                 style={{background:"#111827",overflow:"hidden",position:"relative",borderRadius:"4px"}}>
-                <div style={{
-                  position:"absolute",inset:0,
-                  overflow:"auto",
-                  background:"#111827",
-                  padding:"16px"
-                }}>
-                  {/* Wrapper sized to the scaled dimensions so scroll works correctly */}
+                <div style={{position:"absolute",inset:0,overflow:"auto",background:"#111827",padding:"16px 0 16px 0"}}>
+                  {/* Full-width centering row — A4 scales from center, never clips */}
                   <div style={{
-                    width:"calc(210mm * "+scale+")",
+                    width:"100%",
                     minHeight:"calc(297mm * "+scale+")",
-                    margin:"0 auto",
-                    position:"relative"
+                    display:"flex",
+                    justifyContent:"center",
+                    alignItems:"flex-start",
                   }}>
                     <div ref={prvRef}
                       className="resume-preview-sheet"
@@ -939,13 +966,12 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                         width:"210mm",
                         minHeight:"297mm",
                         background:"white",
+                        flexShrink:0,
                         transform:"scale("+scale+")",
-                        transformOrigin:"top left",
+                        transformOrigin:"top center",
                         wordBreak:"break-word",
                         overflowWrap:"break-word",
                         boxShadow:"0 8px 40px rgba(0,0,0,0.5)",
-                        position:"absolute",
-                        top:0,left:0
                       }}>
                       <AnimatePresence mode="wait">
                         <motion.div key={tpl} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}>
@@ -1207,6 +1233,20 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
             </div>
 
           </motion.div>
+        </div>
+      </div>
+
+      {/* ── HIDDEN PDF EXPORT DIV — full size, no transform, invisible ── */}
+      <div style={{position:"fixed",left:"-9999px",top:0,zIndex:-1,pointerEvents:"none"}}>
+        <div ref={pdfRef} style={{width:"794px",background:"white",fontFamily:"Inter,sans-serif"}}>
+          {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
+          {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
+          {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
+          {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
+          {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
+          {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
+          {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
+          {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
         </div>
       </div>
     </div>
