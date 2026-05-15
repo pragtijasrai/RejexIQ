@@ -1,214 +1,182 @@
-# RejexIQ — Skill Evaluation & Career Readiness Platform
+# RejexIQ - Career Intelligence Platform
 
-> 🎯 **Evaluate your skills. Discover your readiness. Build your career.**
+A skill evaluation and career readiness platform for students and professionals.
 
-[![Status](https://img.shields.io/badge/status-production--ready-success)]()
-[![Stack](https://img.shields.io/badge/stack-React%20%2B%20Node.js%20%2B%20JWT-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
+## 🚀 Features
 
----
+- **Skill Assessment** - Rate yourself across 8 technical & soft skills
+- **Career Readiness Score** - AI-powered analysis comparing your profile to real job requirements
+- **Market Demand Analysis** - See which skills are trending in the industry
+- **Interactive Resume Builder** - Drag-and-drop builder with live preview and PDF export
+- **DSA Learning Hub** - Interactive tutorials for data structures and algorithms
 
-## What is RejexIQ?
+## 🛠️ Tech Stack
 
-RejexIQ is a **full-stack Skill Evaluation & Career Readiness Platform** that helps students:
+**Frontend:**
+- React 18 + Vite
+- Recharts for data visualization
+- Tailwind CSS
+- Framer Motion for animations
 
-- Evaluate technical and soft skills across 8 dimensions
-- Get a **Career Readiness Score** for 5 major tech roles
-- Compare their profile with real market demand
-- Receive a **personalized learning roadmap**
-- Build a professional resume with live preview
-- Interact with an AI career assistant
+**Backend:**
+- Node.js + Express
+- JWT authentication
+- bcrypt for password hashing
+- In-memory database (demo mode)
 
----
-
-## Live Demo
-
-The platform includes a **Demo Mode** — click "Try Demo" on the homepage to explore all features with pre-loaded data without creating an account.
-
----
-
-## Feature Overview
-
-| Feature | Description |
-|---|---|
-| 🎯 Skill Assessment | Rate yourself on 8 skills with interactive sliders |
-| 🏆 Career Match | See readiness % for Frontend, Backend, Full Stack, Data Analyst, DevOps |
-| 📊 Skill Gap Analysis | Bar chart comparison of your scores vs required |
-| 📍 Learning Roadmap | Personalized step-by-step improvement plan |
-| 📈 Market Demand | Industry charts for trending tech skills |
-| 📄 Resume Builder | Live preview, 3 templates, PDF download |
-| 🤖 AI Assistant | Chat-based career guidance with real suggestions |
-| 🥇 Leaderboard | See how you rank among other students |
-| 🗺️ Guided Tour | Step-by-step onboarding for new users |
-
----
-
-## Tech Stack
-
-### Frontend
-- **React 18** (JavaScript, Vite)
-- **TailwindCSS** — utility-first styling
-- **Recharts** — RadarChart, BarChart, AreaChart
-- **React Router** — client-side navigation
-- **Custom Animations** — CSS keyframes + transitions
-
-### Backend
-- **Node.js** + **Express.js**
-- **JWT** (jsonwebtoken) — authentication
-- **bcryptjs** — password hashing
-- **HTTP module** — server creation
-- **fs module** — file handling and streaming
-- **CORS** — cross-origin support
-
----
-
-## NodeJS Concepts Demonstrated
-
-| Concept | Where |
-|---|---|
-| Client-Server Architecture | Express server + React frontend |
-| HTTP Module | `http.createServer(app)` in server.js |
-| Express Framework | All routes |
-| Routing | `/api/auth/*`, `/api/profile`, etc. |
-| Route Parameters | `GET /api/skill-score/:userId` |
-| Middleware | `authMiddleware`, logging, error handler |
-| JWT Authentication | Login, register, protected routes |
-| File Handling Module | Resume saving, access log writing |
-| File Streaming | `fs.createReadStream()` for log download, `fs.createWriteStream()` for resume |
-| Exception Handling | `app.use((err, req, res, next) => ...)` |
-| Serving Static Files | `express.static(path.join(...))` |
-| NPM Modules | express, jsonwebtoken, bcryptjs, cors |
-
----
-
-## Project Structure
-
-```
-rejexiq/
-├── backend/
-│   ├── server.js          # Main Express server (all NodeJS concepts)
-│   ├── access.log         # Auto-generated request log (file handling demo)
-│   └── resumes/           # Saved resume JSON files (file streaming demo)
-├── src/
-│   ├── App.jsx            # Main React application
-│   ├── main.jsx           # React entry point
-│   └── index.css          # Base styles
-├── public/
-├── index.html
-├── package.json
-├── tailwind.config.js
-└── vite.config.js
-```
-
----
-
-## API Endpoints
-
-### Authentication
-```
-POST /api/auth/register    — Create account
-POST /api/auth/login       — Login, get JWT token
-```
-
-### Protected Routes (require Authorization: Bearer <token>)
-```
-GET  /api/profile                  — Get user profile
-POST /api/assessment               — Submit skill scores, get readiness report
-GET  /api/skill-score/:userId      — Get score by user ID (route parameters)
-GET  /api/market-demand            — Get market demand data
-POST /api/resume-data              — Save resume (file writing)
-GET  /api/download-log             — Stream access log as file download
-```
-
----
-
-## Setup Instructions
+## 📦 Installation
 
 ### Prerequisites
-- Node.js v16+
-- npm
+- Node.js 16+ and npm
 
-### Quick Start
+### Setup
 
-**Option 1: Automated (Windows)**
-```bash
-# Run the installation script
-install.bat
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd RejexIQ
+   ```
 
-# Then start both servers
-start-dev.bat
-```
+2. **Install dependencies**
+   ```bash
+   # Install frontend dependencies
+   npm install
 
-**Option 2: Manual Setup**
+   # Install backend dependencies
+   cd backend
+   npm install
+   cd ..
+   ```
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/pragtijasrai/RejexIQ.git
-cd RejexIQ
+3. **Start the development servers**
 
-# 2. Install all dependencies
-npm install
+   **Terminal 1 - Frontend:**
+   ```bash
+   npm run dev
+   ```
+   Frontend runs on `http://localhost:5173`
 
-# 3. Install backend dependencies
-cd backend
-npm install
-cd ..
+   **Terminal 2 - Backend:**
+   ```bash
+   cd backend
+   npm start
+   ```
+   Backend runs on `http://localhost:5000`
 
-# 4. Create .env file (optional)
-echo PORT=5000 > .env
-echo JWT_SECRET=rejexiq_secret_2025 >> .env
-echo NODE_ENV=development >> .env
+4. **Open the app**
+   Navigate to `http://localhost:5173` in your browser
 
-# 5. Start backend (Terminal 1)
-npm run server
+## 🎯 Usage
 
-# 6. Start frontend (Terminal 2)
-npm run dev
+### For Team Members
 
-# 7. Open browser
-# http://localhost:5173
-```
+1. Start both frontend and backend servers (see Installation above)
+2. Create an account using email/password signup
+3. Complete the skill assessment
+4. Explore your career readiness dashboard
+5. Build your resume using the interactive builder
 
 ### Demo Mode
-No setup needed — just click "✨ Try Demo" on the homepage.
+
+Click "Try Demo Mode" on the landing page to explore all features without creating an account.
+
+## 🔐 Authentication
+
+This project uses **email/password authentication** for simplicity and team collaboration.
+
+**Why no OAuth (Google/Microsoft)?**
+- OAuth credentials are secrets that cannot be committed to Git
+- Each team member would need to set up their own OAuth apps
+- Email/password auth works perfectly for demos and team projects
+
+If you need OAuth for production, see `OAUTH_SETUP.md` for detailed instructions.
+
+## 📁 Project Structure
+
+```
+RejexIQ/
+├── src/                    # Frontend React components
+│   ├── App.jsx            # Main app component
+│   ├── AuthPage.jsx       # Login/Signup page
+│   ├── ProfilePage.jsx    # User profile & dashboard
+│   ├── ResumeBuilder.jsx  # Resume builder component
+│   └── DSA*.jsx           # DSA tutorial components
+├── backend/
+│   ├── server.js          # Express backend server
+│   ├── package.json       # Backend dependencies
+│   └── .env.example       # Environment variables template
+├── index.html             # HTML entry point
+├── vite.config.js         # Vite configuration
+└── package.json           # Frontend dependencies
+```
+
+## 🧪 Testing
+
+The app includes:
+- Email validation (no spaces/commas allowed)
+- Password strength indicator
+- Form validation with real-time feedback
+- JWT token-based authentication
+
+## 🚢 Deployment
+
+### Frontend (Vercel/Netlify)
+1. Connect your GitHub repo
+2. Build command: `npm run build`
+3. Output directory: `dist`
+
+### Backend (Railway/Render/Heroku)
+1. Deploy the `backend/` folder
+2. Set environment variables:
+   - `JWT_SECRET` (generate a random string)
+   - `PORT` (usually auto-set by platform)
+3. Start command: `npm start`
+
+## 🤝 Contributing
+
+This is a team project. To contribute:
+
+1. Create a new branch for your feature
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit
+   ```bash
+   git add .
+   git commit -m "Add your feature description"
+   ```
+
+3. Push to your branch
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. Create a Pull Request on GitHub
+
+## 📝 License
+
+This project is for educational purposes.
+
+## 🐛 Known Issues
+
+- Backend uses in-memory storage (data resets on server restart)
+- For production, replace with MongoDB or PostgreSQL
+- Resume PDF export works best in Chrome/Edge
+
+## 💡 Future Enhancements
+
+- [ ] Database integration (MongoDB/PostgreSQL)
+- [ ] Email verification
+- [ ] Password reset functionality
+- [ ] Social sharing of career scores
+- [ ] More DSA tutorials
+- [ ] Interview preparation module
+
+## 📧 Support
+
+For questions or issues, open a GitHub issue or contact the team.
 
 ---
 
-## User Flow
-
-```
-Landing Page
-    ↓
-Sign Up / Login (JWT issued)
-    ↓
-Dashboard (skill overview + guided tour for new users)
-    ↓
-Skill Assessment (rate 8 skills 0–100)
-    ↓
-Career Readiness Score + Best Role Match
-    ↓
-Career Match Page (skill gap analysis + learning roadmap)
-    ↓
-Market Demand (industry trend charts)
-    ↓
-Resume Builder (live preview + PDF download)
-    ↓
-AI Assistant (personalized career Q&A)
-```
-
----
-
-## Presentation Notes
-
-**When asked how the system works:**
-
-> "RejexIQ analyzes user skill inputs across 8 dimensions and compares them with real-world job role requirements using a weighted readiness algorithm. The system calculates a Career Readiness Score, identifies skill gaps, and generates a personalized learning roadmap. The backend uses Node.js and Express with JWT authentication, demonstrating client-server architecture, file handling, middleware, and RESTful API design."
-
-**Key talking points:**
-- The skill assessment engine calculates readiness per role using weighted comparisons
-- JWT tokens are verified on every protected API call
-- File streaming is demonstrated through resume saving and log download
-- The radar chart visualizes multi-dimensional skill profiles
-- Market data simulates real-time industry insights
-
-
+**Built with ❤️ by the RejexIQ Team**

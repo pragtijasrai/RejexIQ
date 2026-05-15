@@ -13,16 +13,25 @@ const jwt = require("jsonwebtoken");   // JWT authentication
 const bcrypt = require("bcryptjs");    // Password hashing
 const cors = require("cors");          // CORS middleware
 
+// Load .env if present
+try { require("dotenv").config({ path: path.join(__dirname, ".env") }); } catch (_) {}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Story Mode routes
+const storyRoutes = require("./storyRoutes");
+// Career Match routes
+const careerRoutes = require("./careerRoutes");
 const JWT_SECRET = process.env.JWT_SECRET || "rejexiq_dev_secret_2025";
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 // ── IN-MEMORY DATABASE (for demo — replace with MongoDB in production) ──────
 const users = [];          // Simulates user collection
 const assessments = [];    // Simulates assessments collection
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -95,6 +104,11 @@ function generateReport(userSkills) {
 }
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
+
+// Story Mode routes
+app.use("/api", storyRoutes);
+// Career Match routes
+app.use("/api/career", careerRoutes);
 
 // Root — demonstrates Express routing
 app.get("/api", (req, res) => {

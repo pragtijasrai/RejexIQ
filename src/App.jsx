@@ -1,6 +1,9 @@
-﻿
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import NewAuthPage from "./AuthPage.jsx";
+import NewProfilePage from "./ProfilePage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
+import CareerMatch from "./CareerMatch.jsx";
+const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
 import ControlFlow from "./ControlFlow.jsx";
@@ -504,8 +507,8 @@ function ScoreRing({ score, size = 140, color = G.accent, label = "" }) {
   return (
     <div className="score-ring" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={G.border} strokeWidth={10} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={G.border} strokeWidth={10} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={10}
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1.2s ease", filter: `drop-shadow(0 0 8px ${color})` }} />
       </svg>
@@ -797,320 +800,9 @@ function LandingPage({ onNav, onDemo }) {
   );
 }
 
-// AUTH PAGES - Multi-Stage Registration
+// AUTH PAGE — uses the new standalone AuthPage component
 function AuthPage({ type, onLogin, onNav }) {
-  const [stage, setStage] = useState(1);
-  const [form, setForm] = useState({
-    // Stage 1: Basic Info
-    name: "", email: "", username: "", password: "", confirm: "",
-    // Stage 2: Education
-    education: "", university: "", graduationYear: "", major: "",
-    // Stage 3: Skills
-    skills: {},
-    // Stage 4: Projects & Links
-    github: "", linkedin: "", portfolio: "", projects: "",
-    // Stage 5: Additional
-    bio: "", experience: "", interests: ""
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [pwStrength, setPwStrength] = useState({ score: 0 });
-
-  const isLogin = type === "login";
-  const totalStages = isLogin ? 1 : 5;
-
-  function validateStage() {
-    const e = {};
-    if (isLogin || stage === 1) {
-      if (!isLogin && !form.name.trim()) e.name = "Name is required";
-      if (!isLogin && !form.username.trim()) e.username = "Username is required";
-      const emailErr = validateEmail(form.email);
-      if (emailErr) e.email = emailErr;
-      const pwErr = validatePassword(form.password);
-      if (pwErr) e.password = pwErr;
-      if (!isLogin && form.password !== form.confirm) e.confirm = "Passwords do not match";
-    }
-    if (stage === 2 && !isLogin) {
-      if (!form.education) e.education = "Education level is required";
-      if (!form.university.trim()) e.university = "University/School name is required";
-    }
-    return e;
-  }
-
-  function handleNext() {
-    const e = validateStage();
-    setErrors(e);
-    if (Object.keys(e).length > 0) return;
-    
-    if (isLogin || stage === totalStages) {
-      setLoading(true);
-      setTimeout(() => {
-        const userData = { 
-          ...form,
-          name: form.name || form.email.split("@")[0],
-          assessmentDone: false 
-        };
-        setLoading(false);
-        onLogin(userData);
-      }, 1200);
-    } else {
-      setStage(stage + 1);
-    }
-  }
-
-  function handleBack() {
-    if (stage > 1) setStage(stage - 1);
-  }
-
-  const stageInfo = [
-    { title: "Basic Information", icon: "👤", desc: "Let's start with the basics" },
-    { title: "Education Details", icon: "🎓", desc: "Tell us about your education" },
-    { title: "Your Skills", icon: "💡", desc: "What are you good at?" },
-    { title: "Projects & Links", icon: "🔗", desc: "Show us your work" },
-    { title: "About You", icon: "✨", desc: "Final touches" }
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: `linear-gradient(135deg, ${G.bg} 0%, #1a1f3a 100%)` }}>
-      <div style={{ position: "fixed", top: "20%", left: "5%", width: 300, height: 300, background: `radial-gradient(circle, ${G.accent}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(40px)" }} />
-      <div style={{ position: "fixed", bottom: "20%", right: "5%", width: 400, height: 400, background: `radial-gradient(circle, ${G.purple}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(40px)" }} />
-
-      <div style={{ width: "100%", maxWidth: 520, position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div className="syne" style={{ fontSize: 32, fontWeight: 800, marginBottom: 12 }}>
-            <span style={{ background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Rejex</span>IQ
-          </div>
-          <h1 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-            {isLogin ? "Welcome Back!" : stageInfo[stage - 1].title}
-          </h1>
-          <p style={{ color: G.muted, fontSize: 14 }}>
-            {isLogin ? "Sign in to continue your journey" : stageInfo[stage - 1].desc}
-          </p>
-        </div>
-
-        {/* Progress Bar for Signup */}
-        {!isLogin && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-              {stageInfo.map((s, i) => (
-                <div key={i} style={{ textAlign: "center", flex: 1, cursor: i + 1 <= stage ? "pointer" : "default" }}
-                  onClick={() => i + 1 <= stage && setStage(i + 1)}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    background: i + 1 === stage ? `linear-gradient(135deg, ${G.accent}, ${G.purple})` : i + 1 < stage ? G.surface : G.surface,
-                    border: `2px solid ${i + 1 === stage ? G.accent : i + 1 < stage ? G.purple : G.border}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 8px", fontSize: 18,
-                    transition: "all 0.3s ease",
-                    opacity: i + 1 <= stage ? 1 : 0.5
-                  }}>
-                    {s.icon}
-                  </div>
-                  <div style={{ fontSize: 10, color: i + 1 === stage ? G.accent : i + 1 < stage ? G.purple : G.muted, fontWeight: 600 }}>
-                    Step {i + 1}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 4, background: G.border, borderRadius: 2, overflow: "hidden" }}>
-              <div style={{
-                height: "100%",
-                width: `${(stage / totalStages) * 100}%`,
-                background: `linear-gradient(90deg, ${G.accent}, ${G.purple})`,
-                transition: "width 0.3s ease"
-              }} />
-            </div>
-          </div>
-        )}
-
-        <div className="card" style={{ padding: 40, background: `${G.card}dd`, backdropFilter: "blur(20px)", border: `1px solid ${G.border}` }}>
-          {/* Stage 1: Basic Info */}
-          {(isLogin || stage === 1) && (
-            <div className="fade-in">
-              {!isLogin && (
-                <>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Full Name *</label>
-                    <input className={`input-field ${errors.name ? "error" : ""}`} placeholder="John Doe"
-                      value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                    {errors.name && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.name}</p>}
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Username *</label>
-                    <input className={`input-field ${errors.username ? "error" : ""}`} placeholder="johndoe"
-                      value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/\s/g, "") })} />
-                    {errors.username && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.username}</p>}
-                  </div>
-                </>
-              )}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Email Address *</label>
-                <input className={`input-field ${errors.email ? "error" : ""}`} type="email" placeholder="you@example.com"
-                  value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                {errors.email && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
-              </div>
-              <div style={{ marginBottom: !isLogin ? 8 : 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Password *</label>
-                <input className={`input-field ${errors.password ? "error" : ""}`} type="password" placeholder="Min 6 characters"
-                  value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setPwStrength(passwordStrength(e.target.value)); }} />
-                {errors.password && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.password}</p>}
-              </div>
-              {!isLogin && form.password && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                    {[1,2,3,4].map(i => (
-                      <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwStrength.score ? pwStrength.color : G.border, transition: "background 0.3s" }} />
-                    ))}
-                  </div>
-                  <span style={{ fontSize: 11, color: pwStrength.color }}>{pwStrength.label}</span>
-                </div>
-              )}
-              {!isLogin && (
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Confirm Password *</label>
-                  <input className={`input-field ${errors.confirm ? "error" : ""}`} type="password" placeholder="Repeat password"
-                    value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} />
-                  {errors.confirm && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.confirm}</p>}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Stage 2: Education */}
-          {!isLogin && stage === 2 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Education Level *</label>
-                <select className={`input-field ${errors.education ? "error" : ""}`}
-                  value={form.education} onChange={e => setForm({ ...form, education: e.target.value })}>
-                  <option value="">Select your education level</option>
-                  <option value="high-school">High School</option>
-                  <option value="diploma">Diploma</option>
-                  <option value="bachelors">Bachelor's Degree</option>
-                  <option value="masters">Master's Degree</option>
-                  <option value="phd">PhD</option>
-                </select>
-                {errors.education && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.education}</p>}
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>University/School *</label>
-                <input className={`input-field ${errors.university ? "error" : ""}`} placeholder="Your institution name"
-                  value={form.university} onChange={e => setForm({ ...form, university: e.target.value })} />
-                {errors.university && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.university}</p>}
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Graduation Year</label>
-                  <input className="input-field" type="number" placeholder="2024"
-                    value={form.graduationYear} onChange={e => setForm({ ...form, graduationYear: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Major/Field</label>
-                  <input className="input-field" placeholder="Computer Science"
-                    value={form.major} onChange={e => setForm({ ...form, major: e.target.value })} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Stage 3: Skills */}
-          {!isLogin && stage === 3 && (
-            <div className="fade-in">
-              <p style={{ color: G.muted, fontSize: 14, marginBottom: 20 }}>
-                Select your skill levels (you can update these later in the assessment)
-              </p>
-              {SKILL_KEYS.slice(0, 5).map(skill => (
-                <div key={skill} style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: G.text }}>{SKILL_ICONS[skill]} {skill}</label>
-                    <span className="mono" style={{ fontSize: 14, color: G.accent }}>{form.skills[skill] || 50}</span>
-                  </div>
-                  <input type="range" className="slider-custom" min={0} max={100}
-                    value={form.skills[skill] || 50}
-                    onChange={e => setForm({ ...form, skills: { ...form.skills, [skill]: Number(e.target.value) } })}
-                    style={{ background: `linear-gradient(90deg, ${G.accent} ${form.skills[skill] || 50}%, ${G.border} ${form.skills[skill] || 50}%)` }} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Stage 4: Projects & Links */}
-          {!isLogin && stage === 4 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>GitHub Profile</label>
-                <input className="input-field" placeholder="https://github.com/yourusername"
-                  value={form.github} onChange={e => setForm({ ...form, github: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>LinkedIn Profile</label>
-                <input className="input-field" placeholder="https://linkedin.com/in/yourusername"
-                  value={form.linkedin} onChange={e => setForm({ ...form, linkedin: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Portfolio Website</label>
-                <input className="input-field" placeholder="https://yourportfolio.com"
-                  value={form.portfolio} onChange={e => setForm({ ...form, portfolio: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Notable Projects</label>
-                <textarea className="input-field" rows={4} placeholder="Describe your best projects (one per line)"
-                  value={form.projects} onChange={e => setForm({ ...form, projects: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {/* Stage 5: Additional Info */}
-          {!isLogin && stage === 5 && (
-            <div className="fade-in">
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Bio</label>
-                <textarea className="input-field" rows={3} placeholder="Tell us about yourself..."
-                  value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Years of Experience</label>
-                <select className="input-field" value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })}>
-                  <option value="">Select experience level</option>
-                  <option value="0">No experience (Student)</option>
-                  <option value="1">Less than 1 year</option>
-                  <option value="2">1-2 years</option>
-                  <option value="3">3-5 years</option>
-                  <option value="5+">5+ years</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Interests & Goals</label>
-                <textarea className="input-field" rows={3} placeholder="What are you interested in? What are your career goals?"
-                  value={form.interests} onChange={e => setForm({ ...form, interests: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-            <button className="btn-primary" style={{ width: "100%", padding: 14, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              onClick={handleNext} disabled={loading}>
-              {loading ? <><LoadingSpinner size={18} /> Processing...</> : 
-                (isLogin ? "Sign In" : stage === totalStages ? "Complete Registration" : "Next")}
-            </button>
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: G.muted }}>
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <span style={{ color: G.accent, cursor: "pointer", fontWeight: 600 }}
-              onClick={() => { onNav(isLogin ? "signup" : "login"); setStage(1); }}>
-              {isLogin ? "Sign Up" : "Log In"}
-            </span>
-          </div>
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <button className="btn-ghost" onClick={() => onNav("home")}>← Back to Home</button>
-        </div>
-      </div>
-    </div>
-  );
+  return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
 
 // SIDEBAR
@@ -1119,7 +811,8 @@ function Sidebar({ active, onNav, user, onLogout }) {
     { key: "dashboard", icon: "🏠", label: "Dashboard" },
     { key: "profile", icon: "👤", label: "Profile" },
     { key: "assessment", icon: "🎯", label: "Skill Assessment" },
-    { key: "dsa",  icon: "📚", label: "DSA Tutorial" },
+    { key: "dsa", icon: "📚", label: "DSA Tutorial" },
+    { key: "story", icon: "⚔️", label: "Story Mode" },
     { key: "career", icon: "🏆", label: "Career Match" },
     { key: "market", icon: "📈", label: "Market Demand" },
     { key: "resume", icon: "📄", label: "Resume Builder" },
@@ -1174,257 +867,9 @@ function Sidebar({ active, onNav, user, onLogout }) {
   );
 }
 
-// PROFILE PAGE
+// PROFILE PAGE — uses the new standalone ProfilePage component
 function ProfilePage({ user, onUpdateUser, onNav }) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    name: user.name || "",
-    username: user.username || "",
-    email: user.email || "",
-    bio: user.bio || "",
-    university: user.university || "",
-    major: user.major || "",
-    graduationYear: user.graduationYear || "",
-    github: user.github || "",
-    linkedin: user.linkedin || "",
-    portfolio: user.portfolio || "",
-    experience: user.experience || ""
-  });
-  const [profilePic, setProfilePic] = useState(user.profilePic || null);
-  const [uploading, setUploading] = useState(false);
-
-  function handleSave() {
-    onUpdateUser({ ...form, profilePic });
-    setEditing(false);
-  }
-
-  function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (file) {
-      setUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePic(reader.result);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
-          My Profile
-        </h1>
-        <p style={{ color: G.muted }}>Manage your account settings and personal information</p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 32 }}>
-        {/* Left Column - Profile Picture */}
-        <div>
-          <div className="card" style={{ padding: 24, textAlign: "center" }}>
-            <div style={{ position: "relative", width: 200, height: 200, margin: "0 auto 20px" }}>
-              {profilePic ? (
-                <img src={profilePic} alt="Profile" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: `3px solid ${G.accent}` }} />
-              ) : (
-                <div style={{
-                  width: "100%", height: "100%", borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 72, fontWeight: 800, color: "#fff"
-                }}>
-                  {user.name?.[0]?.toUpperCase() || "U"}
-                </div>
-              )}
-              {editing && (
-                <label style={{
-                  position: "absolute", bottom: 10, right: 10,
-                  width: 40, height: 40, borderRadius: "50%",
-                  background: G.accent, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", fontSize: 20, border: `2px solid ${G.card}`
-                }}>
-                  📷
-                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
-                </label>
-              )}
-            </div>
-            <h2 className="syne" style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{user.name}</h2>
-            <p style={{ color: G.muted, fontSize: 14, marginBottom: 4 }}>@{user.username || "username"}</p>
-            <p style={{ color: G.muted, fontSize: 13 }}>{user.email}</p>
-            
-            {!editing && (
-              <>
-                <button className="btn-primary" style={{ width: "100%", marginTop: 20 }} onClick={() => setEditing(true)}>
-                  Edit Profile
-                </button>
-                <button className="btn-outline" style={{ width: "100%", marginTop: 8, fontSize: 12 }} 
-                  onClick={() => {
-                    const dataStr = JSON.stringify(user, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `rejexiq-backup-${Date.now()}.json`;
-                    link.click();
-                  }}>
-                  📥 Export Data
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Quick Stats */}
-          <div className="card" style={{ padding: 20, marginTop: 16 }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Quick Stats</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Skills Assessed</span>
-                <span className="mono" style={{ color: G.accent, fontWeight: 600 }}>{Object.keys(user.skills || {}).length}/8</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Profile Complete</span>
-                <span className="mono" style={{ color: G.success, fontWeight: 600 }}>
-                  {Math.round(([user.name, user.email, user.bio, user.university, user.github].filter(Boolean).length / 5) * 100)}%
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: G.muted, fontSize: 14 }}>Member Since</span>
-                <span style={{ color: G.text, fontSize: 14 }}>2025</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Details */}
-        <div>
-          <div className="card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <h3 className="syne" style={{ fontSize: 20, fontWeight: 700 }}>Personal Information</h3>
-              {editing && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn-ghost" onClick={() => { setEditing(false); setForm({ name: user.name, username: user.username, email: user.email, bio: user.bio, university: user.university, major: user.major, graduationYear: user.graduationYear, github: user.github, linkedin: user.linkedin, portfolio: user.portfolio, experience: user.experience }); }}>
-                    Cancel
-                  </button>
-                  <button className="btn-primary" onClick={handleSave}>Save Changes</button>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Full Name</label>
-                {editing ? (
-                  <input className="input-field" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>{user.name || "Not set"}</p>
-                )}
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Username</label>
-                {editing ? (
-                  <input className="input-field" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>@{user.username || "Not set"}</p>
-                )}
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Email</label>
-                {editing ? (
-                  <input className="input-field" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text }}>{user.email}</p>
-                )}
-              </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Bio</label>
-                {editing ? (
-                  <textarea className="input-field" rows={3} value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} placeholder="Tell us about yourself..." />
-                ) : (
-                  <p style={{ fontSize: 15, color: G.text, lineHeight: 1.6 }}>{user.bio || "No bio added yet"}</p>
-                )}
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${G.border}`, marginTop: 32, paddingTop: 24 }}>
-              <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Education</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>University/School</label>
-                  {editing ? (
-                    <input className="input-field" value={form.university} onChange={e => setForm({ ...form, university: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.university || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Major</label>
-                  {editing ? (
-                    <input className="input-field" value={form.major} onChange={e => setForm({ ...form, major: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.major || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Graduation Year</label>
-                  {editing ? (
-                    <input className="input-field" value={form.graduationYear} onChange={e => setForm({ ...form, graduationYear: e.target.value })} />
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.graduationYear || "Not set"}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Experience</label>
-                  {editing ? (
-                    <select className="input-field" value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })}>
-                      <option value="">Select</option>
-                      <option value="0">No experience</option>
-                      <option value="1">Less than 1 year</option>
-                      <option value="2">1-2 years</option>
-                      <option value="3">3-5 years</option>
-                      <option value="5+">5+ years</option>
-                    </select>
-                  ) : (
-                    <p style={{ fontSize: 15, color: G.text }}>{user.experience || "Not set"}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${G.border}`, marginTop: 32, paddingTop: 24 }}>
-              <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Links & Social</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>GitHub</label>
-                  {editing ? (
-                    <input className="input-field" value={form.github} onChange={e => setForm({ ...form, github: e.target.value })} placeholder="https://github.com/username" />
-                  ) : (
-                    user.github ? <a href={user.github} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.github}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>LinkedIn</label>
-                  {editing ? (
-                    <input className="input-field" value={form.linkedin} onChange={e => setForm({ ...form, linkedin: e.target.value })} placeholder="https://linkedin.com/in/username" />
-                  ) : (
-                    user.linkedin ? <a href={user.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.linkedin}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted }}>Portfolio</label>
-                  {editing ? (
-                    <input className="input-field" value={form.portfolio} onChange={e => setForm({ ...form, portfolio: e.target.value })} placeholder="https://yourportfolio.com" />
-                  ) : (
-                    user.portfolio ? <a href={user.portfolio} target="_blank" rel="noreferrer" style={{ fontSize: 15, color: G.accent }}>{user.portfolio}</a> : <p style={{ fontSize: 15, color: G.muted }}>Not set</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <NewProfilePage user={user} onUpdateUser={onUpdateUser} onNav={onNav} />;
 }
 
 // DASHBOARD
@@ -1662,135 +1107,6 @@ function SkillAssessment({ user, onSave, onNav }) {
   );
 }
 
-// CAREER MATCH
-function CareerMatch({ user, onNav }) {
-  const [selectedRole, setSelectedRole] = useState("fullstack");
-  const skills = user.skills || {};
-  const hasSkills = Object.keys(skills).length > 0;
-
-  if (!hasSkills) {
-    return (
-      <div className="section-enter" style={{ textAlign: "center", paddingTop: 60 }}>
-        <div style={{ fontSize: 48, marginBottom: 20 }}>🏆</div>
-        <h2 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>Complete Assessment First</h2>
-        <p style={{ color: G.muted, marginBottom: 24 }}>Take the skill assessment to see your career matches and personalized recommendations.</p>
-        <button className="btn-primary" onClick={() => onNav("assessment")}>Go to Assessment →</button>
-      </div>
-    );
-  }
-
-  const best = getBestRole(skills);
-  const gaps = getSkillGap(skills, selectedRole);
-  const readinessScore = calcReadiness(skills, selectedRole);
-
-  const gapData = gaps.map(g => ({ name: g.skill, required: g.required, yours: g.user }));
-
-  const roadmap = gaps.slice(0, 4).map((g, i) => ({
-    step: i + 1,
-    title: `Improve ${g.skill}`,
-    desc: g.skill === "JavaScript" ? "Practice ES6+, async/await, closures" :
-      g.skill === "React" ? "Build 3 real React projects with hooks" :
-      g.skill === "SystemDesign" ? "Study system design patterns and scalability" :
-      g.skill === "DataStructures" ? "Solve 50 LeetCode problems (Easy → Medium)" :
-      `Study and practice ${g.skill} fundamentals`,
-    gap: g.gap
-  }));
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Career Recommendations</h1>
-        <p style={{ color: G.muted }}>Personalized analysis based on your skill profile</p>
-      </div>
-
-      {/* Best match banner */}
-      <div className="gradient-border" style={{ padding: 28, marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-        <div>
-          <div style={{ fontSize: 12, color: G.muted, marginBottom: 4 }}>YOUR BEST ROLE MATCH</div>
-          <div style={{ fontSize: 32, marginBottom: 4 }}>{ROLES[best.key]?.icon}</div>
-          <h2 className="syne" style={{ fontSize: 24, fontWeight: 800 }}>{ROLES[best.key]?.label}</h2>
-          <p style={{ color: G.muted, marginTop: 4 }}>You are {best.score}% ready for this role</p>
-        </div>
-        <ScoreRing score={best.score} color={ROLES[best.key]?.color} size={120} label="Readiness" />
-      </div>
-
-      {/* Role selector */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
-        {Object.entries(ROLES).map(([key, role]) => (
-          <button key={key}
-            style={{
-              padding: "8px 16px", borderRadius: 8, border: `1px solid ${selectedRole === key ? role.color : G.border}`,
-              background: selectedRole === key ? `${role.color}20` : "transparent",
-              color: selectedRole === key ? role.color : G.muted, cursor: "pointer", fontSize: 13, fontWeight: 600,
-              transition: "all 0.2s"
-            }}
-            onClick={() => setSelectedRole(key)}>
-            {role.icon} {role.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-        {/* Gap analysis */}
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Skill Gap Analysis</h3>
-          <p style={{ fontSize: 12, color: G.muted, marginBottom: 16 }}>Your scores vs required for {ROLES[selectedRole]?.label}</p>
-          {gapData.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 20 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-              <p style={{ color: G.success }}>You meet all requirements for this role!</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={gapData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke={G.border} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fill: G.muted, fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fill: G.muted, fontSize: 11 }} width={90} />
-                <RechartsTooltip contentStyle={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8 }} />
-                <Bar dataKey="required" fill={`${G.danger}60`} name="Required" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="yours" fill={G.accent} name="Yours" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Readiness */}
-        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-          <ScoreRing score={readinessScore} color={ROLES[selectedRole]?.color} size={150} label={ROLES[selectedRole]?.label} />
-          <div style={{ textAlign: "center" }}>
-            <p style={{ color: G.muted, fontSize: 14 }}>
-              {readinessScore >= 80 ? "🟢 Excellent — You're ready to apply!" :
-               readinessScore >= 60 ? "🟡 Good — A few improvements needed" :
-               "🔴 Needs work — Follow the roadmap below"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Learning Roadmap */}
-      {roadmap.length > 0 && (
-        <div className="card">
-          <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📍 Personalized Learning Roadmap</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {roadmap.map((r, i) => (
-              <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                <div style={{ width: 36, height: 36, background: G.accentDim, border: `1px solid rgba(0,229,255,0.3)`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span className="syne" style={{ fontSize: 14, fontWeight: 700, color: G.accent }}>{r.step}</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{r.title}</div>
-                  <div style={{ fontSize: 13, color: G.muted }}>{r.desc}</div>
-                  <div style={{ fontSize: 11, color: G.danger, marginTop: 4 }}>Gap: {r.gap} points to bridge</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── MARKET DEMAND DATA ───────────────────────────────────────────────────────
 
 const MD_ROLES = {
@@ -1934,67 +1250,51 @@ const MD_ROLES = {
   }
 };
 
-// Master skill database with real-time market data
 const MD_ALL_SKILLS = {
-  "JavaScript":     { demand: 92, growth: "+5%",  category: "Web",        color: "#f7df1e", icon: "⚡" },
-  "Python":         { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
-  "React.js":       { demand: 88, growth: "+8%",  category: "Frontend",   color: "#61dafb", icon: "⚛️" },
-  "TypeScript":     { demand: 84, growth: "+22%", category: "Web",        color: "#3178c6", icon: "📘" },
-  "Node.js":        { demand: 81, growth: "+10%", category: "Backend",    color: "#68a063", icon: "🟢" },
-  "Docker":         { demand: 78, growth: "+18%", category: "DevOps",     color: "#2496ed", icon: "🐳" },
-  "AWS":            { demand: 76, growth: "+15%", category: "Cloud",      color: "#ff9900", icon: "☁️" },
-  "SQL":            { demand: 82, growth: "+6%",  category: "Data",       color: "#336791", icon: "🗄️" },
-  "Kubernetes":     { demand: 70, growth: "+31%", category: "DevOps",     color: "#326ce5", icon: "⚙️" },
-  "LLM / AI":       { demand: 74, growth: "+47%", category: "AI",         color: "#818cf8", icon: "🤖" },
-  "Next.js":        { demand: 72, growth: "+28%", category: "Frontend",   color: "#ffffff", icon: "▲" },
-  "GraphQL":        { demand: 62, growth: "+14%", category: "API",        color: "#e535ab", icon: "🔗" },
-  "System Design":  { demand: 82, growth: "+11%", category: "Backend",    color: "#00e5ff", icon: "🏗️" },
-  "CSS / Tailwind": { demand: 85, growth: "+9%",  category: "Frontend",   color: "#38bdf8", icon: "🎨" },
-  "Vue.js":         { demand: 68, growth: "+7%",  category: "Frontend",   color: "#42b883", icon: "💚" },
-  "Terraform":      { demand: 75, growth: "+25%", category: "DevOps",     color: "#7b42bc", icon: "🔧" },
-  "CI/CD":          { demand: 90, growth: "+16%", category: "DevOps",     color: "#f87171", icon: "🔄" },
-  "Linux":          { demand: 85, growth: "+8%",  category: "DevOps",     color: "#fcc419", icon: "🐧" },
-  "REST APIs":      { demand: 88, growth: "+10%", category: "Backend",    color: "#34d399", icon: "🔗" },
-  "Redis":          { demand: 65, growth: "+13%", category: "Backend",    color: "#dc2626", icon: "⚡" },
-  "Power BI":       { demand: 68, growth: "+19%", category: "Data",       color: "#f2c811", icon: "📊" },
-  "Tableau":        { demand: 66, growth: "+15%", category: "Data",       color: "#e97627", icon: "📈" },
-  "Excel":          { demand: 78, growth: "+3%",  category: "Data",       color: "#217346", icon: "📑" },
-  "Pandas":         { demand: 92, growth: "+14%", category: "Data",       color: "#150458", icon: "🐼" },
-  "Statistics":     { demand: 75, growth: "+10%", category: "Data",       color: "#8b5cf6", icon: "📐" },
-  "Data Viz":       { demand: 82, growth: "+12%", category: "Data",       color: "#10b981", icon: "📊" },
-  "Machine Learning": { demand: 95, growth: "+35%", category: "AI",       color: "#818cf8", icon: "🤖" },
-  "Deep Learning":  { demand: 88, growth: "+42%", category: "AI",         color: "#6366f1", icon: "🧠" },
-  "PyTorch":        { demand: 85, growth: "+38%", category: "AI",         color: "#ee4c2c", icon: "🔥" },
-  "TensorFlow":     { demand: 83, growth: "+33%", category: "AI",         color: "#ff6f00", icon: "🔶" },
-  "LLMs":           { demand: 80, growth: "+52%", category: "AI",         color: "#a78bfa", icon: "💬" },
-  "MLOps":          { demand: 70, growth: "+45%", category: "AI",         color: "#34d399", icon: "⚙️" },
-  "NLP":            { demand: 78, growth: "+40%", category: "AI",         color: "#c084fc", icon: "📝" },
-  "Data Engineering": { demand: 65, growth: "+28%", category: "Data",     color: "#fbbf24", icon: "🔧" },
-  "Webpack":        { demand: 60, growth: "+5%",  category: "Frontend",   color: "#8dd6f9", icon: "📦" },
-  "Testing":        { demand: 60, growth: "+11%", category: "Frontend",   color: "#94a3b8", icon: "🧪" },
-  "Accessibility":  { demand: 55, growth: "+18%", category: "Frontend",   color: "#10b981", icon: "♿" },
-  "Performance":    { demand: 68, growth: "+14%", category: "Frontend",   color: "#f59e0b", icon: "⚡" },
-  "Monitoring":     { demand: 68, growth: "+20%", category: "DevOps",     color: "#06b6d4", icon: "📡" },
-  "Ansible":        { demand: 62, growth: "+12%", category: "DevOps",     color: "#ee0000", icon: "🔴" },
-  "Jenkins":        { demand: 58, growth: "+8%",  category: "DevOps",     color: "#d24939", icon: "🔨" },
-  "Git":            { demand: 68, growth: "+4%",  category: "Web",        color: "#f05032", icon: "🌿" },
-  "Communication":  { demand: 80, growth: "+6%",  category: "Soft",       color: "#94a3b8", icon: "💬" },
+  "JavaScript": { demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "⚡" },
+  "Python": { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
+  "React.js": { demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "⚛️" },
+  "TypeScript": { demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "📘" },
+  "Node.js": { demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "🟢" },
+  "Docker": { demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "🐳" },
+  "AWS": { demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "☁️" },
+  "SQL": { demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "🗄️" },
+  "Kubernetes": { demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "⚙️" },
+  "LLM / AI": { demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Next.js": { demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "▲" },
+  "GraphQL": { demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "🔗" },
+  "System Design": { demand: 82, growth: "+11%", category: "Backend", color: "#00e5ff", icon: "🏗️" },
+  "CSS / Tailwind": { demand: 85, growth: "+9%", category: "Frontend", color: "#38bdf8", icon: "🎨" },
+  "Vue.js": { demand: 68, growth: "+7%", category: "Frontend", color: "#42b883", icon: "💚" },
+  "Terraform": { demand: 75, growth: "+25%", category: "DevOps", color: "#7b42bc", icon: "🔧" },
+  "CI/CD": { demand: 90, growth: "+16%", category: "DevOps", color: "#f87171", icon: "🔄" },
+  "Linux": { demand: 85, growth: "+8%", category: "DevOps", color: "#fcc419", icon: "🐧" },
+  "REST APIs": { demand: 88, growth: "+10%", category: "Backend", color: "#34d399", icon: "🔗" },
+  "Redis": { demand: 65, growth: "+13%", category: "Backend", color: "#dc2626", icon: "⚡" },
+  "Power BI": { demand: 68, growth: "+19%", category: "Data", color: "#f2c811", icon: "📊" },
+  "Tableau": { demand: 66, growth: "+15%", category: "Data", color: "#e97627", icon: "📈" },
+  "Excel": { demand: 78, growth: "+3%", category: "Data", color: "#217346", icon: "📑" },
+  "Pandas": { demand: 92, growth: "+14%", category: "Data", color: "#150458", icon: "🐼" },
+  "Statistics": { demand: 75, growth: "+10%", category: "Data", color: "#8b5cf6", icon: "📐" },
+  "Data Viz": { demand: 82, growth: "+12%", category: "Data", color: "#10b981", icon: "📊" },
+  "Machine Learning": { demand: 95, growth: "+35%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Deep Learning": { demand: 88, growth: "+42%", category: "AI", color: "#6366f1", icon: "🧠" },
+  "PyTorch": { demand: 85, growth: "+38%", category: "AI", color: "#ee4c2c", icon: "🔥" },
+  "TensorFlow": { demand: 83, growth: "+33%", category: "AI", color: "#ff6f00", icon: "🔶" },
+  "LLMs": { demand: 80, growth: "+52%", category: "AI", color: "#a78bfa", icon: "💬" },
+  "MLOps": { demand: 70, growth: "+45%", category: "AI", color: "#34d399", icon: "⚙️" },
+  "NLP": { demand: 78, growth: "+40%", category: "AI", color: "#c084fc", icon: "📝" },
+  "Data Engineering": { demand: 65, growth: "+28%", category: "Data", color: "#fbbf24", icon: "🔧" },
+  "Webpack": { demand: 60, growth: "+5%", category: "Frontend", color: "#8dd6f9", icon: "📦" },
+  "Testing": { demand: 60, growth: "+11%", category: "Frontend", color: "#94a3b8", icon: "🧪" },
+  "Accessibility": { demand: 55, growth: "+18%", category: "Frontend", color: "#10b981", icon: "♿" },
+  "Performance": { demand: 68, growth: "+14%", category: "Frontend", color: "#f59e0b", icon: "⚡" },
+  "Monitoring": { demand: 68, growth: "+20%", category: "DevOps", color: "#06b6d4", icon: "📡" },
+  "Ansible": { demand: 62, growth: "+12%", category: "DevOps", color: "#ee0000", icon: "🔴" },
+  "Jenkins": { demand: 58, growth: "+8%", category: "DevOps", color: "#d24939", icon: "🔨" },
+  "Git": { demand: 68, growth: "+4%", category: "Web", color: "#f05032", icon: "🌿" },
+  "Communication": { demand: 80, growth: "+6%", category: "Soft", color: "#94a3b8", icon: "💬" },
 };
-
-const MD_TRENDING = [
-  { skill: "JavaScript", demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "⚡" },
-  { skill: "Python", demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
-  { skill: "React.js", demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "⚛️" },
-  { skill: "TypeScript", demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "📘" },
-  { skill: "Node.js", demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "🟢" },
-  { skill: "Docker", demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "🐳" },
-  { skill: "AWS", demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "☁️" },
-  { skill: "SQL", demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "🗄️" },
-  { skill: "Kubernetes", demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "⚙️" },
-  { skill: "LLM / AI", demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "🤖" },
-  { skill: "Next.js", demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "▲" },
-  { skill: "GraphQL", demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "🔗" },
-];
 
 const MD_TREND_DATA = [
   { month: "Jul '24", jobs: 12000, ai: 3200 },
@@ -2007,62 +1307,53 @@ const MD_TREND_DATA = [
   { month: "Feb '25", jobs: 23400, ai: 13200 },
 ];
 
-// Maps each MD_ROLES skill display name → user skill key + minimum score to "have" it
-// User skills are scored 0–100 in the Skill Assessment page
 const MD_SKILL_MAP = {
-  // Software Engineer
-  "JavaScript":        { key: "JavaScript",     threshold: 40 },
-  "Data Structures":   { key: "DataStructures",  threshold: 40 },
-  "System Design":     { key: "SystemDesign",    threshold: 40 },
-  "React / Vue":       { key: "React",           threshold: 40 },
-  "Node.js":           { key: "JavaScript",      threshold: 70 }, // proxy: strong JS implies Node familiarity
-  "SQL / NoSQL":       { key: "DataStructures",  threshold: 60 }, // proxy
-  "Git & CI/CD":       { key: "ProblemSolving",  threshold: 50 }, // proxy
-  "TypeScript":        { key: "JavaScript",      threshold: 80 }, // proxy: high JS → likely TS
-  // Frontend Developer
-  "React.js":          { key: "React",           threshold: 40 },
-  "CSS / Tailwind":    { key: "CSS",             threshold: 40 },
-  "Next.js":           { key: "React",           threshold: 70 },
-  "Performance Opt.":  { key: "SystemDesign",    threshold: 50 },
-  "Testing (Jest)":    { key: "ProblemSolving",  threshold: 60 },
-  "Accessibility":     { key: "CSS",             threshold: 70 },
-  // Backend Developer
-  "Node.js / Python":  { key: "Python",          threshold: 40 },
-  "REST / GraphQL APIs":{ key: "SystemDesign",   threshold: 40 },
-  "SQL Databases":     { key: "DataStructures",  threshold: 50 },
-  "Docker / K8s":      { key: "SystemDesign",    threshold: 65 },
-  "Redis / Caching":   { key: "SystemDesign",    threshold: 70 },
-  "AWS / GCP":         { key: "SystemDesign",    threshold: 75 },
-  "Security Basics":   { key: "ProblemSolving",  threshold: 60 },
-  // Data Analyst
-  "Python (Pandas)":   { key: "Python",          threshold: 40 },
-  "SQL":               { key: "DataStructures",  threshold: 50 },
-  "Data Visualization":{ key: "Python",          threshold: 60 },
-  "Excel / Sheets":    { key: "Communication",   threshold: 50 },
-  "Statistics":        { key: "ProblemSolving",  threshold: 55 },
-  "Power BI / Tableau":{ key: "Python",          threshold: 70 },
-  "Machine Learning":  { key: "Python",          threshold: 65 },
-  "Communication":     { key: "Communication",   threshold: 40 },
-  // DevOps Engineer
-  "Docker / Kubernetes":{ key: "SystemDesign",   threshold: 50 },
-  "CI/CD Pipelines":   { key: "SystemDesign",    threshold: 55 },
-  "AWS / Azure / GCP": { key: "SystemDesign",    threshold: 65 },
-  "Linux / Shell":     { key: "ProblemSolving",  threshold: 55 },
-  "Terraform / IaC":   { key: "SystemDesign",    threshold: 70 },
-  "Monitoring (Grafana)":{ key: "SystemDesign",  threshold: 75 },
-  "Python / Bash":     { key: "Python",          threshold: 40 },
-  "Security / IAM":    { key: "SystemDesign",    threshold: 80 },
-  // AI/ML Engineer — "Machine Learning" key already defined above (shared with Data Analyst)
-  "Python":            { key: "Python",          threshold: 40 },
-  "Deep Learning / NNs":{ key: "Python",         threshold: 75 },
-  "PyTorch / TensorFlow":{ key: "Python",        threshold: 80 },
-  "LLMs / Prompt Eng.":{ key: "Python",          threshold: 85 },
-  "MLOps":             { key: "SystemDesign",    threshold: 70 },
-  "Statistics / Math": { key: "ProblemSolving",  threshold: 60 },
-  "Data Engineering":  { key: "DataStructures",  threshold: 65 },
+  "JavaScript": { key: "JavaScript", threshold: 40 },
+  "Data Structures": { key: "DataStructures", threshold: 40 },
+  "System Design": { key: "SystemDesign", threshold: 40 },
+  "React / Vue": { key: "React", threshold: 40 },
+  "Node.js": { key: "JavaScript", threshold: 70 },
+  "SQL / NoSQL": { key: "DataStructures", threshold: 60 },
+  "Git & CI/CD": { key: "ProblemSolving", threshold: 50 },
+  "TypeScript": { key: "JavaScript", threshold: 80 },
+  "React.js": { key: "React", threshold: 40 },
+  "CSS / Tailwind": { key: "CSS", threshold: 40 },
+  "Next.js": { key: "React", threshold: 70 },
+  "Performance Opt.": { key: "SystemDesign", threshold: 50 },
+  "Testing (Jest)": { key: "ProblemSolving", threshold: 60 },
+  "Accessibility": { key: "CSS", threshold: 70 },
+  "Node.js / Python": { key: "Python", threshold: 40 },
+  "REST / GraphQL APIs": { key: "SystemDesign", threshold: 40 },
+  "SQL Databases": { key: "DataStructures", threshold: 50 },
+  "Docker / K8s": { key: "SystemDesign", threshold: 65 },
+  "Redis / Caching": { key: "SystemDesign", threshold: 70 },
+  "AWS / GCP": { key: "SystemDesign", threshold: 75 },
+  "Security Basics": { key: "ProblemSolving", threshold: 60 },
+  "Python (Pandas)": { key: "Python", threshold: 40 },
+  "SQL": { key: "DataStructures", threshold: 50 },
+  "Data Visualization": { key: "Python", threshold: 60 },
+  "Excel / Sheets": { key: "Communication", threshold: 50 },
+  "Statistics": { key: "ProblemSolving", threshold: 55 },
+  "Power BI / Tableau": { key: "Python", threshold: 70 },
+  "Machine Learning": { key: "Python", threshold: 65 },
+  "Communication": { key: "Communication", threshold: 40 },
+  "Docker / Kubernetes": { key: "SystemDesign", threshold: 50 },
+  "CI/CD Pipelines": { key: "SystemDesign", threshold: 55 },
+  "AWS / Azure / GCP": { key: "SystemDesign", threshold: 65 },
+  "Linux / Shell": { key: "ProblemSolving", threshold: 55 },
+  "Terraform / IaC": { key: "SystemDesign", threshold: 70 },
+  "Monitoring (Grafana)": { key: "SystemDesign", threshold: 75 },
+  "Python / Bash": { key: "Python", threshold: 40 },
+  "Security / IAM": { key: "SystemDesign", threshold: 80 },
+  "Python": { key: "Python", threshold: 40 },
+  "Deep Learning / NNs": { key: "Python", threshold: 75 },
+  "PyTorch / TensorFlow": { key: "Python", threshold: 80 },
+  "LLMs / Prompt Eng.": { key: "Python", threshold: 85 },
+  "MLOps": { key: "SystemDesign", threshold: 70 },
+  "Statistics / Math": { key: "ProblemSolving", threshold: 60 },
+  "Data Engineering": { key: "DataStructures", threshold: 65 },
 };
 
-// Returns true if the user's skills satisfy the threshold for a given skill display name
 function userHasSkill(userSkills, skillName) {
   const mapping = MD_SKILL_MAP[skillName];
   if (!mapping) return false;
@@ -2070,38 +1361,31 @@ function userHasSkill(userSkills, skillName) {
   return score >= mapping.threshold;
 }
 
-// Animated counter hook — animates from previous value to new target (up or down)
 function useCounter(target, duration = 1200) {
   const [count, setCount] = useState(target);
   const prevTarget = useRef(target);
-
   useEffect(() => {
     const from = prevTarget.current;
     prevTarget.current = target;
     if (from === target) return;
-
     const startTime = performance.now();
     const diff = target - from;
-
     function tick(now) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(from + diff * eased));
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
   }, [target, duration]);
-
   return count;
 }
 
-// Animated skill bar
 function AnimatedBar({ value, color, delay = 0 }) {
   const [width, setWidth] = useState(0);
   useEffect(() => {
-    setWidth(0); // reset first so re-mount always animates from 0
+    setWidth(0);
     const t = setTimeout(() => setWidth(value), delay + 80);
     return () => clearTimeout(t);
   }, [value, delay]);
@@ -2117,7 +1401,6 @@ function AnimatedBar({ value, color, delay = 0 }) {
   );
 }
 
-// Animated percentage number — counts from 0 to value on mount
 function AnimatedNumber({ value, color, suffix = "%" }) {
   const count = useCounter(value, 900);
   return (
@@ -2127,7 +1410,6 @@ function AnimatedNumber({ value, color, suffix = "%" }) {
   );
 }
 
-// Circular match indicator
 function CircleMatch({ pct, color, size = 120 }) {
   const r = (size / 2) - 10;
   const circ = 2 * Math.PI * r;
@@ -2139,8 +1421,8 @@ function CircleMatch({ pct, color, size = 120 }) {
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={10}
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)", filter: `drop-shadow(0 0 8px ${color})` }} />
       </svg>
@@ -2163,7 +1445,6 @@ function MarketDemand({ onNav, user }) {
   const roleData = MD_ROLES[selectedRole];
   const roleColor = roleData.color;
 
-  // Compute match % dynamically from user's actual skill scores
   const enrichedSkills = roleData.skills.map(s => ({
     ...s,
     userHas: userHasSkill(userSkills, s.name)
@@ -2171,8 +1452,6 @@ function MarketDemand({ onNav, user }) {
   const matchedSkills = enrichedSkills.filter(s => s.userHas).length;
   const matchPct = Math.round((matchedSkills / enrichedSkills.length) * 100);
 
-  // Build role-specific trending skills from the master skill database
-  // Priority order: role's own trendingSkills list first, then fill with global top skills
   const roleTrendingSkills = roleData.trendingSkills
     .map(name => {
       const data = MD_ALL_SKILLS[name];
@@ -2181,14 +1460,12 @@ function MarketDemand({ onNav, user }) {
     })
     .filter(Boolean);
 
-  // Derive unique categories from the role's trending skills
   const roleCategories = ["All", ...Array.from(new Set(roleTrendingSkills.map(s => s.category)))];
 
   const filteredTrending = filterCat === "All"
     ? roleTrendingSkills
     : roleTrendingSkills.filter(s => s.category === filterCat);
 
-  // Reset category filter when role changes
   const prevRole = useRef(selectedRole);
   if (prevRole.current !== selectedRole) {
     prevRole.current = selectedRole;
@@ -2202,62 +1479,54 @@ function MarketDemand({ onNav, user }) {
     { key: "ai", label: "🤖 AI Recommendations" },
   ];
 
-  // Role-specific monthly postings data
   const MD_MONTHLY_POSTINGS = {
-    "Software Engineer":  23400,
+    "Software Engineer": 23400,
     "Frontend Developer": 16800,
-    "Backend Developer":  19200,
-    "Data Analyst":       11500,
-    "DevOps Engineer":    13700,
-    "AI/ML Engineer":     9800,
+    "Backend Developer": 19200,
+    "Data Analyst": 11500,
+    "DevOps Engineer": 13700,
+    "AI/ML Engineer": 9800,
   };
 
   const openingsNum = parseInt(roleData.openings.replace(/[^0-9]/g, ""), 10);
-  const monthlyNum  = MD_MONTHLY_POSTINGS[selectedRole] || 23400;
-
-  // Parse salary avg (e.g. "₹18L") → number in lakhs for delta comparison
+  const monthlyNum = MD_MONTHLY_POSTINGS[selectedRole] || 23400;
   const parseSalary = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
-  const salaryNum   = parseSalary(roleData.salary.avg);
+  const salaryNum = parseSalary(roleData.salary.avg);
+  const parseTrend = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
+  const trendNum = parseTrend(roleData.trendPct);
 
-  // Parse hiring trend (e.g. "+23%") → number for delta comparison
-  const parseTrend  = s => parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
-  const trendNum    = parseTrend(roleData.trendPct);
-
-  // Track previous values to compute deltas on role change
   const prevOpenings = useRef(openingsNum);
-  const prevMonthly  = useRef(monthlyNum);
-  const prevSalary   = useRef(salaryNum);
-  const prevTrend    = useRef(trendNum);
-  const prevMatch    = useRef(matchPct);
+  const prevMonthly = useRef(monthlyNum);
+  const prevSalary = useRef(salaryNum);
+  const prevTrend = useRef(trendNum);
+  const prevMatch = useRef(matchPct);
 
   const [openingsDelta, setOpeningsDelta] = useState(0);
-  const [monthlyDelta,  setMonthlyDelta]  = useState(0);
-  const [salaryDelta,   setSalaryDelta]   = useState(0);
-  const [trendDelta,    setTrendDelta]    = useState(0);
-  const [matchDelta,    setMatchDelta]    = useState(0);
-  // Increments every role change — used as key to re-mount AnimatedBar so bars re-animate from 0
+  const [monthlyDelta, setMonthlyDelta] = useState(0);
+  const [salaryDelta, setSalaryDelta] = useState(0);
+  const [trendDelta, setTrendDelta] = useState(0);
+  const [matchDelta, setMatchDelta] = useState(0);
   const [roleChangeKey, setRoleChangeKey] = useState(0);
 
   useEffect(() => {
     setOpeningsDelta(openingsNum - prevOpenings.current);
-    setMonthlyDelta(monthlyNum   - prevMonthly.current);
-    setSalaryDelta(salaryNum     - prevSalary.current);
-    setTrendDelta(trendNum       - prevTrend.current);
-    setMatchDelta(matchPct       - prevMatch.current);
+    setMonthlyDelta(monthlyNum - prevMonthly.current);
+    setSalaryDelta(salaryNum - prevSalary.current);
+    setTrendDelta(trendNum - prevTrend.current);
+    setMatchDelta(matchPct - prevMatch.current);
     setRoleChangeKey(k => k + 1);
     prevOpenings.current = openingsNum;
-    prevMonthly.current  = monthlyNum;
-    prevSalary.current   = salaryNum;
-    prevTrend.current    = trendNum;
-    prevMatch.current    = matchPct;
+    prevMonthly.current = monthlyNum;
+    prevSalary.current = salaryNum;
+    prevTrend.current = trendNum;
+    prevMatch.current = matchPct;
   }, [selectedRole]); // eslint-disable-line
 
-  // Animated salary counter (in lakhs)
-  const c1       = useCounter(openingsNum, 1200);
-  const c2       = useCounter(monthlyNum,  1200);
-  const c3       = useCounter(matchPct,    1000);
-  const cSalary  = useCounter(salaryNum,   1000);
-  const cTrend   = useCounter(trendNum,    1000);
+  const c1 = useCounter(openingsNum, 1200);
+  const c2 = useCounter(monthlyNum, 1200);
+  const c3 = useCounter(matchPct, 1000);
+  const cSalary = useCounter(salaryNum, 1000);
+  const cTrend = useCounter(trendNum, 1000);
 
   return (
     <div className="section-enter" style={{ paddingBottom: 48 }}>
@@ -2509,8 +1778,10 @@ function MarketDemand({ onNav, user }) {
       {tab === "match" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Match overview */}
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "32px 36px" }}>
+          <div style={{
+            display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "32px 36px"
+          }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               <CircleMatch pct={matchPct} color={roleColor} size={140} />
               <div style={{ textAlign: "center" }}>
@@ -2528,8 +1799,8 @@ function MarketDemand({ onNav, user }) {
                 {matchPct >= 70
                   ? `You already have ${matchedSkills} of the key skills for ${selectedRole}. Focus on the gaps below to become a top candidate.`
                   : matchPct >= 40
-                  ? `You're on the right track. Building the missing skills will significantly boost your interview success rate.`
-                  : `Start with the high-demand skills below. Even 2–3 additions can dramatically improve your match score.`}
+                    ? `You're on the right track. Building the missing skills will significantly boost your interview success rate.`
+                    : `Start with the high-demand skills below. Even 2–3 additions can dramatically improve your match score.`}
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: 10, padding: "10px 18px" }}>
@@ -2626,10 +1897,12 @@ function MarketDemand({ onNav, user }) {
               <div>
                 <h2 className="syne" style={{ fontSize: 26, fontWeight: 800, color: "#f0f4ff", marginBottom: 4 }}>{selectedRole}</h2>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
                     background: roleData.trend === "increasing" ? "rgba(52,211,153,0.12)" : "rgba(251,191,36,0.12)",
                     border: `1px solid ${roleData.trend === "increasing" ? "rgba(52,211,153,0.3)" : "rgba(251,191,36,0.3)"}`,
-                    borderRadius: 8, padding: "3px 10px" }}>
+                    borderRadius: 8, padding: "3px 10px"
+                  }}>
                     {roleData.trend === "increasing" ? "🚀 Hiring Increasing" : "📊 Stable Demand"}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: roleColor, background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 8, padding: "3px 10px" }}>
@@ -3168,14 +2441,14 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
   async function send(text) {
     const q = text || input;
     if (!q.trim()) return;
-    
+
     const newMsgs = [...messages, { role: "user", text: q }];
     setMessages(newMsgs);
     setInput("");
     setLoading(true);
 
     const response = await callGeminiAPI(q);
-    
+
     setMessages([...newMsgs, { role: "assistant", text: response }]);
     setLoading(false);
     setTimeout(() => msgRef.current?.scrollTo({ top: msgRef.current.scrollHeight, behavior: "smooth" }), 100);
@@ -3195,7 +2468,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
           <p style={{ color: G.muted, marginBottom: 24, lineHeight: 1.6 }}>
             To use the AI Career Assistant, you need a free Google Gemini API key.
           </p>
-          
+
           <div style={{ background: G.surface, padding: 20, borderRadius: 12, marginBottom: 24, textAlign: "left" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>How to get your API key:</h3>
             <ol style={{ color: G.muted, fontSize: 14, lineHeight: 1.8, paddingLeft: 20 }}>
@@ -3211,10 +2484,10 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: G.muted, textAlign: "left" }}>
               Gemini API Key
             </label>
-            <input 
-              className="input-field" 
+            <input
+              className="input-field"
               type="password"
-              placeholder="AIza..." 
+              placeholder="AIza..."
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
               onKeyPress={e => e.key === "Enter" && saveApiKey()}
@@ -3273,7 +2546,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 20 }}>🤖</span>
                 <div className="chat-bubble" style={{ display: "flex", gap: 4 }}>
-                  {[0,1,2].map(i => <span key={i} className="pulse-anim" style={{ width: 8, height: 8, background: G.accent, borderRadius: "50%", display: "inline-block", animationDelay: `${i * 0.2}s` }} />)}
+                  {[0, 1, 2].map(i => <span key={i} className="pulse-anim" style={{ width: 8, height: 8, background: G.accent, borderRadius: "50%", display: "inline-block", animationDelay: `${i * 0.2}s` }} />)}
                 </div>
               </div>
             )}
@@ -3460,7 +2733,7 @@ export default function App() {
       if (dest === "home") { setPage("home"); return; }
       if (dest === "login" || dest === "signup") { setPage(dest); return; }
       // Allow assessment without login
-      if (dest === "assessment") { 
+      if (dest === "assessment") {
         if (user) { setAppPage(dest); setPage("app"); }
         else { setPage("assessment"); }
         return;
@@ -3506,13 +2779,13 @@ export default function App() {
             </div>
           </nav>
           <div style={{ paddingTop: 100, paddingLeft: 40, paddingRight: 40, maxWidth: 1400, margin: "0 auto" }}>
-            <SkillAssessment 
-              user={{ skills: {} }} 
+            <SkillAssessment
+              user={{ skills: {} }}
               onSave={(skills) => {
                 alert("Assessment complete! Login to save your progress and unlock all features.");
                 navigate("signup");
-              }} 
-              onNav={navigate} 
+              }}
+              onNav={navigate}
             />
           </div>
         </div>
@@ -3535,6 +2808,13 @@ export default function App() {
             {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
             {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
             {appPage === "dsa" && <DSAGame />}
+            {appPage === "story" && (
+              <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+                  <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
+                </div>
+              </Suspense>
+            )}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
