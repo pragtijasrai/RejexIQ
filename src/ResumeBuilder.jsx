@@ -94,63 +94,635 @@ async function parseTXT(file) {
 }
 
 function extractResumeData(text) {
-  // Extract real resume content from parsed text
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  
-  // Simple heuristic extraction
-  const data = {
-    name: lines[0] || '',
-    title: lines.find(l => l.match(/engineer|developer|analyst|manager|specialist/i)) || '',
-    email: lines.find(l => l.includes('@')) || '',
-    phone: lines.find(l => /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)) || '',
-    location: '',
-    summary: '',
-    skills: [],
-    experience: [],
-    projects: [],
-    education: [],
-    certifications: [],
-    originalContent: text
-  };
-  
-  // Extract sections
-  let currentSection = '';
-  let currentItem = { description: [] };
-  
-  for (const line of lines) {
-    const lower = line.toLowerCase();
-    
-    if (lower.includes('experience') || lower.includes('professional')) {
-      currentSection = 'experience';
-    } else if (lower.includes('project')) {
-      currentSection = 'projects';
-    } else if (lower.includes('skill')) {
-      currentSection = 'skills';
-    } else if (lower.includes('education')) {
-      currentSection = 'education';
-    } else if (lower.includes('certification')) {
-      currentSection = 'certifications';
-    } else if (lower.includes('summary') || lower.includes('about')) {
-      currentSection = 'summary';
-    } else if (line && currentSection) {
-      if (currentSection === 'experience' && !line.startsWith('•')) {
-        if (currentItem.role) data.experience.push({...currentItem, id: 'e'+Date.now()});
-        currentItem = { role: line, company: '', duration: '', description: '' };
-      } else if (currentSection === 'skills' && line.length < 50) {
-        if (!data.skills.includes(line)) data.skills.push(line);
-      } else if (currentSection === 'summary') {
-        data.summary += (data.summary ? ' ' : '') + line;
-      } else if (currentSection === 'projects') {
-        if (currentItem.name && line.includes('•')) {
-          currentItem.description += '\n' + line;
-        } else if (!currentItem.name) {
-          currentItem = { name: line, tech: '', link: '', description: '', id: 'p'+Date.now() };
+  // ── helpers ──────────────────────────────────────────────────
+  const uid = (pfx) => pfx + Math.random().toString(36).slice(2, 8);
+
+  // Normalise line endings, collapse runs of spaces but keep newlines
+  const rawLines = text.split(/\r?\n/).map(l => l.replace(/[ \t]+/g, ' ').trim());
+
+  // ── 1. CONTACT INFO (scan whole text) ────────────────────────
+  const fullText = rawLines.join(' ');
+
+  const emailMatch   = fullText.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  const phoneMatch   = fullText.match(/(\+?\d[\d\s\-().]{7,}\d)/);
+
+  // Extract full LinkedIn URL or build from username
+  const linkedinFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-_%]+)/i);
+  const linkedinLabelMatch = !linkedinFullMatch && fullText.match(/linkedin[:\s]+([^\s,|<>]+)/i);
+
+  // Extract full GitHub URL or build from username
+  const githubFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9\-_%]+)/i);
+  const githubLabelMatch = !githubFullMatch && fullText.match(/github[:\s]+([^\s,|<>]+)/i);
+
+  // Extract full LeetCode URL or build from username
+  const leetcodeFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?leetcode\.com\/(?:u\/)?([a-zA-Z0-9\-_%]+)/i);
+  const leetcodeLabelMatch = !leetcodeFullMatch && fullText.match(/leetcode[:\s]+([^\s,|<>]+)/i);
+
+  // ── 2. SECTION DETECTION ─────────────────────────────────────
+  // A section header is a SHORT line (≤ 60 chars) that matches a known heading keyword.
+  // It may have trailing punctuation like ":" but nothing else substantial after it.
+  const SECTION_PATTERNS = [
+    { key: 'summary',        re: /^(about\s*me|professional\s*summary|summary|profile|objective|career\s*objective)\s*:?\s*$/i },
+    { key: 'skills',         re: /^(technical\s*skills?|skills?|core\s*competencies|technologies)\s*:?\s*$/i },
+    { key: 'experience',     re: /^(work\s*experience|professional\s*experience|experience|employment)\s*:?\s*$/i },
+    { key: 'projects',       re: /^(projects?|personal\s*projects?|academic\s*projects?)\s*:?\s*$/i },
+    { key: 'education',      re: /^(education|academic\s*background|qualifications?)\s*:?\s*$/i },
+    { key: 'certifications', re: /^(certifications?|certificates?|licenses?\s*&?\s*certifications?)\s*:?\s*$/i },
+    { key: 'achievements',   re: /^(achievements?|awards?|honors?)\s*:?\s*$/i },
+    { key: 'links',          re: /^(links?|profiles?|social)\s*:?\s*$/i },
+  ];
+
+  // Build section map: { sectionName: [lines...] }
+  const sections = {};
+  let currentSec = null;
+
+  // First non-empty lines before any section header = header block (name, title, contact)
+  const headerLines = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    if (!line) continue;
+
+    // Only treat as a section header if the line is short enough to be a heading
+    // (prevents long sentences that happen to start with "Summary" from being misclassified)
+    const isShortEnough = line.length <= 60;
+    const matched = isShortEnough && SECTION_PATTERNS.find(p => p.re.test(line));
+    if (matched) {
+      currentSec = matched.key;
+      if (!sections[currentSec]) sections[currentSec] = [];
+      continue;
+    }
+
+    if (currentSec === null) {
+      headerLines.push(line);
+    } else {
+      sections[currentSec].push(line);
+    }
+  }
+
+  // ── 3. NAME & TITLE from header block ────────────────────────
+  // Name is usually the first prominent line (all caps or title case, no @ or digits)
+  let name = '';
+  let title = '';
+  let location = '';
+
+  for (const hl of headerLines) {
+    if (!name && /^[A-Z][a-zA-Z\s.\-']{2,40}$/.test(hl) && !hl.includes('@') && !/\d/.test(hl)) {
+      name = hl;
+    } else if (!title && /engineer|developer|analyst|manager|designer|architect|scientist|intern|student|specialist|consultant|lead|full.?stack|front.?end|back.?end|devops|data|ml|ai/i.test(hl) && hl.length < 80) {
+      title = hl;
+    } else if (!location && /,\s*[A-Z]{2}|india|usa|uk|remote|bangalore|mumbai|delhi|hyderabad|pune|chennai|kolkata/i.test(hl) && hl.length < 60) {
+      location = hl;
+    }
+  }
+
+  // Fallback: first line is name
+  if (!name && headerLines.length > 0) name = headerLines[0];
+
+  // ── 4. SUMMARY ───────────────────────────────────────────────
+  let summary = '';
+  if (sections.summary && sections.summary.length > 0) {
+    // Join all lines under the summary section into one paragraph
+    summary = sections.summary
+      .map(l => l.trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+  }
+
+  // Fallback: scan header lines for an inline "ABOUT ME: ..." or "Objective: ..." pattern
+  // (some PDFs put the heading and content on the same line)
+  if (!summary) {
+    for (const hl of headerLines) {
+      const inlineM = hl.match(/^(?:about\s*me|professional\s*summary|summary|objective|profile)\s*[:\-]\s*(.+)/i);
+      if (inlineM && inlineM[1].length > 20) {
+        summary = inlineM[1].trim();
+        break;
+      }
+    }
+  }
+
+  // Second fallback: if there is a long paragraph in headerLines that looks like a summary
+  // (no email/phone/URL, longer than 80 chars, starts with a capital letter)
+  if (!summary) {
+    for (const hl of headerLines) {
+      if (
+        hl.length > 80 &&
+        /^[A-Z]/.test(hl) &&
+        !hl.includes('@') &&
+        !/^https?:\/\//i.test(hl) &&
+        !/\b(linkedin|github|leetcode)\b/i.test(hl)
+      ) {
+        summary = hl;
+        break;
+      }
+    }
+  }
+
+  // ── 5. SKILLS ────────────────────────────────────────────────
+  // Preserve grouped format: "Category: skill1, skill2" → { category, items }
+  let skills = [];
+  let skillGroups = []; // [{category, items}]
+  if (sections.skills) {
+    for (const line of sections.skills) {
+      // Detect "Category Label: skill1, skill2, skill3" pattern
+      const groupMatch = line.match(/^([^:]{3,40}):\s*(.+)$/);
+      if (groupMatch) {
+        const category = groupMatch[1].trim();
+        const items = groupMatch[2].split(/[,|]/).map(s => s.trim()).filter(Boolean);
+        skillGroups.push({ category, items });
+        // Also add to flat skills list
+        items.forEach(s => { if (!skills.includes(s)) skills.push(s); });
+      } else {
+        // Comma/pipe/bullet separated on one line, or one per line
+        const parts = line.split(/[,|•·\t]/).map(s => s.trim()).filter(s => s.length > 0 && s.length < 60);
+        if (parts.length > 1) {
+          parts.forEach(p => { if (!skills.includes(p)) skills.push(p); });
+        } else if (line.length < 80 && !skills.includes(line)) {
+          skills.push(line);
         }
       }
     }
   }
-  
-  return data;
+
+  // ── 6. EXPERIENCE ────────────────────────────────────────────
+  const experience = [];
+  if (sections.experience) {
+    const expLines = sections.experience;
+    let curExp = null;
+
+    const isBullet = l => /^[•\-\*▸►→✓✔]/.test(l);
+    const isDuration = l => /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4}|present|current|till|to)\b/i.test(l);
+
+    for (const line of expLines) {
+      if (isBullet(line)) {
+        if (curExp) curExp.description += (curExp.description ? '\n' : '') + line;
+      } else if (isDuration(line) && curExp) {
+        // Duration line belonging to current entry
+        if (!curExp.duration) curExp.duration = line;
+        else curExp.company = curExp.company || line;
+      } else {
+        // New entry heading — could be "Role | Company | Duration" or separate lines
+        if (curExp) experience.push({ ...curExp, id: uid('e') });
+        // Try to split "Role | Company" or "Role at Company"
+        const pipeparts = line.split(/\s*[|–—]\s*/);
+        let role = line, company = '', duration = '';
+        if (pipeparts.length >= 2) {
+          role = pipeparts[0].trim();
+          // Check if last part looks like a duration
+          const last = pipeparts[pipeparts.length - 1];
+          if (isDuration(last)) {
+            duration = last;
+            company = pipeparts.slice(1, -1).join(' | ').trim();
+          } else {
+            company = pipeparts.slice(1).join(' | ').trim();
+          }
+        } else {
+          const atMatch = line.match(/^(.+?)\s+at\s+(.+)$/i);
+          if (atMatch) { role = atMatch[1].trim(); company = atMatch[2].trim(); }
+        }
+        curExp = { role, company, duration, description: '' };
+      }
+    }
+    if (curExp && curExp.role) experience.push({ ...curExp, id: uid('e') });
+  }
+
+  // ── 7. PROJECTS ──────────────────────────────────────────────
+  // BLOCK-BASED: one title + following bullets/description lines until next title
+  const projects = [];
+  if (sections.projects) {
+    // ── PRE-PROCESS: split lines that have a project title embedded mid-line ──
+    // PDFs often join the last bullet of one project with the title of the next onto
+    // a single line, e.g.:
+    //   "Enhanced water efficiency... Smart Notes – Academic Resource Platform | React.js"
+    // We detect this by looking for a " | " that is preceded by a title-like segment
+    // (starts with an uppercase word, not a verb) somewhere after the first word.
+    const splitEmbeddedTitles = (lines) => {
+      const result = [];
+      for (const line of lines) {
+        // Only try to split if the line contains " | " and is long enough to have two parts
+        if (!line.includes('|') || line.length < 20) { result.push(line); continue; }
+
+        // Find all " | " positions and check if the text before any of them looks like
+        // a project title start (uppercase word, not a description verb)
+        const TITLE_START = /(?:^|[.!?…]\s+)([A-Z][A-Za-z0-9\s\-–—]+\s*\|)/g;
+        let match;
+        let splitAt = -1;
+        while ((match = TITLE_START.exec(line)) !== null) {
+          // match.index is where the sentence boundary (or start) is
+          // match[0] starts with the boundary char or is at position 0
+          const titleStart = match.index + match[0].indexOf(match[1]);
+          if (titleStart > 0) {
+            // Check the word right before this position isn't a section header
+            const before = line.slice(0, titleStart).trim();
+            const after  = line.slice(titleStart).trim();
+            // "after" must look like a real project title: has | and the part before | is a noun phrase
+            const afterPipe = after.indexOf('|');
+            if (afterPipe > 2) {
+              const titlePart = after.slice(0, afterPipe).trim();
+              // Title part must start with uppercase and not be a description verb
+              if (/^[A-Z]/.test(titlePart) && !/^(Engineered|Built|Implemented|Designed|Leveraged|Developed|Created|Integrated|Deployed|Automated|Optimized|Architected|Launched|Delivered|Led|Managed|Collaborated|Configured|Utilized|Used|Applied|Established|Improved|Reduced|Increased|Achieved|Enabled|Supported|Maintained|Tested|Analyzed|Researched|Contributed|Worked|Helped|Assisted|Performed|Executed|Handled|Processed|Generated|Produced|Provided|Ensured|Monitored|Tracked|Reviewed|Evaluated|Assessed|Identified|Resolved|Fixed|Debugged|Refactored|Migrated|Upgraded|Extended|Enhanced|Customized|Adapted|Transformed|Converted|Extracted|Parsed|Validated|Verified|Documented|Wrote|Presented|Communicated|Coordinated|Organized|Planned|Scheduled|Facilitated|Trained|Mentored|Guided|Supervised|Oversaw|Directed|Spearheaded|Pioneered|Initiated|Founded|Scaled|Grew|Expanded|Streamlined|Simplified|Standardized|Consolidated|Centralized|Accelerated|Boosted|Maximized|Minimized|Eliminated|Removed|Replaced|Updated|Patched|Secured|Protected|Encrypted|Authenticated|Authorized|Sanitized|Cleaned|Formatted|Structured|Categorized|Classified|Sorted|Filtered|Searched|Queried|Retrieved|Fetched|Loaded|Saved|Stored|Cached|Indexed|Mapped|Serialized|Deserialized|Encoded|Decoded|Compressed|Decompressed|Minified|Bundled|Compiled|Transpiled|Linted|Mocked|Stubbed|Simulated|Emulated|Profiled|Benchmarked|Measured|Logged|Traced|Inspected|Audited|Reported|Visualized|Rendered|Displayed|Showed|Exported|Imported|Synced|Replicated|Backed|Restored|Recovered|Announced|Promoted|Marketed|Sold|Pitched|Demonstrated|Showcased|Exhibited|Shared|Distributed|Broadcast|Streamed|Transmitted|Sent|Received|Controlled|Regulated|Enforced|Ran|Started|Stopped|Paused|Resumed|Restarted|Initialized|Reset|Cleared|Flushed|Purged|Deleted|Inserted|Appended|Prepended|Merged|Split|Joined|Concatenated|Combined|Aggregated|Grouped|Partitioned|Sharded|Balanced|Replicated|Synchronized|Orchestrated|Queued|Prioritized|Throttled|Memoized|Tuned|Alerted|Notified|Triggered|Fired|Emitted|Subscribed|Consumed|Batched|Chunked|Paginated|Programmed|Interfaced|Wired|Soldered|Calibrated|Flashed|Assembled|Prototyped|Modeled|Fabricated|Characterized|Diagnosed|Repaired|Replaced|Installed|Mounted|Connected|Powered|Sensed|Actuated|Transmitted|Filtered|Amplified|Converted|Stabilized|Deployed|Launched|Released|Published|Shipped|Delivered)\b/i.test(titlePart)) {
+                splitAt = titleStart;
+                break;
+              }
+            }
+          }
+        }
+
+        if (splitAt > 0) {
+          const part1 = line.slice(0, splitAt).trim();
+          const part2 = line.slice(splitAt).trim();
+          if (part1) result.push(part1);
+          if (part2) result.push(part2);
+        } else {
+          result.push(line);
+        }
+      }
+      return result;
+    };
+
+    const projLines = splitEmbeddedTitles(sections.projects);
+    let curProj = null;
+
+    const isBullet = l => /^[•\-\*▸►→✓✔]/.test(l);
+
+    // Action verbs that start DESCRIPTION lines — these are NEVER project titles.
+    const DESCRIPTION_VERBS = /^(Engineered|Built|Implemented|Designed|Leveraged|Developed|Created|Integrated|Deployed|Automated|Optimized|Architected|Launched|Delivered|Led|Managed|Collaborated|Configured|Utilized|Used|Applied|Established|Improved|Reduced|Increased|Achieved|Enabled|Supported|Maintained|Tested|Analyzed|Researched|Contributed|Worked|Helped|Assisted|Performed|Executed|Handled|Processed|Generated|Produced|Provided|Ensured|Monitored|Tracked|Reviewed|Evaluated|Assessed|Identified|Resolved|Fixed|Debugged|Refactored|Migrated|Upgraded|Extended|Enhanced|Customized|Adapted|Transformed|Converted|Extracted|Parsed|Validated|Verified|Documented|Wrote|Presented|Communicated|Coordinated|Organized|Planned|Scheduled|Facilitated|Trained|Mentored|Guided|Supervised|Oversaw|Directed|Spearheaded|Pioneered|Initiated|Founded|Scaled|Grew|Expanded|Streamlined|Simplified|Standardized|Consolidated|Centralized|Accelerated|Boosted|Maximized|Minimized|Eliminated|Removed|Replaced|Updated|Patched|Secured|Protected|Encrypted|Authenticated|Authorized|Sanitized|Cleaned|Formatted|Structured|Categorized|Classified|Sorted|Filtered|Searched|Queried|Retrieved|Fetched|Loaded|Saved|Stored|Cached|Indexed|Mapped|Serialized|Deserialized|Encoded|Decoded|Compressed|Decompressed|Minified|Bundled|Compiled|Transpiled|Linted|Mocked|Stubbed|Simulated|Emulated|Profiled|Benchmarked|Measured|Logged|Traced|Inspected|Audited|Reported|Visualized|Rendered|Displayed|Showed|Exported|Imported|Synced|Replicated|Backed|Restored|Recovered|Announced|Promoted|Marketed|Sold|Pitched|Demonstrated|Showcased|Exhibited|Shared|Distributed|Broadcast|Streamed|Transmitted|Sent|Received|Controlled|Regulated|Enforced|Ran|Started|Stopped|Paused|Resumed|Restarted|Initialized|Reset|Cleared|Flushed|Purged|Deleted|Inserted|Appended|Prepended|Merged|Split|Joined|Concatenated|Combined|Aggregated|Grouped|Partitioned|Sharded|Balanced|Replicated|Synchronized|Orchestrated|Queued|Prioritized|Throttled|Memoized|Tuned|Alerted|Notified|Triggered|Fired|Emitted|Subscribed|Consumed|Batched|Chunked|Paginated|Programmed|Interfaced|Wired|Soldered|Calibrated|Flashed|Assembled|Prototyped|Modeled|Fabricated|Characterized|Diagnosed|Repaired|Replaced|Installed|Mounted|Connected|Powered|Sensed|Actuated|Transmitted|Filtered|Amplified|Converted|Stabilized|Deployed|Launched|Released|Published|Shipped|Delivered)\b/i;
+
+    const isDescriptionLine = l => DESCRIPTION_VERBS.test(l.trim());
+
+    // A project title:
+    // STRONG signal  → line contains " | " (tech stack separator): always a title regardless of starting word
+    // WEAK  signal   → starts with uppercase, no verb, no bullet, no digit-start
+    const isProjectTitle = l => {
+      const t = l.trim();
+      if (!t || t.length < 3) return false;
+      if (isBullet(t)) return false;
+      if (/^[a-z]/.test(t)) return false;
+      if (/^\d{4}/.test(t)) return false;
+
+      // STRONG: contains " | " → treat as project title unconditionally
+      // (project titles like "Automated Plant Watering System | IoT" start with a verb word
+      //  but the pipe makes it unambiguous — no description sentence uses " | ")
+      if (t.includes('|')) return true;
+
+      // WEAK: starts with uppercase, not a description verb
+      if (/^[A-Z]/.test(t) && !isDescriptionLine(t)) return true;
+
+      return false;
+    };
+
+    for (const line of projLines) {
+      if (isBullet(line)) {
+        // Bullet → always description of current project
+        if (curProj) curProj.description += (curProj.description ? '\n' : '') + line;
+      } else if (isProjectTitle(line)) {
+        // New project title — save previous and start fresh
+        if (curProj && curProj.name) projects.push({ ...curProj, id: uid('p') });
+
+        // Keep FULL title intact.
+        // "Project Name | Tech Stack" → name = "Project Name", tech = "Tech Stack"
+        // "Project Name – Subtitle | Tech" → name = "Project Name – Subtitle", tech = "Tech"
+        let projName = line, tech = '', link = '';
+
+        // Extract embedded URL first
+        const linkMatch = line.match(/https?:\/\/[^\s|,]+/i);
+        if (linkMatch) { link = linkMatch[0]; projName = projName.replace(linkMatch[0], '').trim(); }
+
+        // Split on the LAST pipe to separate tech stack
+        const lastPipe = projName.lastIndexOf('|');
+        if (lastPipe !== -1) {
+          tech = projName.slice(lastPipe + 1).trim();
+          projName = projName.slice(0, lastPipe).trim();
+        } else {
+          // Try parentheses: "Project Name (Tech)"
+          const parenMatch = projName.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+          if (parenMatch) { projName = parenMatch[1].trim(); tech = parenMatch[2].trim(); }
+        }
+
+        curProj = { name: projName, tech, link, description: '' };
+      } else {
+        // Description verb line or lowercase → append to current project as bullet
+        if (curProj) {
+          const formatted = '• ' + line.replace(/^[•\-\*▸►→✓✔]\s*/, '');
+          curProj.description += (curProj.description ? '\n' : '') + formatted;
+        }
+      }
+    }
+    if (curProj && curProj.name) projects.push({ ...curProj, id: uid('p') });
+  }
+
+  // ── 8. EDUCATION ─────────────────────────────────────────────
+  // BLOCK-BASED: each institution creates a new card; all related lines stay in same card
+  const education = [];
+  if (sections.education) {
+    const eduLines = sections.education;
+    let curEdu = null;
+
+    const isBullet = l => /^[•\-\*▸►→]/.test(l);
+    const hasYear  = l => /\b(19|20)\d{2}\b/.test(l);
+    const hasGPA   = l => /(?:gpa|cgpa|percentage|score|%)\s*[:\-]?\s*[\d.]+/i.test(l) || /[\d.]+\s*(?:cgpa|gpa|%)/i.test(l);
+    const hasBoard = l => /\b(cbse|icse|state\s*board|igcse|ib\b|matriculation)\b/i.test(l);
+    const hasClass = l => /\b(10th|12th|class\s*(x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i.test(l);
+
+    // A line starts a NEW education entry if it contains a degree/institution keyword
+    // AND is not a detail line (GPA, year, board, coursework)
+    const isNewEntry = l => {
+      if (isBullet(l)) return false;
+      const lo = l.toLowerCase();
+      // Degree keywords
+      if (/\b(b\.?tech|b\.?e\b|b\.?sc|b\.?com|b\.?a\b|m\.?tech|m\.?sc|m\.?e\b|m\.?com|m\.?a\b|mba|phd|ph\.d|bachelor|master|diploma|associate)\b/i.test(lo)) return true;
+      // School/college/university as standalone institution name
+      if (/\b(university|college|institute|school|academy|polytechnic)\b/i.test(lo) && l.length > 8) return true;
+      // Class 10/12 lines that also contain school name
+      if (hasClass(l) && l.length > 15) return true;
+      return false;
+    };
+
+    // Extract GPA/score value from a line
+    const extractGPA = l => {
+      const m = l.match(/(?:gpa|cgpa|score|percentage)\s*[:\-]?\s*([\d.]+\s*%?)/i)
+             || l.match(/([\d.]+)\s*(?:cgpa|gpa|%)/i)
+             || l.match(/(?:scored?|marks?|obtained)\s*[:\-]?\s*([\d.]+\s*%?)/i);
+      return m ? m[1].trim() : '';
+    };
+
+    // Extract year range from a line
+    const extractYear = l => {
+      const m = l.match(/\b((?:19|20)\d{2})\s*[-–—to]+\s*((?:19|20)?\d{2,4}|\bpresent\b|\bcurrent\b)/i)
+             || l.match(/\b((?:19|20)\d{2})\b/);
+      return m ? m[0] : '';
+    };
+
+    for (const line of eduLines) {
+      if (isBullet(line)) {
+        // Bullet = coursework or detail for current entry
+        if (curEdu) {
+          const text = line.replace(/^[•\-\*▸►→]\s*/, '');
+          curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + text;
+        }
+        continue;
+      }
+
+      if (isNewEntry(line)) {
+        // Save previous entry
+        if (curEdu) education.push({ ...curEdu, id: uid('d') });
+
+        // Parse the heading line — could be:
+        // "B.E. in Computer Science Engineering" (degree only)
+        // "B.E. in CSE | Chitkara University | Aug 2028" (pipe-separated)
+        // "S B SINGH PUBLIC HIGH SCHOOL SANGRUR PUNJAB" (school name)
+        const pipeparts = line.split(/\s*[|–—]\s*/);
+        let degree = '', institution = '', year = '', gpa = '', board = '', classLevel = '';
+
+        if (pipeparts.length >= 3) {
+          // "Degree | Institution | Year" format
+          degree = pipeparts[0].trim();
+          institution = pipeparts[1].trim();
+          const rest = pipeparts.slice(2).join(' ');
+          year = extractYear(rest) || extractYear(pipeparts[pipeparts.length - 1]);
+          gpa = extractGPA(rest);
+        } else if (pipeparts.length === 2) {
+          degree = pipeparts[0].trim();
+          const second = pipeparts[1].trim();
+          if (hasYear(second)) { year = extractYear(second); }
+          else { institution = second; }
+        } else {
+          // Single line — could be degree or institution name
+          // If it has a degree keyword, treat as degree
+          if (/\b(b\.?tech|b\.?e\b|b\.?sc|b\.?com|b\.?a\b|m\.?tech|m\.?sc|m\.?e\b|mba|phd|bachelor|master|diploma)\b/i.test(line)) {
+            degree = line;
+          } else {
+            // It's an institution name (school/college)
+            institution = line;
+          }
+        }
+
+        // Extract class level (10th/12th) from degree or institution line
+        const classM = line.match(/\b(10th|12th|class\s*(?:x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i);
+        if (classM) classLevel = classM[0];
+
+        // Extract board
+        const boardM = line.match(/\b(cbse|icse|state\s*board|igcse|ib\b)\b/i);
+        if (boardM) board = boardM[0].toUpperCase();
+
+        // Extract GPA from degree line if present
+        if (!gpa) gpa = extractGPA(line);
+        // Extract year from degree line if present
+        if (!year) year = extractYear(line);
+
+        curEdu = { degree, institution, year, gpa, board, classLevel, coursework: '' };
+      } else if (curEdu) {
+        // Detail line belonging to current entry — do NOT start a new entry
+        // Try to fill in missing fields
+
+        // Institution name (if not yet set and line looks like an org name)
+        if (!curEdu.institution && !hasYear(line) && !hasGPA(line) && !hasBoard(line) && line.length > 5 && !/^\d/.test(line)) {
+          curEdu.institution = line;
+        }
+        // Year
+        else if (!curEdu.year && hasYear(line)) {
+          curEdu.year = extractYear(line) || line;
+        }
+        // GPA / score
+        else if (!curEdu.gpa && hasGPA(line)) {
+          curEdu.gpa = extractGPA(line) || line;
+        }
+        // Board
+        else if (!curEdu.board && hasBoard(line)) {
+          const bm = line.match(/\b(cbse|icse|state\s*board|igcse|ib\b)\b/i);
+          if (bm) curEdu.board = bm[0].toUpperCase();
+        }
+        // Class level
+        else if (!curEdu.classLevel) {
+          const cm = line.match(/\b(10th|12th|class\s*(?:x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i);
+          if (cm) curEdu.classLevel = cm[0];
+        }
+        // Coursework / relevant courses
+        else if (/relevant\s*coursework|courses?:/i.test(line)) {
+          const cw = line.replace(/relevant\s*coursework[:\s]*/i, '').replace(/courses?[:\s]*/i, '').trim();
+          if (cw) curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + cw;
+        }
+        // Anything else — append to coursework if it looks like a list
+        else if (line.includes(',') && line.length < 200) {
+          curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + line;
+        }
+      } else {
+        // Line before any recognised entry — start a new entry
+        curEdu = { degree: '', institution: line, year: '', gpa: '', board: '', classLevel: '', coursework: '' };
+      }
+    }
+    if (curEdu && (curEdu.degree || curEdu.institution)) education.push({ ...curEdu, id: uid('d') });
+  }
+
+  // ── 9. CERTIFICATIONS ────────────────────────────────────────
+  // BLOCK-BASED: one cert title + following issuer/year/URL lines until next cert title.
+  //
+  // KEY INSIGHT: A cert TITLE line contains a cert-type keyword like:
+  //   CERTIFICATE, Certification, Specialization, Course, Program, Badge
+  // OR it is the very first non-empty line in the section (before any title has been seen).
+  //
+  // An ISSUER line is a long org name that follows a title — it does NOT contain cert keywords.
+  // We must NOT start a new cert card on an issuer line.
+  const certifications = [];
+  if (sections.certifications) {
+    const certLines = sections.certifications;
+    let curCert = null;
+    let firstCertSeen = false;
+
+    const isBullet = l => /^[•\-\*▸►→]/.test(l);
+
+    // A line is a cert TITLE if it contains a cert-type keyword anywhere in it,
+    // OR if no cert has been started yet (first non-bullet, non-URL line in section).
+    const CERT_KEYWORDS = /\b(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\b/i;
+
+    const isCertTitle = (l, hasActiveCert) => {
+      if (isBullet(l)) return false;
+      if (/^https?:\/\//i.test(l.trim())) return false;
+      if (/^\d{4}$/.test(l.trim())) return false;
+      // If the line contains a cert keyword → always a title
+      if (CERT_KEYWORDS.test(l)) return true;
+      // If no cert has been started yet → treat as first title
+      if (!hasActiveCert) return true;
+      return false;
+    };
+
+    for (const line of certLines) {
+      if (isBullet(line)) {
+        if (curCert) curCert.description = (curCert.description ? curCert.description + ' ' : '') + line.replace(/^[•\-\*▸►→]\s*/, '');
+        continue;
+      }
+
+      if (isCertTitle(line, firstCertSeen)) {
+        // Save previous cert before starting new one
+        if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
+        firstCertSeen = true;
+
+        let certName = line, issuer = '', year = '', certUrl = '';
+
+        // Extract embedded URL
+        const urlM = line.match(/https?:\/\/[^\s]+/);
+        if (urlM) { certUrl = urlM[0]; certName = certName.replace(urlM[0], '').trim(); }
+
+        // Extract year (e.g. "May 2025" or just "2025")
+        const yearM = certName.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i);
+        if (yearM) { year = yearM[0].trim(); certName = certName.replace(yearM[0], '').trim(); }
+
+        // If the title contains " | CERTIFICATE" or " | Certification" etc., keep it intact
+        // but also try to split off an inline issuer: "Title | Issuer | CERTIFICATE"
+        // Strategy: find the LAST occurrence of a cert keyword and treat everything before it as name+issuer
+        const certKwMatch = certName.match(/^(.*?)\s*[|–—]\s*(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\s*$/i);
+        if (certKwMatch) {
+          // Everything before the final " | CERTIFICATE" is the cert name (possibly with issuer)
+          const beforeKw = certKwMatch[1].trim();
+          const kw = certKwMatch[2];
+          // Check if beforeKw itself has a pipe — if so, split name | issuer
+          const innerPipe = beforeKw.lastIndexOf('|');
+          if (innerPipe !== -1) {
+            certName = beforeKw.slice(0, innerPipe).trim() + ' | ' + kw;
+            issuer = beforeKw.slice(innerPipe + 1).trim();
+          } else {
+            certName = beforeKw + ' | ' + kw;
+          }
+        } else {
+          // No cert keyword in title line — just clean up trailing punctuation
+          certName = certName.replace(/[,\-–—|]+$/, '').trim();
+        }
+
+        curCert = { name: certName, issuer, year, url: certUrl, description: '' };
+      } else if (curCert) {
+        // Detail line belonging to current cert — could be issuer, year, or URL
+
+        // Pure URL line
+        const urlM = line.match(/https?:\/\/[^\s]+/);
+        if (urlM && !curCert.url) { curCert.url = urlM[0]; continue; }
+
+        // Year-only or "Month Year" line
+        const yearOnlyM = line.match(/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\s*$/i);
+        if (yearOnlyM) { if (!curCert.year) curCert.year = line.trim(); continue; }
+
+        // Line contains a year embedded in it — extract year and treat rest as issuer
+        const yearM = line.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i);
+        if (yearM && !curCert.year) curCert.year = yearM[0].trim();
+
+        // Treat as issuer if not yet set; otherwise append to description
+        const cleaned = line.replace(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i, '').replace(/[|,\s]+$/, '').trim();
+        if (!curCert.issuer && cleaned.length > 2) {
+          curCert.issuer = cleaned;
+        } else if (cleaned.length > 2 && cleaned !== curCert.issuer) {
+          // Append to issuer if it looks like a continuation (e.g. long org name split across lines)
+          curCert.issuer = curCert.issuer ? curCert.issuer + ', ' + cleaned : cleaned;
+        }
+      }
+    }
+    if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
+  }
+
+  // ── 10. LINKS (LinkedIn, GitHub, LeetCode) ───────────────────
+  // Use full URLs extracted from text; fall back to label-based extraction
+  let linkedin = '';
+  let github   = '';
+  let leetcode = '';
+
+  if (linkedinFullMatch) {
+    linkedin = 'linkedin.com/in/' + linkedinFullMatch[1];
+  } else if (linkedinLabelMatch) {
+    const val = linkedinLabelMatch[1].trim();
+    // If it already looks like a URL fragment, use as-is; otherwise treat as username
+    linkedin = val.includes('linkedin.com') ? val : 'linkedin.com/in/' + val;
+  }
+
+  if (githubFullMatch) {
+    github = 'github.com/' + githubFullMatch[1];
+  } else if (githubLabelMatch) {
+    const val = githubLabelMatch[1].trim();
+    github = val.includes('github.com') ? val : 'github.com/' + val;
+  }
+
+  if (leetcodeFullMatch) {
+    leetcode = 'leetcode.com/u/' + leetcodeFullMatch[1];
+  } else if (leetcodeLabelMatch) {
+    const val = leetcodeLabelMatch[1].trim();
+    leetcode = val.includes('leetcode.com') ? val : 'leetcode.com/u/' + val;
+  }
+
+  // Also scan a dedicated links section if present
+  if (sections.links) {
+    for (const line of sections.links) {
+      if (!linkedin && /linkedin/i.test(line)) {
+        const m = line.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-_%]+)/i);
+        linkedin = m ? 'linkedin.com/in/' + m[1] : line.replace(/^linkedin[:\s]*/i, '').trim();
+      }
+      if (!github && /github/i.test(line)) {
+        const m = line.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9\-_%]+)/i);
+        github = m ? 'github.com/' + m[1] : line.replace(/^github[:\s]*/i, '').trim();
+      }
+      if (!leetcode && /leetcode/i.test(line)) {
+        const m = line.match(/(?:https?:\/\/)?(?:www\.)?leetcode\.com\/(?:u\/)?([a-zA-Z0-9\-_%]+)/i);
+        leetcode = m ? 'leetcode.com/u/' + m[1] : line.replace(/^leetcode[:\s]*/i, '').trim();
+      }
+    }
+  }
+
+  // ── 11. ASSEMBLE ─────────────────────────────────────────────
+  return {
+    name,
+    title,
+    email:    emailMatch  ? emailMatch[0]  : '',
+    phone:    phoneMatch  ? phoneMatch[1].trim() : '',
+    location,
+    linkedin,
+    github,
+    leetcode,
+    summary,
+    skills,
+    skillGroups,
+    experience,
+    projects,
+    education,
+    certifications,
+    originalContent: text,
+  };
 }
 
 // ─── UTILITIES ───────────────────────────────────────────────────
@@ -206,17 +778,23 @@ function ModernPreview({data,accent}){
             <div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontWeight:500,marginTop:4}}>{data.title||"Job Title"}</div>
             <div style={{display:"flex",gap:14,marginTop:6,fontSize:10,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>
               {data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}{data.location&&<span>📍 {data.location}</span>}
+              {data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}{data.leetcode&&<span>💻 {data.leetcode}</span>}
             </div>
           </div>
         </div>
       </div>
       <div style={{padding:"24px 32px 24px 32px"}}>
         {data.summary&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Summary</h2><p style={{fontSize:11,color:"#374151",lineHeight:1.7,margin:0}}>{data.summary}</p></div>}
-        {data.skills.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Skills</h2><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"15",border:"1px solid "+accent+"33",color:accent,padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600}}>{s}</span>)}</div></div>}
-        {data.experience.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}><div><div style={{fontWeight:700,fontSize:12,color:"#111827"}}>{e.role||"Role"}</div><div style={{fontSize:10,color:"#6b7280",marginTop:1}}>{e.company}</div></div><div style={{fontSize:9,color:"#9ca3af",whiteSpace:"nowrap",marginLeft:8}}>{e.duration}</div></div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#4b5563",margin:"2px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
-        {data.projects.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}><span style={{fontWeight:700,fontSize:11,color:"#111827"}}>{p.name||"Project"}</span>{p.link&&<span style={{fontSize:9,color:accent}}>{p.link}</span>}</div>{p.tech&&<div style={{fontSize:9,color:"#9ca3af",marginBottom:2}}>Stack: {p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#4b5563",margin:"1px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
-        {data.education.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div><div style={{fontWeight:700,fontSize:11,color:"#111827"}}>{e.degree}</div><div style={{fontSize:10,color:"#6b7280",marginTop:1}}>{e.institution}{e.gpa?" · GPA "+e.gpa:""}</div></div><div style={{fontSize:9,color:"#9ca3af",whiteSpace:"nowrap",marginLeft:8}}>{e.year}</div></div>)}</div>}
-        {data.certifications.length>0&&<div><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{fontSize:10,color:"#374151",marginBottom:4,lineHeight:1.5}}><span style={{fontWeight:600}}>{c.name}</span>{c.issuer&&" — "+c.issuer}{c.year&&" ("+c.year+")"}</div>)}</div>}
+        {data.skills.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Skills</h2>
+          {data.skillGroups?.length>0
+            ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:4,fontSize:10,color:"#374151",lineHeight:1.6}}><span style={{fontWeight:700,color:"#111827"}}>{g.category}:</span> {g.items.join(", ")}</div>)
+            : <div style={{display:"flex",flexWrap:"wrap",gap:5}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"15",border:"1px solid "+accent+"33",color:accent,padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600}}>{s}</span>)}</div>
+          }
+        </div>}
+        {data.experience.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}><div><div style={{fontWeight:700,fontSize:12,color:"#111827"}}>{e.role||"Role"}</div><div style={{fontSize:10,color:"#6b7280",marginTop:1}}>{e.company}</div></div><div style={{fontSize:9,color:"#9ca3af",whiteSpace:"nowrap",marginLeft:8}}>{e.duration}</div></div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#4b5563",margin:"2px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.projects.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}><span style={{fontWeight:700,fontSize:11,color:"#111827"}}>{p.name||"Project"}</span>{p.link&&<span style={{fontSize:9,color:accent,fontWeight:400}}>{p.link}</span>}</div>{p.tech&&<div style={{fontSize:9,color:"#9ca3af",marginBottom:2,fontWeight:400}}>Stack: {p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#4b5563",margin:"1px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.education.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div style={{flex:1}}><div style={{fontWeight:700,fontSize:11,color:"#111827"}}>{e.degree||e.classLevel}</div><div style={{fontSize:10,color:"#6b7280",marginTop:1}}>{e.institution}</div>{(e.gpa||e.board)&&<div style={{fontSize:9,color:"#9ca3af",marginTop:1}}>{e.gpa?"GPA/Score: "+e.gpa:""}{e.gpa&&e.board?" · ":""}{e.board?"Board: "+e.board:""}</div>}{e.coursework&&<div style={{fontSize:9,color:"#9ca3af",marginTop:1,fontStyle:"italic"}}>Courses: {e.coursework}</div>}</div><div style={{fontSize:9,color:"#9ca3af",whiteSpace:"nowrap",marginLeft:8,flexShrink:0}}>{e.year}</div></div></div>)}</div>}
+        {data.certifications.length>0&&<div><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:6,lineHeight:1.5}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:10,color:"#111827",fontWeight:700}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:8,color:accent,fontWeight:600,textDecoration:"none",border:"1px solid "+accent+"44",borderRadius:4,padding:"1px 6px",flexShrink:0}}>View Certificate</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:9,color:"#6b7280",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}{c.description&&<div style={{fontSize:9,color:"#4b5563",fontWeight:400}}>{c.description}</div>}</div>)}</div>}
       </div>
     </div>
   );
@@ -229,13 +807,18 @@ function ClassicPreview({data,accent}){
         {data.profileImage&&<img src={data.profileImage} alt="" style={{width:72,height:72,borderRadius:"50%",border:"3px solid #333",objectFit:"cover",marginBottom:8}}/>}
         <h1 style={{fontSize:26,fontWeight:700,color:"#1a1a1a",margin:"0 0 4px",letterSpacing:1,lineHeight:1.2}}>{data.name||"Your Name"}</h1>
         <div style={{fontSize:13,color:"#555",fontStyle:"italic",marginBottom:6}}>{data.title}</div>
-        <div style={{display:"flex",justifyContent:"center",gap:16,fontSize:10,color:"#666",flexWrap:"wrap"}}>{data.email&&<span>{data.email}</span>}{data.phone&&<span>{data.phone}</span>}{data.location&&<span>{data.location}</span>}</div>
+        <div style={{display:"flex",justifyContent:"center",gap:16,fontSize:10,color:"#666",flexWrap:"wrap"}}>{data.email&&<span>{data.email}</span>}{data.phone&&<span>{data.phone}</span>}{data.location&&<span>{data.location}</span>}{data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}{data.leetcode&&<span>💻 {data.leetcode}</span>}</div>
       </div>
       {data.summary&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Professional Summary</h2><p style={{fontSize:11,color:"#333",lineHeight:1.8,fontStyle:"italic",margin:0}}>{data.summary}</p></div>}
-      {data.skills.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Core Competencies</h2><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"3px 8px"}}>{data.skills.map((s,i)=><span key={i} style={{fontSize:10,color:"#444"}}>▸ {s}</span>)}</div></div>}
-      {data.experience.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Professional Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:700,fontSize:12}}>{e.role}</span><span style={{fontSize:10,color:"#666",fontStyle:"italic"}}>{e.duration}</span></div><div style={{fontSize:11,color:"#555",fontStyle:"italic",marginBottom:4}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#444",margin:"2px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
+      {data.skills.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Core Competencies</h2>
+        {data.skillGroups?.length>0
+          ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:4,fontSize:10,color:"#333",lineHeight:1.6}}><span style={{fontWeight:700}}>{g.category}:</span> {g.items.join(", ")}</div>)
+          : <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"3px 8px"}}>{data.skills.map((s,i)=><span key={i} style={{fontSize:10,color:"#444"}}>▸ {s}</span>)}</div>
+        }
+      </div>}
+      {data.experience.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Professional Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:700,fontSize:12}}>{e.role}</span><span style={{fontSize:10,color:"#666",fontStyle:"italic"}}>{e.duration}</span></div><div style={{fontSize:11,color:"#555",fontStyle:"italic",marginBottom:4}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#444",margin:"2px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
       {data.education.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:8,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:11}}>{e.degree}</div><div style={{fontSize:10,color:"#666",fontStyle:"italic"}}>{e.institution}{e.gpa?" | GPA: "+e.gpa:""}</div></div><div style={{fontSize:10,color:"#888"}}>{e.year}</div></div>)}</div>}
-      {data.certifications.length>0&&<div><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{fontSize:10,color:"#444",marginBottom:3}}><span style={{fontWeight:600}}>{c.name}</span>{c.issuer&&" — "+c.issuer}{c.year&&" ("+c.year+")"}</div>)}</div>}
+      {data.certifications.length>0&&<div><h2 style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:2,borderBottom:"1px solid #ccc",paddingBottom:4,marginBottom:8}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:6,lineHeight:1.5}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:10,color:"#1a1a1a",fontWeight:700}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:8,color:"#555",fontWeight:600,textDecoration:"none",border:"1px solid #ccc",borderRadius:4,padding:"1px 6px",flexShrink:0}}>View Certificate</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:9,color:"#555",fontStyle:"italic",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}{c.description&&<div style={{fontSize:9,color:"#444",fontWeight:400}}>{c.description}</div>}</div>)}</div>}
     </div>
   );
 }
@@ -248,15 +831,20 @@ function MinimalPreview({data,accent}){
           {data.profileImage&&<img src={data.profileImage} alt="" style={{width:56,height:56,borderRadius:8,objectFit:"cover",flexShrink:0}}/>}
           <div><h1 style={{fontSize:22,fontWeight:700,color:"#111",margin:0,lineHeight:1.2}}>{data.name||"Your Name"}</h1><div style={{fontSize:12,color:"#666",marginTop:3}}>{data.title}</div></div>
         </div>
-        <div style={{display:"flex",gap:16,marginTop:8,fontSize:10,color:"#888",flexWrap:"wrap"}}>{data.email&&<span>{data.email}</span>}{data.phone&&<span>{data.phone}</span>}{data.location&&<span>{data.location}</span>}</div>
+        <div style={{display:"flex",gap:16,marginTop:8,fontSize:10,color:"#888",flexWrap:"wrap"}}>{data.email&&<span>{data.email}</span>}{data.phone&&<span>{data.phone}</span>}{data.location&&<span>{data.location}</span>}{data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}{data.leetcode&&<span>💻 {data.leetcode}</span>}</div>
         <div style={{height:2,background:accent,marginTop:12,borderRadius:1}}/>
       </div>
       {data.summary&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>About</h2><p style={{fontSize:11,color:"#444",lineHeight:1.8,margin:0}}>{data.summary}</p></div>}
-      {data.skills.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Skills</h2><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{data.skills.map((s,i)=><span key={i} style={{background:"#f3f4f6",padding:"3px 9px",borderRadius:4,fontSize:10,color:"#555"}}>{s}</span>)}</div></div>}
-      {data.experience.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12,paddingLeft:12,borderLeft:"2px solid "+accent+"55"}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:600,fontSize:11}}>{e.role}</span><span style={{fontSize:9,color:"#aaa"}}>{e.duration}</span></div><div style={{fontSize:10,color:"#888",marginBottom:3}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#555",margin:"1px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
-      {data.projects.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:10,paddingLeft:12,borderLeft:"2px solid "+accent+"55"}}><span style={{fontWeight:600,fontSize:11}}>{p.name}</span>{p.tech&&<span style={{fontSize:9,color:"#aaa"}}> · {p.tech}</span>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#555",margin:"1px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
+      {data.skills.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Skills</h2>
+        {data.skillGroups?.length>0
+          ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:3,fontSize:10,color:"#444",lineHeight:1.6}}><span style={{fontWeight:700,color:"#222"}}>{g.category}:</span> {g.items.join(", ")}</div>)
+          : <div style={{display:"flex",flexWrap:"wrap",gap:5}}>{data.skills.map((s,i)=><span key={i} style={{background:"#f3f4f6",padding:"3px 9px",borderRadius:4,fontSize:10,color:"#555"}}>{s}</span>)}</div>
+        }
+      </div>}
+      {data.experience.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12,paddingLeft:12,borderLeft:"2px solid "+accent+"55"}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:600,fontSize:11}}>{e.role}</span><span style={{fontSize:9,color:"#aaa"}}>{e.duration}</span></div><div style={{fontSize:10,color:"#888",marginBottom:3}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#555",margin:"1px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
+      {data.projects.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:10,paddingLeft:12,borderLeft:"2px solid "+accent+"55"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:1}}><span style={{fontWeight:600,fontSize:11}}>{p.name}</span>{p.link&&<span style={{fontSize:9,color:accent,fontWeight:400}}>{p.link}</span>}</div>{p.tech&&<div style={{fontSize:9,color:"#aaa",marginBottom:2,fontWeight:400}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#555",margin:"1px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
       {data.education.length>0&&<div style={{marginBottom:16}}><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:8,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:600,fontSize:11}}>{e.degree}</div><div style={{fontSize:10,color:"#888"}}>{e.institution}{e.gpa?" · GPA "+e.gpa:""}</div></div><div style={{fontSize:9,color:"#aaa"}}>{e.year}</div></div>)}</div>}
-      {data.certifications.length>0&&<div><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{fontSize:10,color:"#555",marginBottom:3}}>{c.name}{c.issuer&&" · "+c.issuer}{c.year&&" ("+c.year+")"}</div>)}</div>}
+      {data.certifications.length>0&&<div><h2 style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:2,color:"#999",marginBottom:6}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:5,lineHeight:1.5}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:10,color:"#222",fontWeight:600}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:8,color:"#888",fontWeight:600,textDecoration:"none",border:"1px solid #ddd",borderRadius:4,padding:"1px 6px",flexShrink:0}}>View Certificate</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:9,color:"#888",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}{c.description&&<div style={{fontSize:9,color:"#555",fontWeight:400}}>{c.description}</div>}</div>)}</div>}
     </div>
   );
 }
@@ -270,12 +858,22 @@ function SidebarPreview({data,accent}){
         {data.email&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)",wordBreak:"break-all"}}>✉ {data.email}</div>}
         {data.phone&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)"}}>📞 {data.phone}</div>}
         {data.location&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)"}}>📍 {data.location}</div>}
-        {data.skills.length>0&&<div style={{marginTop:8}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.6)",marginBottom:6}}>Skills</div>{data.skills.slice(0,8).map((s,i)=><div key={i} style={{fontSize:8,color:"rgba(255,255,255,0.85)",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.15)"}}>{s}</div>)}</div>}
+        {data.linkedin&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)",wordBreak:"break-all"}}>🔗 {data.linkedin}</div>}
+        {data.github&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)",wordBreak:"break-all"}}>🐙 {data.github}</div>}
+        {data.leetcode&&<div style={{fontSize:8,color:"rgba(255,255,255,0.75)",wordBreak:"break-all"}}>💻 {data.leetcode}</div>}
+        {data.skills.length>0&&<div style={{marginTop:8}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.6)",marginBottom:6}}>Skills</div>
+          {data.skillGroups?.length>0
+            ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:4}}><div style={{fontSize:7,fontWeight:700,color:"rgba(255,255,255,0.5)",textTransform:"uppercase",letterSpacing:1}}>{g.category}</div><div style={{fontSize:8,color:"rgba(255,255,255,0.85)"}}>{g.items.join(", ")}</div></div>)
+            : data.skills.slice(0,8).map((s,i)=><div key={i} style={{fontSize:8,color:"rgba(255,255,255,0.85)",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.15)"}}>{s}</div>)
+          }
+        </div>}
       </div>
       <div style={{flex:1,padding:"20px 16px",display:"flex",flexDirection:"column",gap:12,overflow:"hidden"}}>
-        {data.summary&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Summary</div><p style={{fontSize:10,color:"#444",lineHeight:1.6,margin:0}}>{data.summary}</p></div>}
-        {data.experience.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div style={{fontWeight:700,fontSize:11,color:"#111"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#888",whiteSpace:"nowrap",marginLeft:4}}>{e.duration}</div></div><div style={{fontSize:9,color:"#666",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
-        {data.education.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:6,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666"}}>{e.institution}</div></div><div style={{fontSize:8,color:"#888"}}>{e.year}</div></div>)}</div>}
+        {data.summary&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Summary</div><p style={{fontSize:10,color:"#444",lineHeight:1.6,margin:0,fontWeight:400}}>{data.summary}</p></div>}
+        {data.experience.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div style={{fontWeight:700,fontSize:11,color:"#111"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#888",whiteSpace:"nowrap",marginLeft:4}}>{e.duration}</div></div><div style={{fontSize:9,color:"#666",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.projects&&data.projects.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Projects</div>{data.projects.map((p,i)=><div key={i} style={{marginBottom:8}}><div style={{fontWeight:700,fontSize:10,color:"#111"}}>{p.name}</div>{p.tech&&<div style={{fontSize:8,color:"#888",fontWeight:400,marginBottom:1}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0",lineHeight:1.5,fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.education.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:6,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666",fontWeight:400}}>{e.institution}</div></div><div style={{fontSize:8,color:"#888"}}>{e.year}</div></div>)}</div>}
+        {data.certifications&&data.certifications.length>0&&<div><div style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Certifications</div>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:5}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:9,color:"#111"}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:7,color:accent,fontWeight:600,textDecoration:"none",border:"1px solid "+accent+"44",borderRadius:3,padding:"1px 5px",flexShrink:0}}>View</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:8,color:"#666",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}</div>)}</div>}
       </div>
     </div>
   );
@@ -288,13 +886,25 @@ function DarkPreview({data,accent}){
         <div style={{width:48,height:48,borderRadius:"50%",background:"linear-gradient(135deg,"+accent+","+accent+"88)",margin:"0 auto 6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:"0 0 16px "+accent+"66",overflow:"hidden"}}>{data.profileImage?<img src={data.profileImage} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"👤"}</div>
         <div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:12,color:"#fff"}}>{data.name||"Your Name"}</div><div style={{fontSize:9,color:accent,marginTop:2}}>{data.title||"Job Title"}</div></div>
         {data.email&&<div style={{fontSize:8,color:"#94a3b8",wordBreak:"break-all"}}>✉ {data.email}</div>}
-        {data.skills.length>0&&<div style={{marginTop:6}}><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:5}}>Skills</div>{data.skills.slice(0,7).map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}><div style={{width:5,height:5,borderRadius:"50%",background:accent,flexShrink:0}}/><span style={{fontSize:8,color:"#cbd5e1"}}>{s}</span></div>)}</div>}
+        {data.phone&&<div style={{fontSize:8,color:"#94a3b8"}}>📞 {data.phone}</div>}
+        {data.location&&<div style={{fontSize:8,color:"#94a3b8"}}>📍 {data.location}</div>}
+        {data.linkedin&&<div style={{fontSize:8,color:"#94a3b8",wordBreak:"break-all"}}>🔗 {data.linkedin}</div>}
+        {data.github&&<div style={{fontSize:8,color:"#94a3b8",wordBreak:"break-all"}}>🐙 {data.github}</div>}
+        {data.leetcode&&<div style={{fontSize:8,color:"#94a3b8",wordBreak:"break-all"}}>💻 {data.leetcode}</div>}
+        {data.skills.length>0&&<div style={{marginTop:6}}><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:5}}>Skills</div>
+          {data.skillGroups?.length>0
+            ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:4}}><div style={{fontSize:7,fontWeight:700,color:accent+"bb",textTransform:"uppercase",letterSpacing:0.8,marginBottom:1}}>{g.category}</div><div style={{fontSize:8,color:"#cbd5e1",lineHeight:1.4}}>{g.items.join(", ")}</div></div>)
+            : data.skills.slice(0,7).map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}><div style={{width:5,height:5,borderRadius:"50%",background:accent,flexShrink:0}}/><span style={{fontSize:8,color:"#cbd5e1"}}>{s}</span></div>)
+          }
+        </div>}
       </div>
       <div style={{flex:1,padding:"18px 14px",display:"flex",flexDirection:"column",gap:10}}>
         <div style={{borderBottom:"1px solid "+accent+"44",paddingBottom:8,marginBottom:2}}><div style={{fontSize:16,fontWeight:800,color:"#fff"}}>{data.name||"Your Name"}</div><div style={{fontSize:10,color:accent}}>{data.title||"Job Title"}</div></div>
-        {data.summary&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Summary</div><p style={{fontSize:9,color:"#94a3b8",lineHeight:1.6,margin:0}}>{data.summary}</p></div>}
-        {data.experience.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:10,color:"#e2e8f0"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#64748b"}}>{e.duration}</div></div><div style={{fontSize:9,color:accent+"cc",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"#94a3b8",margin:"1px 0"}}>{l}</p>)}</div>)}</div>}
-        {data.education.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:5,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:9,color:"#e2e8f0"}}>{e.degree}</div><div style={{fontSize:8,color:"#64748b"}}>{e.institution}</div></div><div style={{fontSize:8,color:"#64748b"}}>{e.year}</div></div>)}</div>}
+        {data.summary&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Summary</div><p style={{fontSize:9,color:"#94a3b8",lineHeight:1.6,margin:0,fontWeight:400}}>{data.summary}</p></div>}
+        {data.experience.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:10,color:"#e2e8f0"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#64748b"}}>{e.duration}</div></div><div style={{fontSize:9,color:accent+"cc",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"#94a3b8",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.projects&&data.projects.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Projects</div>{data.projects.map((p,i)=><div key={i} style={{marginBottom:6}}><div style={{fontWeight:700,fontSize:9,color:"#e2e8f0"}}>{p.name}</div>{p.tech&&<div style={{fontSize:8,color:"#64748b",fontWeight:400}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"#94a3b8",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.education.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:5,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:9,color:"#e2e8f0"}}>{e.degree}</div><div style={{fontSize:8,color:"#64748b",fontWeight:400}}>{e.institution}</div></div><div style={{fontSize:8,color:"#64748b"}}>{e.year}</div></div>)}</div>}
+        {data.certifications&&data.certifications.length>0&&<div><div style={{fontSize:7,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:accent,marginBottom:4,borderBottom:"1px solid "+accent+"33",paddingBottom:2}}>Certifications</div>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:5}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:9,color:"#e2e8f0"}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:7,color:accent,fontWeight:600,textDecoration:"none",border:"1px solid "+accent+"44",borderRadius:3,padding:"1px 5px",flexShrink:0}}>View</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:8,color:"#64748b",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}</div>)}</div>}
       </div>
     </div>
   );
@@ -306,14 +916,21 @@ function DiagonalPreview({data,accent}){
       <div style={{background:"linear-gradient(135deg,"+accent+","+accent+"cc)",padding:"28px 28px 56px",clipPath:"polygon(0 0,100% 0,100% 72%,0 100%)"}}>
         <div style={{display:"flex",alignItems:"center",gap:14}}>
           {data.profileImage?<img src={data.profileImage} alt="" style={{width:60,height:60,borderRadius:"50%",border:"3px solid rgba(255,255,255,0.6)",objectFit:"cover",flexShrink:0}}/>:<div style={{width:60,height:60,borderRadius:"50%",background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>}
-          <div><h1 style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{data.name||"Your Name"}</h1><div style={{fontSize:12,color:"rgba(255,255,255,0.85)",marginTop:3}}>{data.title||"Job Title"}</div><div style={{display:"flex",gap:10,marginTop:5,fontSize:8,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}</div></div>
+          <div><h1 style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{data.name||"Your Name"}</h1><div style={{fontSize:12,color:"rgba(255,255,255,0.85)",marginTop:3}}>{data.title||"Job Title"}</div><div style={{display:"flex",gap:10,marginTop:5,fontSize:8,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}{data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}</div></div>
         </div>
       </div>
       <div style={{padding:"9px 20px",marginTop:-16}}>
-        {data.skills.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Skills</h2><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"18",border:"1px solid "+accent+"44",color:accent,padding:"2px 7px",borderRadius:10,fontSize:9,fontWeight:600}}>{s}</span>)}</div></div>}
-        {data.summary&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Summary</h2><p style={{fontSize:10,color:"#444",lineHeight:1.6,margin:0}}>{data.summary}</p></div>}
-        {data.experience.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:11}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#888"}}>{e.duration}</div></div><div style={{fontSize:9,color:"#666",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0"}}>{l}</p>)}</div>)}</div>}
-        {data.education.length>0&&<div><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:6,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666"}}>{e.institution}</div></div><div style={{fontSize:8,color:"#888"}}>{e.year}</div></div>)}</div>}
+        {data.skills.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Skills</h2>
+          {data.skillGroups?.length>0
+            ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:3,fontSize:9,color:"#374151",lineHeight:1.5}}><span style={{fontWeight:700,color:"#111"}}>{g.category}:</span> {g.items.join(", ")}</div>)
+            : <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"18",border:"1px solid "+accent+"44",color:accent,padding:"2px 7px",borderRadius:10,fontSize:9,fontWeight:600}}>{s}</span>)}</div>
+          }
+        </div>}
+        {data.summary&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Summary</h2><p style={{fontSize:10,color:"#444",lineHeight:1.6,margin:0,fontWeight:400}}>{data.summary}</p></div>}
+        {data.experience.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:11}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#888"}}>{e.duration}</div></div><div style={{fontSize:9,color:"#666",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.projects&&data.projects.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:8}}><div style={{fontWeight:700,fontSize:10}}>{p.name}</div>{p.tech&&<div style={{fontSize:8,color:"#888",fontWeight:400,marginBottom:1}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+        {data.education.length>0&&<div><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:6,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666",fontWeight:400}}>{e.institution}</div></div><div style={{fontSize:8,color:"#888"}}>{e.year}</div></div>)}</div>}
+        {data.certifications&&data.certifications.length>0&&<div style={{marginTop:10}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:5}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:9,color:"#111"}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:7,color:accent,fontWeight:600,textDecoration:"none",border:"1px solid "+accent+"44",borderRadius:3,padding:"1px 5px",flexShrink:0}}>View</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:8,color:"#666",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}</div>)}</div>}
       </div>
     </div>
   );
@@ -323,12 +940,19 @@ function GlassPreview({data,accent}){
   return(
     <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,lineHeight:1.6,background:"linear-gradient(135deg,#667eea 0%,#764ba2 100%)",minHeight:"297mm",padding:"20px"}}>
       <div style={{background:"rgba(255,255,255,0.15)",backdropFilter:"blur(20px)",borderRadius:14,padding:"18px",marginBottom:14,border:"1px solid rgba(255,255,255,0.3)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>{data.profileImage?<img src={data.profileImage} alt="" style={{width:56,height:56,borderRadius:"50%",border:"3px solid rgba(255,255,255,0.6)",objectFit:"cover",flexShrink:0}}/>:<div style={{width:56,height:56,borderRadius:"50%",background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>👤</div>}<div><h1 style={{fontSize:18,fontWeight:800,color:"#fff",margin:0}}>{data.name||"Your Name"}</h1><div style={{fontSize:11,color:"rgba(255,255,255,0.85)",marginTop:2}}>{data.title||"Job Title"}</div><div style={{display:"flex",gap:8,marginTop:4,fontSize:8,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}</div></div></div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>{data.profileImage?<img src={data.profileImage} alt="" style={{width:56,height:56,borderRadius:"50%",border:"3px solid rgba(255,255,255,0.6)",objectFit:"cover",flexShrink:0}}/>:<div style={{width:56,height:56,borderRadius:"50%",background:"rgba(255,255,255,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>👤</div>}<div><h1 style={{fontSize:18,fontWeight:800,color:"#fff",margin:0}}>{data.name||"Your Name"}</h1><div style={{fontSize:11,color:"rgba(255,255,255,0.85)",marginTop:2}}>{data.title||"Job Title"}</div><div style={{display:"flex",gap:8,marginTop:4,fontSize:8,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}{data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}</div></div></div>
       </div>
-      {data.skills.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Skills</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{data.skills.map((s,i)=><span key={i} style={{background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",padding:"2px 7px",borderRadius:8,fontSize:8,fontWeight:600}}>{s}</span>)}</div></div>}
-      {data.summary&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:5}}>Summary</div><p style={{fontSize:9,color:"rgba(255,255,255,0.9)",lineHeight:1.6,margin:0}}>{data.summary}</p></div>}
-      {data.experience.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:10,color:"#fff"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"rgba(255,255,255,0.6)"}}>{e.duration}</div></div><div style={{fontSize:9,color:"rgba(255,255,255,0.75)",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"rgba(255,255,255,0.7)",margin:"1px 0"}}>{l}</p>)}</div>)}</div>}
-      {data.education.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:5,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:9,color:"#fff"}}>{e.degree}</div><div style={{fontSize:8,color:"rgba(255,255,255,0.7)"}}>{e.institution}</div></div><div style={{fontSize:8,color:"rgba(255,255,255,0.6)"}}>{e.year}</div></div>)}</div>}
+      {data.skills.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Skills</div>
+        {data.skillGroups?.length>0
+          ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:3,fontSize:8,color:"rgba(255,255,255,0.9)",lineHeight:1.5}}><span style={{fontWeight:700,color:"#fff"}}>{g.category}:</span> {g.items.join(", ")}</div>)
+          : <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{data.skills.map((s,i)=><span key={i} style={{background:"rgba(255,255,255,0.2)",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",padding:"2px 7px",borderRadius:8,fontSize:8,fontWeight:600}}>{s}</span>)}</div>
+        }
+      </div>}
+      {data.summary&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:5}}>Summary</div><p style={{fontSize:9,color:"rgba(255,255,255,0.9)",lineHeight:1.6,margin:0,fontWeight:400}}>{data.summary}</p></div>}
+      {data.experience.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Experience</div>{data.experience.map((e,i)=><div key={i} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:10,color:"#fff"}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"rgba(255,255,255,0.6)"}}>{e.duration}</div></div><div style={{fontSize:9,color:"rgba(255,255,255,0.75)",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"rgba(255,255,255,0.7)",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+      {data.projects&&data.projects.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Projects</div>{data.projects.map((p,i)=><div key={i} style={{marginBottom:7}}><div style={{fontWeight:700,fontSize:9,color:"#fff"}}>{p.name}</div>{p.tech&&<div style={{fontSize:8,color:"rgba(255,255,255,0.6)",fontWeight:400,marginBottom:1}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:8,color:"rgba(255,255,255,0.7)",margin:"1px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+      {data.education.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",marginBottom:10,border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Education</div>{data.education.map((e,i)=><div key={i} style={{marginBottom:5,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:9,color:"#fff"}}>{e.degree}</div><div style={{fontSize:8,color:"rgba(255,255,255,0.7)",fontWeight:400}}>{e.institution}</div></div><div style={{fontSize:8,color:"rgba(255,255,255,0.6)"}}>{e.year}</div></div>)}</div>}
+      {data.certifications&&data.certifications.length>0&&<div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:10,padding:"12px",border:"1px solid rgba(255,255,255,0.2)"}}><div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"rgba(255,255,255,0.7)",marginBottom:7}}>Certifications</div>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:5}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:9,color:"#fff"}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:7,color:"rgba(255,255,255,0.8)",fontWeight:600,textDecoration:"none",border:"1px solid rgba(255,255,255,0.3)",borderRadius:3,padding:"1px 5px",flexShrink:0}}>View</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:8,color:"rgba(255,255,255,0.7)",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}</div>)}</div>}
     </div>
   );
 }
@@ -340,12 +964,19 @@ function ElegantPreview({data,accent}){
         {data.profileImage&&<img src={data.profileImage} alt="" style={{width:68,height:68,borderRadius:"50%",border:"3px solid "+accent,objectFit:"cover",marginBottom:8}}/>}
         <h1 style={{fontSize:24,fontWeight:700,color:"#1a1a1a",margin:"0 0 4px",letterSpacing:2,lineHeight:1.2}}>{data.name||"Your Name"}</h1>
         <div style={{fontSize:12,color:accent,fontStyle:"italic",marginBottom:6,letterSpacing:1}}>{data.title||"Job Title"}</div>
-        <div style={{display:"flex",justifyContent:"center",gap:14,fontSize:9,color:"#666",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>✆ {data.phone}</span>}{data.location&&<span>⌖ {data.location}</span>}</div>
+        <div style={{display:"flex",justifyContent:"center",gap:14,fontSize:9,color:"#666",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>✆ {data.phone}</span>}{data.location&&<span>⌖ {data.location}</span>}{data.linkedin&&<span>🔗 {data.linkedin}</span>}{data.github&&<span>🐙 {data.github}</span>}{data.leetcode&&<span>💻 {data.leetcode}</span>}</div>
       </div>
-      {data.summary&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Profile</h2><p style={{fontSize:10,color:"#333",lineHeight:1.8,fontStyle:"italic",margin:0}}>{data.summary}</p></div>}
-      {data.skills.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Expertise</h2><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"3px 8px"}}>{data.skills.map((s,i)=><span key={i} style={{fontSize:9,color:"#444"}}>◆ {s}</span>)}</div></div>}
-      {data.experience.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Career History</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:11}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:700,fontSize:11}}>{e.role}</span><span style={{fontSize:9,color:"#666",fontStyle:"italic"}}>{e.duration}</span></div><div style={{fontSize:10,color:accent,fontStyle:"italic",marginBottom:3}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#444",margin:"2px 0"}}>{l}</p>)}</div>)}</div>}
-      {data.education.length>0&&<div><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:7,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666",fontStyle:"italic"}}>{e.institution}{e.gpa?" | GPA: "+e.gpa:""}</div></div><div style={{fontSize:9,color:"#888"}}>{e.year}</div></div>)}</div>}
+      {data.summary&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Profile</h2><p style={{fontSize:10,color:"#333",lineHeight:1.8,fontStyle:"italic",margin:0,fontWeight:400}}>{data.summary}</p></div>}
+      {data.skills.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Expertise</h2>
+        {data.skillGroups?.length>0
+          ? data.skillGroups.map((g,i)=><div key={i} style={{marginBottom:4,fontSize:10,color:"#333",lineHeight:1.6}}><span style={{fontWeight:700,color:"#1a1a1a"}}>{g.category}:</span> {g.items.join(", ")}</div>)
+          : <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"3px 8px"}}>{data.skills.map((s,i)=><span key={i} style={{fontSize:9,color:"#444"}}>◆ {s}</span>)}</div>
+        }
+      </div>}
+      {data.experience.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Career History</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:11}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontWeight:700,fontSize:11}}>{e.role}</span><span style={{fontSize:9,color:"#666",fontStyle:"italic"}}>{e.duration}</span></div><div style={{fontSize:10,color:accent,fontStyle:"italic",marginBottom:3}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#444",margin:"2px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+      {data.projects&&data.projects.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Projects</h2>{data.projects.map((p,i)=><div key={i} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}><span style={{fontWeight:700,fontSize:10}}>{p.name}</span>{p.link&&<span style={{fontSize:8,color:accent,fontWeight:400}}>{p.link}</span>}</div>{p.tech&&<div style={{fontSize:9,color:"#888",fontStyle:"italic",fontWeight:400,marginBottom:2}}>{p.tech}</div>}{p.description&&p.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#444",margin:"2px 0",fontWeight:400}}>{l}</p>)}</div>)}</div>}
+      {data.education.length>0&&<div style={{marginBottom:14}}><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Education</h2>{data.education.map((e,i)=><div key={i} style={{marginBottom:7,display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:700,fontSize:10}}>{e.degree}</div><div style={{fontSize:9,color:"#666",fontStyle:"italic",fontWeight:400}}>{e.institution}{e.gpa?" | GPA: "+e.gpa:""}</div></div><div style={{fontSize:9,color:"#888"}}>{e.year}</div></div>)}</div>}
+      {data.certifications&&data.certifications.length>0&&<div><h2 style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:3,color:accent,marginBottom:7,borderBottom:"1px solid "+accent+"55",paddingBottom:4}}>Certifications</h2>{data.certifications.map((c,i)=><div key={i} style={{marginBottom:7,lineHeight:1.6}}><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:10,color:"#1a1a1a"}}>{c.name}</span>{c.url&&<a href={c.url} target="_blank" rel="noopener noreferrer" style={{fontSize:8,color:accent,fontWeight:600,textDecoration:"none",border:"1px solid "+accent+"44",borderRadius:4,padding:"1px 6px",flexShrink:0}}>View Certificate</a>}</div>{(c.issuer||c.year)&&<div style={{fontSize:9,color:"#666",fontStyle:"italic",fontWeight:400}}>{c.issuer}{c.issuer&&c.year?" · ":""}{c.year}</div>}{c.description&&<div style={{fontSize:9,color:"#444",fontWeight:400}}>{c.description}</div>}</div>)}</div>}
     </div>
   );
 }
@@ -382,7 +1013,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[secOrd,setSecOrd]=useState(["experience","projects","education","certifications"]);
   const[pdfL,setPdfL]=useState(false);
   const[toast,setToast]=useState(null);
-  const[scale,setScale]=useState(0.75);
+  const[scale,setScale]=useState(0.60);
   const[fixPanel,setFixPanel]=useState(false);
   const[grammarFixes,setGrammarFixes]=useState([]);
   const[fixingGrammar,setFixingGrammar]=useState(false);
@@ -397,8 +1028,9 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
 
   // SINGLE SOURCE OF TRUTH - updatedResumeData tracks ALL changes
   const[updatedResumeData,setUpdatedResumeData]=useState({
-    name:user.name||"",title:"Software Engineer",email:user.email||"",phone:"",location:"",summary:"",profileImage:null,
+    name:user.name||"",title:"Software Engineer",email:user.email||"",phone:"",location:"",linkedin:"",github:"",leetcode:"",summary:"",profileImage:null,
     skills:user.skills?Object.keys(user.skills).filter(k=>(user.skills[k]||0)>=50):[],
+    skillGroups:[],
     experience:[{id:"e1",role:"",company:"",duration:"",description:""}],
     projects:[{id:"p1",name:"",tech:"",link:"",description:""}],
     education:[{id:"d1",degree:"",institution:"",year:"",gpa:""}],
@@ -452,8 +1084,12 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         email: parsedData.email || prev.email,
         phone: parsedData.phone || prev.phone,
         location: parsedData.location || prev.location,
+        linkedin: parsedData.linkedin || prev.linkedin,
+        github: parsedData.github || prev.github,
+        leetcode: parsedData.leetcode || prev.leetcode,
         summary: parsedData.summary || prev.summary,
         skills: parsedData.skills?.length > 0 ? parsedData.skills : prev.skills,
+        skillGroups: parsedData.skillGroups?.length > 0 ? parsedData.skillGroups : prev.skillGroups,
         experience: parsedData.experience?.length > 0 ? parsedData.experience : prev.experience,
         projects: parsedData.projects?.length > 0 ? parsedData.projects : prev.projects,
         education: parsedData.education?.length > 0 ? parsedData.education : prev.education,
@@ -696,7 +1332,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const sens=useSensors(useSensor(PointerSensor),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
   function onDrag({active,over}){if(active.id!==over?.id)setSecOrd(p=>arrayMove(p,p.indexOf(active.id),p.indexOf(over.id)));}
   useEffect(()=>{const t=setInterval(()=>setTipI(i=>(i+1)%RESUME_TIPS.length),5000);return()=>clearInterval(t);},[]);
-  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.62:w<1536?0.70:0.75);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
+  useEffect(()=>{function r(){setScale(0.60);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
   const bg=dark?"bg-gradient-to-br from-[#05071a] via-[#0c0f2e] to-[#130a2e]":"bg-gradient-to-br from-slate-50 via-white to-indigo-50";
   const card=dark?"bg-white/5 border-white/10":"bg-white border-gray-200";
   const tp=dark?"text-white":"text-gray-900";
@@ -819,6 +1455,11 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                     </div>
                     <br />
                     <div className="mt-4"><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>Location</label><input className={iCls} style={iStyle} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="San Francisco, CA"/></div><br></br>
+                    <div className="grid grid-cols-1 gap-y-4 mt-2">
+                      {[["LinkedIn","linkedin","🔗","linkedin.com/in/username"],["GitHub","github","🐙","github.com/username"],["LeetCode","leetcode","💻","leetcode.com/u/username"]].map(([l,k,ic,ph])=>(
+                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{ic} {l}</label><input className={iCls} style={iStyle} value={data[k]||""} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
+                      ))}
+                    </div><br></br>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -899,27 +1540,37 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                         ))}</AnimatePresence>
                       </>)}
                       {sec==="education"&&(<>
-                        <SecHead icon="🎓" title="Education" onAdd={()=>addI("education",{degree:"",institution:"",year:"",gpa:""})} addLabel="Add" collapsed={col.education} onToggle={()=>togC("education")}/>
+                        <SecHead icon="🎓" title="Education" onAdd={()=>addI("education",{degree:"",institution:"",year:"",gpa:"",board:"",classLevel:"",coursework:""})} addLabel="Add" collapsed={col.education} onToggle={()=>togC("education")}/>
                         <AnimatePresence>{!col.education&&data.education.map(edu=>(
                           <motion.div key={edu.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-2 gap-4 mb-3">
-                              <input className={iCls} style={iStyle} value={edu.degree} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="Degree / Course"/>
-                              <input className={iCls} style={iStyle} value={edu.institution} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="Institution"/>
-                              <input className={iCls} style={iStyle} value={edu.year} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
-                              <input className={iCls} style={iStyle} value={edu.gpa} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="GPA / %"/>
+                              <input className={iCls} style={iStyle} value={edu.degree||""} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="Degree / Course"/>
+                              <input className={iCls} style={iStyle} value={edu.institution||""} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="Institution (full name)"/>
+                              <input className={iCls} style={iStyle} value={edu.year||""} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
+                              <input className={iCls} style={iStyle} value={edu.gpa||""} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="GPA / Score / %"/>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <input className={iCls} style={iStyle} value={edu.board||""} onChange={e=>updI("education",edu.id,"board",e.target.value)} placeholder="Board (e.g. CBSE)"/>
+                              <input className={iCls} style={iStyle} value={edu.classLevel||""} onChange={e=>updI("education",edu.id,"classLevel",e.target.value)} placeholder="Class (e.g. 12th Grade)"/>
+                            </div>
+                            <div className="mb-3">
+                              <input className={iCls} style={iStyle} value={edu.coursework||""} onChange={e=>updI("education",edu.id,"coursework",e.target.value)} placeholder="Relevant Coursework (optional)"/>
                             </div>
                             {data.education.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("education",edu.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
                       {sec==="certifications"&&(<>
-                        <SecHead icon="🏆" title="Certifications" onAdd={()=>addI("certifications",{name:"",issuer:"",year:""})} addLabel="Add" collapsed={col.certifications} onToggle={()=>togC("certifications")}/>
+                        <SecHead icon="🏆" title="Certifications" onAdd={()=>addI("certifications",{name:"",issuer:"",year:"",url:""})} addLabel="Add" collapsed={col.certifications} onToggle={()=>togC("certifications")}/>
                         <AnimatePresence>{!col.certifications&&data.certifications.map(cert=>(
                           <motion.div key={cert.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-3 gap-4 mb-3">
                               <input className={iCls} style={iStyle} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="Certification"/>
                               <input className={iCls} style={iStyle} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="Issuer"/>
                               <input className={iCls} style={iStyle} value={cert.year} onChange={e=>updI("certifications",cert.id,"year",e.target.value)} placeholder="Year"/>
+                            </div>
+                            <div className="mb-3">
+                              <input className={iCls} style={iStyle} value={cert.url||""} onChange={e=>updI("certifications",cert.id,"url",e.target.value)} placeholder="Certificate URL (optional)"/>
                             </div>
                             {data.certifications.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("certifications",cert.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                           </motion.div>
