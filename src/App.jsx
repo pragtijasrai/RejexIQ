@@ -1,9 +1,8 @@
-﻿import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import NewAuthPage from "./AuthPage.jsx";
 import NewProfilePage from "./ProfilePage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
-import CareerLanding from "./CareerLanding.jsx";
 const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
@@ -22,43 +21,43 @@ import {
   LineChart, Line, Area, AreaChart
 } from "recharts";
 
-// â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const ROLES = {
   frontend: {
     label: "Frontend Developer",
-    icon: "ðŸŽ¨",
+    icon: "🎨",
     color: "#00e5ff",
     skills: { JavaScript: 85, React: 80, CSS: 75, ProblemSolving: 70, Communication: 65, SystemDesign: 40, Python: 20, DataStructures: 55 }
   },
   backend: {
     label: "Backend Developer",
-    icon: "âš™ï¸",
+    icon: "⚙️",
     color: "#7c3aed",
     skills: { JavaScript: 75, Python: 80, SystemDesign: 80, DataStructures: 75, ProblemSolving: 80, Communication: 60, React: 30, CSS: 25 }
   },
   fullstack: {
     label: "Full Stack Developer",
-    icon: "ðŸ”¥",
+    icon: "🔥",
     color: "#f59e0b",
     skills: { JavaScript: 85, React: 75, Python: 70, SystemDesign: 70, DataStructures: 70, ProblemSolving: 75, Communication: 65, CSS: 65 }
   },
   dataAnalyst: {
     label: "Data Analyst",
-    icon: "ðŸ“Š",
+    icon: "📊",
     color: "#10b981",
     skills: { Python: 85, DataStructures: 75, ProblemSolving: 80, Communication: 75, SystemDesign: 60, JavaScript: 40, React: 20, CSS: 15 }
   },
   devops: {
     label: "DevOps Engineer",
-    icon: "ðŸš€",
+    icon: "🚀",
     color: "#ef4444",
     skills: { SystemDesign: 90, ProblemSolving: 80, Python: 70, DataStructures: 65, Communication: 65, JavaScript: 50, React: 25, CSS: 20 }
   }
 };
 
 const SKILL_KEYS = ["JavaScript", "React", "Python", "CSS", "SystemDesign", "DataStructures", "ProblemSolving", "Communication"];
-const SKILL_ICONS = { JavaScript: "âš¡", React: "âš›ï¸", Python: "ðŸ", CSS: "ðŸŽ¨", SystemDesign: "ðŸ—ï¸", DataStructures: "ðŸŒ³", ProblemSolving: "ðŸ§©", Communication: "ðŸ’¬" };
+const SKILL_ICONS = { JavaScript: "⚡", React: "⚛️", Python: "🐍", CSS: "🎨", SystemDesign: "🏗️", DataStructures: "🌳", ProblemSolving: "🧩", Communication: "💬" };
 
 const MARKET_DATA = [
   { skill: "JavaScript", demand: 92 }, { skill: "Python", demand: 88 },
@@ -81,14 +80,14 @@ const DEMO_USER = {
 };
 
 const TOUR_STEPS = [
-  { target: "dashboard", title: "Welcome to RejexIQ! ðŸ‘‹", text: "This is your Career Intelligence Dashboard. Everything you need is here." },
-  { target: "assessment", title: "Skill Assessment ðŸŽ¯", text: "Rate yourself on key technical skills. We'll calculate your career readiness score." },
-  { target: "career", title: "Career Match ðŸ†", text: "See which roles you're best suited for based on your skill profile." },
-  { target: "market", title: "Market Demand ðŸ“ˆ", text: "Real industry data showing which skills are most in demand right now." },
-  { target: "resume", title: "Resume Builder ðŸ“„", text: "Build a professional resume with live preview and PDF export." }
+  { target: "dashboard", title: "Welcome to RejexIQ! 👋", text: "This is your Career Intelligence Dashboard. Everything you need is here." },
+  { target: "assessment", title: "Skill Assessment 🎯", text: "Rate yourself on key technical skills. We'll calculate your career readiness score." },
+  { target: "career", title: "Career Match 🏆", text: "See which roles you're best suited for based on your skill profile." },
+  { target: "market", title: "Market Demand 📈", text: "Real industry data showing which skills are most in demand right now." },
+  { target: "resume", title: "Resume Builder 📄", text: "Build a professional resume with live preview and PDF export." }
 ];
 
-// â”€â”€â”€ UTILS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILS ────────────────────────────────────────────────────────────────────
 
 function calcReadiness(userSkills, roleKey) {
   const role = ROLES[roleKey];
@@ -142,7 +141,7 @@ function passwordStrength(pwd) {
   return { score, label: labels[score], color: colors[score] };
 }
 
-// â”€â”€â”€ STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STYLES ───────────────────────────────────────────────────────────────────
 
 const G = {
   bg: "#0a0e27",
@@ -499,7 +498,7 @@ const css = `
   }
 `;
 
-// â”€â”€â”€ COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── COMPONENTS ───────────────────────────────────────────────────────────────
 
 function ScoreRing({ score, size = 140, color = G.accent, label = "" }) {
   const r = (size / 2) - 12;
@@ -561,8 +560,247 @@ function LoadingSpinner({ size = 24 }) {
   );
 }
 
+// ─── PAGES ────────────────────────────────────────────────────────────────────
 
-// AUTH PAGE â€” uses the new standalone AuthPage component
+// LANDING PAGE
+function LandingPage({ onNav, onDemo }) {
+  const [typeIdx, setTypeIdx] = useState(0);
+  const phrases = ["Evaluate Your Skills", "Analyze Career Readiness", "Build Your Professional Resume", "Discover Your Best Role"];
+  const [displayed, setDisplayed] = useState("");
+  const [typing, setTyping] = useState(true);
+  const charRef = useRef(0);
+
+  useEffect(() => {
+    const phrase = phrases[typeIdx];
+    if (typing) {
+      if (charRef.current < phrase.length) {
+        const t = setTimeout(() => {
+          setDisplayed(phrase.slice(0, charRef.current + 1));
+          charRef.current++;
+        }, 60);
+        return () => clearTimeout(t);
+      } else {
+        const t = setTimeout(() => setTyping(false), 1800);
+        return () => clearTimeout(t);
+      }
+    } else {
+      if (charRef.current > 0) {
+        const t = setTimeout(() => {
+          setDisplayed(phrase.slice(0, charRef.current - 1));
+          charRef.current--;
+        }, 30);
+        return () => clearTimeout(t);
+      } else {
+        setTypeIdx((i) => (i + 1) % phrases.length);
+        setTyping(true);
+      }
+    }
+  }, [displayed, typing, typeIdx]);
+
+  const features = [
+    { icon: "🎯", title: "Skill Assessment", desc: "Rate yourself across 8 technical & soft skills. Get an instant readiness score.", action: () => onNav("assessment") },
+    { icon: "📊", title: "Career Readiness Score", desc: "AI-powered analysis comparing your profile to real job requirements.", action: () => onNav("career") },
+    { icon: "📈", title: "Market Demand Analysis", desc: "See which skills are trending and how your profile stacks up to industry demand.", action: () => onNav("market") },
+    { icon: "📄", title: "Interactive Resume Builder", desc: "Drag-and-drop builder with live preview. Download as PDF instantly.", action: () => onNav("resume") }
+  ];
+
+  const steps = [
+    { n: "01", title: "Create Account", desc: "Sign up in seconds. No credit card." },
+    { n: "02", title: "Take Assessment", desc: "Rate your skills with our interactive slider quiz." },
+    { n: "03", title: "View Score", desc: "Get your career readiness score and best-matching roles." },
+    { n: "04", title: "Improve & Build", desc: "Follow your personalized roadmap and build your resume." }
+  ];
+
+  const sampleSkills = [
+    { name: "Programming", val: 85, color: G.accent },
+    { name: "Problem Solving", val: 72, color: "#7c3aed" },
+    { name: "Communication", val: 60, color: G.warning }
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh" }}>
+      {/* NAV */}
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
+        background: "rgba(10,14,39,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: `1px solid ${G.border}`, padding: "0 40px"
+      }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="syne" style={{ fontSize: 24, fontWeight: 800, cursor: "pointer" }} onClick={() => onNav("home")}>
+            <span style={{ background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Rejex</span>
+            <span style={{ color: G.text }}>IQ</span>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button className="btn-primary" onClick={() => onNav("signup")}>Get Started</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero-grid" style={{ paddingTop: 160, paddingBottom: 100, position: "relative", overflow: "hidden", minHeight: "100vh" }}>
+        {/* Glow orbs */}
+        <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, background: `radial-gradient(circle, ${G.accent}20 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", top: "30%", right: "10%", width: 500, height: 500, background: `radial-gradient(circle, ${G.purple}20 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", bottom: "20%", left: "40%", width: 350, height: 350, background: `radial-gradient(circle, ${G.cyan}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
+
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 40px", textAlign: "center", position: "relative" }}>
+          <div className="fade-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: G.accentDim, border: `1px solid rgba(0,229,255,0.3)`, borderRadius: 20, padding: "6px 16px", marginBottom: 32, fontSize: 12, color: G.accent, fontWeight: 600 }}>
+            <span className="pulse-anim" style={{ width: 6, height: 6, background: G.accent, borderRadius: "50%", display: "inline-block" }} />
+            Career Intelligence Platform
+          </div>
+
+          <h1 className="syne fade-up" style={{ fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 24, animationDelay: "0.1s" }}>
+            Analyze Your Skills.<br />
+            <span className="gradient-text">Build Your Career.</span>
+          </h1>
+
+          <p className="fade-up" style={{ fontSize: 18, color: G.muted, maxWidth: 560, margin: "0 auto 16px", lineHeight: 1.6, animationDelay: "0.2s" }}>
+            RejexIQ helps students evaluate their technical skills and measure career readiness using intelligent analytics and real market data.
+          </p>
+
+          <div className="fade-up mono" style={{ fontSize: 20, color: G.accent, height: 36, marginBottom: 40, animationDelay: "0.3s" }}>
+            {displayed}<span style={{ borderRight: `2px solid ${G.accent}`, animation: "blink 1s infinite", marginLeft: 2 }} />
+          </div>
+
+          <div className="fade-up" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", animationDelay: "0.4s" }}>
+            <button className="btn-primary" style={{ fontSize: 16, padding: "14px 36px" }} onClick={() => onNav("assessment")}>
+              🚀 Start Assessment
+            </button>
+            <button className="btn-outline" style={{ fontSize: 16, padding: "13px 36px" }} onClick={() => onNav("dashboard")}>
+              Explore Dashboard
+            </button>
+            <button className="btn-ghost" onClick={onDemo} style={{ fontSize: 16, padding: "13px 36px" }}>
+              ✨ Try Demo Mode
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{ padding: "80px 40px", background: G.surface }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, marginBottom: 12 }}>
+              Everything You Need to <span className="gradient-text">Land the Job</span>
+            </h2>
+            <p style={{ color: G.muted, fontSize: 16 }}>Four powerful tools working together to accelerate your career</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
+            {features.map((f, i) => (
+              <div key={i} className="card" style={{ cursor: "pointer", animationDelay: `${i * 0.1}s` }} onClick={f.action}>
+                <div style={{ fontSize: 36, marginBottom: 16 }}>{f.icon}</div>
+                <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: G.text }}>{f.title}</h3>
+                <p style={{ color: G.muted, fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{f.desc}</p>
+                <span style={{ color: G.accent, fontSize: 13, fontWeight: 600 }}>Explore →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{ padding: "80px 40px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, marginBottom: 12 }}>How It Works</h2>
+            <p style={{ color: G.muted }}>Four steps to your career clarity</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32 }}>
+            {steps.map((s, i) => (
+              <div key={i} style={{ textAlign: "center", position: "relative" }}>
+                {i < steps.length - 1 && <div style={{ position: "absolute", top: 24, left: "60%", right: "-40%", height: 1, background: `linear-gradient(90deg, ${G.accent}40, transparent)`, display: "none" }} />}
+                <div className="mono" style={{ fontSize: 42, fontWeight: 800, color: G.border, marginBottom: 12 }}>{s.n}</div>
+                <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{s.title}</h3>
+                <p style={{ color: G.muted, fontSize: 14 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DASHBOARD PREVIEW */}
+      <section style={{ padding: "80px 40px", background: G.surface }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+            <div>
+              <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
+                Your Personal<br /><span className="gradient-text">Career Dashboard</span>
+              </h2>
+              <p style={{ color: G.muted, marginBottom: 24, lineHeight: 1.7 }}>
+                See exactly where you stand. Track skill progress, compare with market demand, and get actionable improvement plans — all in one place.
+              </p>
+              <button className="btn-primary" onClick={() => onNav("signup")}>View Dashboard →</button>
+            </div>
+            <div className="card float-anim">
+              <div style={{ marginBottom: 20, fontSize: 14, color: G.muted, fontWeight: 600 }}>SKILL OVERVIEW</div>
+              {sampleSkills.map((s, i) => (
+                <div key={i} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+                    <span>{s.name}</span>
+                    <span className="mono" style={{ color: s.color }}>{s.val}%</span>
+                  </div>
+                  <ProgressBar value={s.val} color={s.color} />
+                </div>
+              ))}
+              <div style={{ marginTop: 24, padding: "16px", background: G.accentDim, borderRadius: 10, border: `1px solid rgba(0,229,255,0.2)` }}>
+                <div style={{ fontSize: 12, color: G.muted }}>Career Readiness Score</div>
+                <div className="syne" style={{ fontSize: 32, fontWeight: 800, color: G.accent }}>72%</div>
+                <div style={{ fontSize: 12, color: G.success }}>▲ Best Match: Frontend Developer</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI ASSISTANT */}
+      <section style={{ padding: "80px 40px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+          <div className="float-anim" style={{ fontSize: 72, marginBottom: 24 }}>🤖</div>
+          <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
+            Meet Your <span className="gradient-text">AI Career Assistant</span>
+          </h2>
+          <p style={{ color: G.muted, fontSize: 16, maxWidth: 500, margin: "0 auto 32px", lineHeight: 1.7 }}>
+            Get guidance on improving skills, preparing for technical roles, and navigating your career path with our intelligent assistant.
+          </p>
+          <button className="btn-outline" onClick={() => onNav("signup")}>Try AI Assistant →</button>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "80px 40px", background: "linear-gradient(135deg, rgba(0,229,255,0.05), rgba(124,58,237,0.05))", borderTop: `1px solid ${G.border}` }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+          <h2 className="syne" style={{ fontSize: 40, fontWeight: 800, marginBottom: 16 }}>
+            Ready to Evaluate Your Skills?
+          </h2>
+          <p style={{ color: G.muted, marginBottom: 32, fontSize: 16 }}>
+            Join students who've already discovered their career readiness score.
+          </p>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <button className="btn-primary" style={{ padding: "14px 40px", fontSize: 16 }} onClick={() => onNav("signup")}>Create Account</button>
+            <button className="btn-ghost" onClick={onDemo}>Try Demo First</button>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ background: G.surface, borderTop: `1px solid ${G.border}`, padding: "40px", textAlign: "center" }}>
+        <div className="syne" style={{ fontSize: 20, fontWeight: 800, color: G.accent, marginBottom: 16 }}>
+          Rejex<span style={{ color: G.text }}>IQ</span>
+        </div>
+        <div style={{ display: "flex", gap: 32, justifyContent: "center", marginBottom: 24 }}>
+          {["About", "Features", "Assessment", "Resume Builder"].map(l => (
+            <span key={l} style={{ color: G.muted, fontSize: 14, cursor: "pointer" }}
+              onClick={() => onNav(l === "Assessment" ? "assessment" : l === "Resume Builder" ? "resume" : "signup")}>{l}</span>
+          ))}
+          <a href="https://github.com/pragtijasrai/RejexIQ" target="_blank" rel="noreferrer" style={{ color: G.muted, fontSize: 14 }}>GitHub</a>
+        </div>
+        <p style={{ color: G.muted, fontSize: 13 }}>© 2025 RejexIQ — Skill Evaluation & Career Readiness Platform</p>
+      </footer>
+    </div>
+  );
+}
+
+// AUTH PAGE — uses the new standalone AuthPage component
 function AuthPage({ type, onLogin, onNav }) {
   return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
@@ -570,16 +808,16 @@ function AuthPage({ type, onLogin, onNav }) {
 // SIDEBAR
 function Sidebar({ active, onNav, user, onLogout }) {
   const navItems = [
-    { key: "dashboard", icon: "ðŸ ", label: "Dashboard" },
-    { key: "profile", icon: "ðŸ‘¤", label: "Profile" },
-    { key: "assessment", icon: "ðŸŽ¯", label: "Skill Assessment" },
-    { key: "dsa", icon: "ðŸ“š", label: "DSA Tutorial" },
-    { key: "story", icon: "âš”ï¸", label: "Story Mode" },
-    { key: "career", icon: "ðŸ†", label: "Career Match" },
-    { key: "market", icon: "ðŸ“ˆ", label: "Market Demand" },
-    { key: "resume", icon: "ðŸ“„", label: "Resume Builder" },
-    { key: "assistant", icon: "ðŸ¤–", label: "AI Assistant" },
-    { key: "leaderboard", icon: "ðŸ¥‡", label: "Leaderboard" }
+    { key: "dashboard", icon: "🏠", label: "Dashboard" },
+    { key: "profile", icon: "👤", label: "Profile" },
+    { key: "assessment", icon: "🎯", label: "Skill Assessment" },
+    { key: "dsa", icon: "📚", label: "DSA Tutorial" },
+    { key: "story", icon: "⚔️", label: "Story Mode" },
+    { key: "career", icon: "🏆", label: "Career Match" },
+    { key: "market", icon: "📈", label: "Market Demand" },
+    { key: "resume", icon: "📄", label: "Resume Builder" },
+    { key: "assistant", icon: "🤖", label: "AI Assistant" },
+    { key: "leaderboard", icon: "🥇", label: "Leaderboard" }
   ];
 
   return (
@@ -622,14 +860,14 @@ function Sidebar({ active, onNav, user, onLogout }) {
       {/* Logout */}
       <div style={{ padding: "12px 12px", borderTop: `1px solid ${G.border}` }}>
         <button className="nav-link" onClick={onLogout} style={{ color: G.danger }}>
-          <span>ðŸšª</span><span>Log Out</span>
+          <span>🚪</span><span>Log Out</span>
         </button>
       </div>
     </div>
   );
 }
 
-// PROFILE PAGE â€” uses the new standalone ProfilePage component
+// PROFILE PAGE — uses the new standalone ProfilePage component
 function ProfilePage({ user, onUpdateUser, onNav }) {
   return <NewProfilePage user={user} onUpdateUser={onUpdateUser} onNav={onNav} />;
 }
@@ -648,7 +886,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
       {/* Welcome */}
       <div style={{ marginBottom: 32 }}>
         <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
-          Welcome back, {user.name} ðŸ‘‹
+          Welcome back, {user.name} 👋
         </h1>
         <p style={{ color: G.muted }}>
           {hasAssessment ? "Here's your career readiness overview" : "Complete your skill assessment to unlock full insights"}
@@ -658,10 +896,10 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
       {/* Stats Row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 32 }}>
         {[
-          { label: "Readiness Score", val: hasAssessment ? `${avgScore}%` : "â€”", icon: "âš¡", color: G.accent },
-          { label: "Best Role Match", val: hasAssessment ? ROLES[best?.key]?.label.split(" ")[0] : "â€”", icon: "ðŸ†", color: G.warning },
-          { label: "Skills Assessed", val: hasAssessment ? `${SKILL_KEYS.length}/8` : "0/8", icon: "ðŸŽ¯", color: G.purple },
-          { label: "Market Rank", val: hasAssessment ? "Top 35%" : "â€”", icon: "ðŸ“ˆ", color: G.success }
+          { label: "Readiness Score", val: hasAssessment ? `${avgScore}%` : "—", icon: "⚡", color: G.accent },
+          { label: "Best Role Match", val: hasAssessment ? ROLES[best?.key]?.label.split(" ")[0] : "—", icon: "🏆", color: G.warning },
+          { label: "Skills Assessed", val: hasAssessment ? `${SKILL_KEYS.length}/8` : "0/8", icon: "🎯", color: G.purple },
+          { label: "Market Rank", val: hasAssessment ? "Top 35%" : "—", icon: "📈", color: G.success }
         ].map((s, i) => (
           <div key={i} className="stat-card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -677,11 +915,11 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
       {!hasAssessment ? (
         /* Onboarding CTA */
         <div className="gradient-border" style={{ padding: 40, textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>ðŸŽ¯</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
           <h2 className="syne" style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Start Your Skill Assessment</h2>
           <p style={{ color: G.muted, marginBottom: 24 }}>Rate yourself on 8 key skills to unlock your personalized career readiness score, role matches, and improvement plan.</p>
           <button className="btn-primary" style={{ padding: "14px 40px", fontSize: 16 }} onClick={() => onNav("assessment")}>
-            ðŸš€ Begin Assessment
+            🚀 Begin Assessment
           </button>
         </div>
       ) : (
@@ -745,15 +983,15 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
       {/* Quick actions */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {[
-          { icon: "ðŸ“Š", label: "View Market Trends", action: () => onNav("market"), color: G.accent },
-          { icon: "ðŸ“„", label: "Build Resume", action: () => onNav("resume"), color: G.warning },
-          { icon: "ðŸ¤–", label: "Ask AI Assistant", action: () => onNav("assistant"), color: G.purple },
-          { icon: "ðŸ†", label: "Career Roadmap", action: () => onNav("career"), color: G.success }
+          { icon: "📊", label: "View Market Trends", action: () => onNav("market"), color: G.accent },
+          { icon: "📄", label: "Build Resume", action: () => onNav("resume"), color: G.warning },
+          { icon: "🤖", label: "Ask AI Assistant", action: () => onNav("assistant"), color: G.purple },
+          { icon: "🏆", label: "Career Roadmap", action: () => onNav("career"), color: G.success }
         ].map((a, i) => (
           <button key={i} className="card" style={{ textAlign: "left", cursor: "pointer", border: `1px solid ${G.border}`, background: "none" }}
             onClick={a.action}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{a.icon}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: a.color }}>{a.label} â†’</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: a.color }}>{a.label} →</div>
           </button>
         ))}
       </div>
@@ -794,7 +1032,7 @@ function SkillAssessment({ user, onSave, onNav }) {
     const best = getBestRole(skills);
     return (
       <div className="section-enter" style={{ textAlign: "center", paddingTop: 40 }}>
-        <div style={{ fontSize: 64, marginBottom: 24 }}>ðŸŽ‰</div>
+        <div style={{ fontSize: 64, marginBottom: 24 }}>🎉</div>
         <h2 className="syne" style={{ fontSize: 32, fontWeight: 800, marginBottom: 12 }}>Assessment Complete!</h2>
         <p style={{ color: G.muted, marginBottom: 32 }}>Your career readiness score has been calculated</p>
         <div style={{ display: "flex", justifyContent: "center", gap: 40, marginBottom: 40, flexWrap: "wrap" }}>
@@ -807,7 +1045,7 @@ function SkillAssessment({ user, onSave, onNav }) {
           <div style={{ color: G.muted, fontSize: 14, marginTop: 4 }}>You are {best.score}% ready for this role</div>
         </div>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button className="btn-primary" onClick={() => onNav("career")}>View Career Analysis â†’</button>
+          <button className="btn-primary" onClick={() => onNav("career")}>View Career Analysis →</button>
           <button className="btn-outline" onClick={() => setSubmitted(false)}>Reassess Skills</button>
         </div>
       </div>
@@ -818,7 +1056,7 @@ function SkillAssessment({ user, onSave, onNav }) {
     <div className="section-enter">
       <div style={{ marginBottom: 32 }}>
         <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Skill Assessment</h1>
-        <p style={{ color: G.muted }}>Rate yourself honestly on each skill (0â€“100). This generates your career readiness score.</p>
+        <p style={{ color: G.muted }}>Rate yourself honestly on each skill (0–100). This generates your career readiness score.</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, marginBottom: 32 }}>
@@ -863,18 +1101,18 @@ function SkillAssessment({ user, onSave, onNav }) {
 
       <button className="btn-primary" style={{ padding: "14px 48px", fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}
         onClick={handleSave} disabled={loading}>
-        {loading ? <><LoadingSpinner size={18} /> Calculating...</> : "Generate Career Report â†’"}
+        {loading ? <><LoadingSpinner size={18} /> Calculating...</> : "Generate Career Report →"}
       </button>
     </div>
   );
 }
 
-// â”€â”€â”€ MARKET DEMAND DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MARKET DEMAND DATA ───────────────────────────────────────────────────────
 
 const MD_ROLES = {
   "Software Engineer": {
-    icon: "ðŸ’»", color: "#00e5ff",
-    salary: { min: "â‚¹8L", max: "â‚¹35L", avg: "â‚¹18L" },
+    icon: "💻", color: "#00e5ff",
+    salary: { min: "₹8L", max: "₹35L", avg: "₹18L" },
     trend: "increasing", trendPct: "+23%",
     openings: "42,000+",
     trendingSkills: ["JavaScript", "TypeScript", "React.js", "Node.js", "System Design", "Docker", "AWS", "SQL", "Git", "REST APIs"],
@@ -889,15 +1127,15 @@ const MD_ROLES = {
       { name: "TypeScript", demand: 65, userHas: false },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "Learn System Design fundamentals â€” it's asked in 82% of SWE interviews." },
-      { type: "skill", icon: "ðŸŸ¢", text: "Add Node.js to your stack. Full-stack ability increases offers by 40%." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Build a REST API with authentication â€” demonstrates backend readiness." },
-      { type: "resume", icon: "ðŸ“„", text: "Quantify your impact: 'Reduced load time by 40%' beats 'Improved performance'." },
+      { type: "skill", icon: "⚡", text: "Learn System Design fundamentals — it's asked in 82% of SWE interviews." },
+      { type: "skill", icon: "🟢", text: "Add Node.js to your stack. Full-stack ability increases offers by 40%." },
+      { type: "project", icon: "🛠️", text: "Build a REST API with authentication — demonstrates backend readiness." },
+      { type: "resume", icon: "📄", text: "Quantify your impact: 'Reduced load time by 40%' beats 'Improved performance'." },
     ]
   },
   "Frontend Developer": {
-    icon: "ðŸŽ¨", color: "#c084fc",
-    salary: { min: "â‚¹6L", max: "â‚¹28L", avg: "â‚¹14L" },
+    icon: "🎨", color: "#c084fc",
+    salary: { min: "₹6L", max: "₹28L", avg: "₹14L" },
     trend: "increasing", trendPct: "+18%",
     openings: "28,000+",
     trendingSkills: ["React.js", "JavaScript", "TypeScript", "Next.js", "CSS / Tailwind", "Vue.js", "Webpack", "Testing", "Accessibility", "Performance"],
@@ -912,15 +1150,15 @@ const MD_ROLES = {
       { name: "Accessibility", demand: 55, userHas: false },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "TypeScript is now required at 80% of frontend roles â€” prioritize it." },
-      { type: "skill", icon: "ðŸŸ¢", text: "Next.js expertise can increase your salary band by â‚¹3â€“5L." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Build a portfolio with Lighthouse score 90+ to stand out." },
-      { type: "resume", icon: "ðŸ“„", text: "List specific component libraries and bundle size optimizations." },
+      { type: "skill", icon: "⚡", text: "TypeScript is now required at 80% of frontend roles — prioritize it." },
+      { type: "skill", icon: "🟢", text: "Next.js expertise can increase your salary band by ₹3–5L." },
+      { type: "project", icon: "🛠️", text: "Build a portfolio with Lighthouse score 90+ to stand out." },
+      { type: "resume", icon: "📄", text: "List specific component libraries and bundle size optimizations." },
     ]
   },
   "Backend Developer": {
-    icon: "âš™ï¸", color: "#34d399",
-    salary: { min: "â‚¹8L", max: "â‚¹40L", avg: "â‚¹20L" },
+    icon: "⚙️", color: "#34d399",
+    salary: { min: "₹8L", max: "₹40L", avg: "₹20L" },
     trend: "increasing", trendPct: "+21%",
     openings: "35,000+",
     trendingSkills: ["Node.js", "Python", "SQL", "REST APIs", "GraphQL", "Docker", "Kubernetes", "AWS", "Redis", "System Design"],
@@ -935,15 +1173,15 @@ const MD_ROLES = {
       { name: "Security Basics", demand: 60, userHas: false },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "Master SQL â€” it's tested in 85% of backend interviews." },
-      { type: "skill", icon: "ðŸŸ¢", text: "Docker knowledge is now a baseline expectation, not a bonus." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Build a microservices project with auth, caching, and a database." },
-      { type: "resume", icon: "ðŸ“„", text: "Highlight API throughput numbers and database query optimizations." },
+      { type: "skill", icon: "⚡", text: "Master SQL — it's tested in 85% of backend interviews." },
+      { type: "skill", icon: "🟢", text: "Docker knowledge is now a baseline expectation, not a bonus." },
+      { type: "project", icon: "🛠️", text: "Build a microservices project with auth, caching, and a database." },
+      { type: "resume", icon: "📄", text: "Highlight API throughput numbers and database query optimizations." },
     ]
   },
   "Data Analyst": {
-    icon: "ðŸ“Š", color: "#fbbf24",
-    salary: { min: "â‚¹5L", max: "â‚¹22L", avg: "â‚¹11L" },
+    icon: "📊", color: "#fbbf24",
+    salary: { min: "₹5L", max: "₹22L", avg: "₹11L" },
     trend: "stable", trendPct: "+9%",
     openings: "18,000+",
     trendingSkills: ["Python", "SQL", "Excel", "Power BI", "Tableau", "Statistics", "Data Viz", "Pandas", "Machine Learning", "Communication"],
@@ -958,15 +1196,15 @@ const MD_ROLES = {
       { name: "Communication", demand: 80, userHas: true },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "Python + Pandas is the #1 skill gap for aspiring data analysts." },
-      { type: "skill", icon: "ðŸŸ¢", text: "Learn Power BI â€” it's requested in 68% of analyst job postings." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Create a public Kaggle notebook with EDA and visualizations." },
-      { type: "resume", icon: "ðŸ“„", text: "Mention specific datasets, tools, and business insights you derived." },
+      { type: "skill", icon: "⚡", text: "Python + Pandas is the #1 skill gap for aspiring data analysts." },
+      { type: "skill", icon: "🟢", text: "Learn Power BI — it's requested in 68% of analyst job postings." },
+      { type: "project", icon: "🛠️", text: "Create a public Kaggle notebook with EDA and visualizations." },
+      { type: "resume", icon: "📄", text: "Mention specific datasets, tools, and business insights you derived." },
     ]
   },
   "DevOps Engineer": {
-    icon: "ðŸš€", color: "#f87171",
-    salary: { min: "â‚¹10L", max: "â‚¹45L", avg: "â‚¹24L" },
+    icon: "🚀", color: "#f87171",
+    salary: { min: "₹10L", max: "₹45L", avg: "₹24L" },
     trend: "increasing", trendPct: "+31%",
     openings: "22,000+",
     trendingSkills: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Linux", "Python", "Monitoring", "Ansible", "Jenkins"],
@@ -981,15 +1219,15 @@ const MD_ROLES = {
       { name: "Security / IAM", demand: 65, userHas: false },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "Kubernetes is the fastest-growing DevOps skill â€” get certified." },
-      { type: "skill", icon: "ðŸŸ¢", text: "Terraform (IaC) is now expected at senior DevOps roles." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Deploy a full-stack app on AWS with CI/CD and monitoring." },
-      { type: "resume", icon: "ðŸ“„", text: "Highlight uptime improvements, deployment frequency, and cost savings." },
+      { type: "skill", icon: "⚡", text: "Kubernetes is the fastest-growing DevOps skill — get certified." },
+      { type: "skill", icon: "🟢", text: "Terraform (IaC) is now expected at senior DevOps roles." },
+      { type: "project", icon: "🛠️", text: "Deploy a full-stack app on AWS with CI/CD and monitoring." },
+      { type: "resume", icon: "📄", text: "Highlight uptime improvements, deployment frequency, and cost savings." },
     ]
   },
   "AI/ML Engineer": {
-    icon: "ðŸ¤–", color: "#818cf8",
-    salary: { min: "â‚¹12L", max: "â‚¹60L", avg: "â‚¹28L" },
+    icon: "🤖", color: "#818cf8",
+    salary: { min: "₹12L", max: "₹60L", avg: "₹28L" },
     trend: "increasing", trendPct: "+47%",
     openings: "15,000+",
     trendingSkills: ["Python", "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "LLMs", "MLOps", "Statistics", "Data Engineering", "NLP"],
@@ -1004,58 +1242,58 @@ const MD_ROLES = {
       { name: "Data Engineering", demand: 65, userHas: false },
     ],
     aiRecs: [
-      { type: "skill", icon: "âš¡", text: "LLM fine-tuning and prompt engineering are the hottest skills of 2025." },
-      { type: "skill", icon: "ðŸŸ¢", text: "MLOps knowledge separates junior from senior ML engineers." },
-      { type: "project", icon: "ðŸ› ï¸", text: "Build and deploy a fine-tuned model on HuggingFace with a demo." },
-      { type: "resume", icon: "ðŸ“„", text: "Include model accuracy metrics, dataset sizes, and inference speed." },
+      { type: "skill", icon: "⚡", text: "LLM fine-tuning and prompt engineering are the hottest skills of 2025." },
+      { type: "skill", icon: "🟢", text: "MLOps knowledge separates junior from senior ML engineers." },
+      { type: "project", icon: "🛠️", text: "Build and deploy a fine-tuned model on HuggingFace with a demo." },
+      { type: "resume", icon: "📄", text: "Include model accuracy metrics, dataset sizes, and inference speed." },
     ]
   }
 };
 
 const MD_ALL_SKILLS = {
-  "JavaScript": { demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "âš¡" },
-  "Python": { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "ðŸ" },
-  "React.js": { demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "âš›ï¸" },
-  "TypeScript": { demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "ðŸ“˜" },
-  "Node.js": { demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "ðŸŸ¢" },
-  "Docker": { demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "ðŸ³" },
-  "AWS": { demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "â˜ï¸" },
-  "SQL": { demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "ðŸ—„ï¸" },
-  "Kubernetes": { demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "âš™ï¸" },
-  "LLM / AI": { demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "ðŸ¤–" },
-  "Next.js": { demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "â–²" },
-  "GraphQL": { demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "ðŸ”—" },
-  "System Design": { demand: 82, growth: "+11%", category: "Backend", color: "#00e5ff", icon: "ðŸ—ï¸" },
-  "CSS / Tailwind": { demand: 85, growth: "+9%", category: "Frontend", color: "#38bdf8", icon: "ðŸŽ¨" },
-  "Vue.js": { demand: 68, growth: "+7%", category: "Frontend", color: "#42b883", icon: "ðŸ’š" },
-  "Terraform": { demand: 75, growth: "+25%", category: "DevOps", color: "#7b42bc", icon: "ðŸ”§" },
-  "CI/CD": { demand: 90, growth: "+16%", category: "DevOps", color: "#f87171", icon: "ðŸ”„" },
-  "Linux": { demand: 85, growth: "+8%", category: "DevOps", color: "#fcc419", icon: "ðŸ§" },
-  "REST APIs": { demand: 88, growth: "+10%", category: "Backend", color: "#34d399", icon: "ðŸ”—" },
-  "Redis": { demand: 65, growth: "+13%", category: "Backend", color: "#dc2626", icon: "âš¡" },
-  "Power BI": { demand: 68, growth: "+19%", category: "Data", color: "#f2c811", icon: "ðŸ“Š" },
-  "Tableau": { demand: 66, growth: "+15%", category: "Data", color: "#e97627", icon: "ðŸ“ˆ" },
-  "Excel": { demand: 78, growth: "+3%", category: "Data", color: "#217346", icon: "ðŸ“‘" },
-  "Pandas": { demand: 92, growth: "+14%", category: "Data", color: "#150458", icon: "ðŸ¼" },
-  "Statistics": { demand: 75, growth: "+10%", category: "Data", color: "#8b5cf6", icon: "ðŸ“" },
-  "Data Viz": { demand: 82, growth: "+12%", category: "Data", color: "#10b981", icon: "ðŸ“Š" },
-  "Machine Learning": { demand: 95, growth: "+35%", category: "AI", color: "#818cf8", icon: "ðŸ¤–" },
-  "Deep Learning": { demand: 88, growth: "+42%", category: "AI", color: "#6366f1", icon: "ðŸ§ " },
-  "PyTorch": { demand: 85, growth: "+38%", category: "AI", color: "#ee4c2c", icon: "ðŸ”¥" },
-  "TensorFlow": { demand: 83, growth: "+33%", category: "AI", color: "#ff6f00", icon: "ðŸ”¶" },
-  "LLMs": { demand: 80, growth: "+52%", category: "AI", color: "#a78bfa", icon: "ðŸ’¬" },
-  "MLOps": { demand: 70, growth: "+45%", category: "AI", color: "#34d399", icon: "âš™ï¸" },
-  "NLP": { demand: 78, growth: "+40%", category: "AI", color: "#c084fc", icon: "ðŸ“" },
-  "Data Engineering": { demand: 65, growth: "+28%", category: "Data", color: "#fbbf24", icon: "ðŸ”§" },
-  "Webpack": { demand: 60, growth: "+5%", category: "Frontend", color: "#8dd6f9", icon: "ðŸ“¦" },
-  "Testing": { demand: 60, growth: "+11%", category: "Frontend", color: "#94a3b8", icon: "ðŸ§ª" },
-  "Accessibility": { demand: 55, growth: "+18%", category: "Frontend", color: "#10b981", icon: "â™¿" },
-  "Performance": { demand: 68, growth: "+14%", category: "Frontend", color: "#f59e0b", icon: "âš¡" },
-  "Monitoring": { demand: 68, growth: "+20%", category: "DevOps", color: "#06b6d4", icon: "ðŸ“¡" },
-  "Ansible": { demand: 62, growth: "+12%", category: "DevOps", color: "#ee0000", icon: "ðŸ”´" },
-  "Jenkins": { demand: 58, growth: "+8%", category: "DevOps", color: "#d24939", icon: "ðŸ”¨" },
-  "Git": { demand: 68, growth: "+4%", category: "Web", color: "#f05032", icon: "ðŸŒ¿" },
-  "Communication": { demand: 80, growth: "+6%", category: "Soft", color: "#94a3b8", icon: "ðŸ’¬" },
+  "JavaScript": { demand: 92, growth: "+5%", category: "Web", color: "#f7df1e", icon: "⚡" },
+  "Python": { demand: 90, growth: "+12%", category: "AI/Backend", color: "#3776ab", icon: "🐍" },
+  "React.js": { demand: 88, growth: "+8%", category: "Frontend", color: "#61dafb", icon: "⚛️" },
+  "TypeScript": { demand: 84, growth: "+22%", category: "Web", color: "#3178c6", icon: "📘" },
+  "Node.js": { demand: 81, growth: "+10%", category: "Backend", color: "#68a063", icon: "🟢" },
+  "Docker": { demand: 78, growth: "+18%", category: "DevOps", color: "#2496ed", icon: "🐳" },
+  "AWS": { demand: 76, growth: "+15%", category: "Cloud", color: "#ff9900", icon: "☁️" },
+  "SQL": { demand: 82, growth: "+6%", category: "Data", color: "#336791", icon: "🗄️" },
+  "Kubernetes": { demand: 70, growth: "+31%", category: "DevOps", color: "#326ce5", icon: "⚙️" },
+  "LLM / AI": { demand: 74, growth: "+47%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Next.js": { demand: 72, growth: "+28%", category: "Frontend", color: "#ffffff", icon: "▲" },
+  "GraphQL": { demand: 62, growth: "+14%", category: "API", color: "#e535ab", icon: "🔗" },
+  "System Design": { demand: 82, growth: "+11%", category: "Backend", color: "#00e5ff", icon: "🏗️" },
+  "CSS / Tailwind": { demand: 85, growth: "+9%", category: "Frontend", color: "#38bdf8", icon: "🎨" },
+  "Vue.js": { demand: 68, growth: "+7%", category: "Frontend", color: "#42b883", icon: "💚" },
+  "Terraform": { demand: 75, growth: "+25%", category: "DevOps", color: "#7b42bc", icon: "🔧" },
+  "CI/CD": { demand: 90, growth: "+16%", category: "DevOps", color: "#f87171", icon: "🔄" },
+  "Linux": { demand: 85, growth: "+8%", category: "DevOps", color: "#fcc419", icon: "🐧" },
+  "REST APIs": { demand: 88, growth: "+10%", category: "Backend", color: "#34d399", icon: "🔗" },
+  "Redis": { demand: 65, growth: "+13%", category: "Backend", color: "#dc2626", icon: "⚡" },
+  "Power BI": { demand: 68, growth: "+19%", category: "Data", color: "#f2c811", icon: "📊" },
+  "Tableau": { demand: 66, growth: "+15%", category: "Data", color: "#e97627", icon: "📈" },
+  "Excel": { demand: 78, growth: "+3%", category: "Data", color: "#217346", icon: "📑" },
+  "Pandas": { demand: 92, growth: "+14%", category: "Data", color: "#150458", icon: "🐼" },
+  "Statistics": { demand: 75, growth: "+10%", category: "Data", color: "#8b5cf6", icon: "📐" },
+  "Data Viz": { demand: 82, growth: "+12%", category: "Data", color: "#10b981", icon: "📊" },
+  "Machine Learning": { demand: 95, growth: "+35%", category: "AI", color: "#818cf8", icon: "🤖" },
+  "Deep Learning": { demand: 88, growth: "+42%", category: "AI", color: "#6366f1", icon: "🧠" },
+  "PyTorch": { demand: 85, growth: "+38%", category: "AI", color: "#ee4c2c", icon: "🔥" },
+  "TensorFlow": { demand: 83, growth: "+33%", category: "AI", color: "#ff6f00", icon: "🔶" },
+  "LLMs": { demand: 80, growth: "+52%", category: "AI", color: "#a78bfa", icon: "💬" },
+  "MLOps": { demand: 70, growth: "+45%", category: "AI", color: "#34d399", icon: "⚙️" },
+  "NLP": { demand: 78, growth: "+40%", category: "AI", color: "#c084fc", icon: "📝" },
+  "Data Engineering": { demand: 65, growth: "+28%", category: "Data", color: "#fbbf24", icon: "🔧" },
+  "Webpack": { demand: 60, growth: "+5%", category: "Frontend", color: "#8dd6f9", icon: "📦" },
+  "Testing": { demand: 60, growth: "+11%", category: "Frontend", color: "#94a3b8", icon: "🧪" },
+  "Accessibility": { demand: 55, growth: "+18%", category: "Frontend", color: "#10b981", icon: "♿" },
+  "Performance": { demand: 68, growth: "+14%", category: "Frontend", color: "#f59e0b", icon: "⚡" },
+  "Monitoring": { demand: 68, growth: "+20%", category: "DevOps", color: "#06b6d4", icon: "📡" },
+  "Ansible": { demand: 62, growth: "+12%", category: "DevOps", color: "#ee0000", icon: "🔴" },
+  "Jenkins": { demand: 58, growth: "+8%", category: "DevOps", color: "#d24939", icon: "🔨" },
+  "Git": { demand: 68, growth: "+4%", category: "Web", color: "#f05032", icon: "🌿" },
+  "Communication": { demand: 80, growth: "+6%", category: "Soft", color: "#94a3b8", icon: "💬" },
 };
 
 const MD_TREND_DATA = [
@@ -1196,7 +1434,7 @@ function CircleMatch({ pct, color, size = 120 }) {
   );
 }
 
-// MARKET DEMAND â€” Premium Dashboard
+// MARKET DEMAND — Premium Dashboard
 function MarketDemand({ onNav, user }) {
   const [tab, setTab] = useState("trending");
   const [selectedRole, setSelectedRole] = useState("Software Engineer");
@@ -1235,10 +1473,10 @@ function MarketDemand({ onNav, user }) {
   }
 
   const tabs = [
-    { key: "trending", label: "ðŸ”¥ Trending Skills" },
-    { key: "match", label: "ðŸŽ¯ Your Match" },
-    { key: "role", label: "ðŸ’¼ Role Insights" },
-    { key: "ai", label: "ðŸ¤– AI Recommendations" },
+    { key: "trending", label: "🔥 Trending Skills" },
+    { key: "match", label: "🎯 Your Match" },
+    { key: "role", label: "💼 Role Insights" },
+    { key: "ai", label: "🤖 AI Recommendations" },
   ];
 
   const MD_MONTHLY_POSTINGS = {
@@ -1292,7 +1530,7 @@ function MarketDemand({ onNav, user }) {
 
   return (
     <div className="section-enter" style={{ paddingBottom: 48 }}>
-      {/* â”€â”€ HEADER â”€â”€ */}
+      {/* ── HEADER ── */}
       <div style={{
         position: "relative", borderRadius: 24, overflow: "hidden",
         background: "linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(124,58,237,0.12) 50%, rgba(255,107,157,0.08) 100%)",
@@ -1307,7 +1545,7 @@ function MarketDemand({ onNav, user }) {
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.25)", borderRadius: 20, padding: "4px 14px", marginBottom: 14, fontSize: 11, color: "#22d3ee", fontWeight: 700, letterSpacing: 1 }}>
               <span style={{ width: 6, height: 6, background: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "pulse 2s infinite" }} />
-              LIVE MARKET DATA Â· 2025
+              LIVE MARKET DATA · 2025
             </div>
             <h1 className="syne" style={{ fontSize: "clamp(24px,3vw,36px)", fontWeight: 800, marginBottom: 10, lineHeight: 1.2 }}>
               Market Demand{" "}
@@ -1348,48 +1586,48 @@ function MarketDemand({ onNav, user }) {
             {
               label: "Open Positions",
               val: `${c1.toLocaleString()}+`,
-              icon: "ðŸ’¼", color: "#22d3ee",
+              icon: "💼", color: "#22d3ee",
               sub: "Tech sector, India",
               delta: openingsDelta,
-              deltaLabel: openingsDelta !== 0 ? `${openingsDelta > 0 ? "â–²" : "â–¼"} ${Math.abs(openingsDelta).toLocaleString()} vs prev role` : null,
+              deltaLabel: openingsDelta !== 0 ? `${openingsDelta > 0 ? "▲" : "▼"} ${Math.abs(openingsDelta).toLocaleString()} vs prev role` : null,
             },
             {
               label: "Monthly Postings",
               val: c2.toLocaleString(),
-              icon: "ðŸ“ˆ", color: "#c084fc",
+              icon: "📈", color: "#c084fc",
               sub: "Feb 2025",
               delta: monthlyDelta,
-              deltaLabel: monthlyDelta !== 0 ? `${monthlyDelta > 0 ? "â–²" : "â–¼"} ${Math.abs(monthlyDelta).toLocaleString()} vs prev role` : null,
+              deltaLabel: monthlyDelta !== 0 ? `${monthlyDelta > 0 ? "▲" : "▼"} ${Math.abs(monthlyDelta).toLocaleString()} vs prev role` : null,
             },
             {
               label: "Your Match Score",
               val: `${c3}%`,
-              icon: "ðŸŽ¯", color: roleColor,
+              icon: "🎯", color: roleColor,
               sub: selectedRole,
               delta: matchDelta,
               deltaLabel: matchDelta !== 0
-                ? `${matchDelta > 0 ? "â–²" : "â–¼"} ${Math.abs(matchDelta)}% vs prev role`
+                ? `${matchDelta > 0 ? "▲" : "▼"} ${Math.abs(matchDelta)}% vs prev role`
                 : null,
             },
             {
               label: "Avg Salary",
-              val: `â‚¹${cSalary}L`,
-              icon: "ðŸ’°", color: "#34d399",
-              sub: `${roleData.salary.min} â€“ ${roleData.salary.max}`,
+              val: `₹${cSalary}L`,
+              icon: "💰", color: "#34d399",
+              sub: `${roleData.salary.min} – ${roleData.salary.max}`,
               delta: salaryDelta,
               deltaLabel: salaryDelta !== 0
-                ? `${salaryDelta > 0 ? "â–²" : "â–¼"} â‚¹${Math.abs(salaryDelta)}L avg vs prev role`
+                ? `${salaryDelta > 0 ? "▲" : "▼"} ₹${Math.abs(salaryDelta)}L avg vs prev role`
                 : null,
             },
             {
               label: "Hiring Trend",
               val: `+${cTrend}%`,
-              icon: roleData.trend === "increasing" ? "ðŸš€" : "ðŸ“Š",
+              icon: roleData.trend === "increasing" ? "🚀" : "📊",
               color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
               sub: "YoY growth",
               delta: trendDelta,
               deltaLabel: trendDelta !== 0
-                ? `${trendDelta > 0 ? "â–²" : "â–¼"} ${Math.abs(trendDelta)}% vs prev role`
+                ? `${trendDelta > 0 ? "▲" : "▼"} ${Math.abs(trendDelta)}% vs prev role`
                 : null,
             },
           ].map((kpi, i) => (
@@ -1421,7 +1659,7 @@ function MarketDemand({ onNav, user }) {
         </div>
       </div>
 
-      {/* â”€â”€ TABS â”€â”€ */}
+      {/* ── TABS ── */}
       <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -1435,12 +1673,12 @@ function MarketDemand({ onNav, user }) {
         ))}
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          TAB 1 â€” TRENDING SKILLS
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════════════════════════════════════
+          TAB 1 — TRENDING SKILLS
+      ══════════════════════════════════════════════════════ */}
       {tab === "trending" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Category filter chips â€” dynamic per role */}
+          {/* Category filter chips — dynamic per role */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {roleCategories.map(cat => (
               <button key={cat} onClick={() => setFilterCat(cat)} style={{
@@ -1491,7 +1729,7 @@ function MarketDemand({ onNav, user }) {
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11, color: "#94a3b8" }}>
                   <span>Demand Index</span>
                   <span style={{ color: s.demand >= 85 ? "#34d399" : s.demand >= 70 ? "#fbbf24" : "#f87171", fontWeight: 600 }}>
-                    {s.demand >= 85 ? "ðŸ”¥ Very High" : s.demand >= 70 ? "ðŸ“ˆ High" : "ðŸ“Š Moderate"}
+                    {s.demand >= 85 ? "🔥 Very High" : s.demand >= 70 ? "📈 High" : "📊 Moderate"}
                   </span>
                 </div>
               </div>
@@ -1506,9 +1744,9 @@ function MarketDemand({ onNav, user }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div>
                 <h3 className="syne" style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
-                  {roleData.icon} {selectedRole} â€” Skill Demand Index
+                  {roleData.icon} {selectedRole} — Skill Demand Index
                 </h3>
-                <p style={{ fontSize: 13, color: "#94a3b8" }}>Top skills ranked by market demand for this role Â· 2025</p>
+                <p style={{ fontSize: 13, color: "#94a3b8" }}>Top skills ranked by market demand for this role · 2025</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
@@ -1534,9 +1772,9 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          TAB 2 â€” YOUR MATCH
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════════════════════════════════════
+          TAB 2 — YOUR MATCH
+      ══════════════════════════════════════════════════════ */}
       {tab === "match" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Match overview */}
@@ -1555,14 +1793,14 @@ function MarketDemand({ onNav, user }) {
             </div>
             <div>
               <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
-                {matchPct >= 70 ? "Strong Match! ðŸŽ‰" : matchPct >= 40 ? "Good Progress ðŸ“ˆ" : "Room to Grow ðŸŒ±"}
+                {matchPct >= 70 ? "Strong Match! 🎉" : matchPct >= 40 ? "Good Progress 📈" : "Room to Grow 🌱"}
               </h3>
               <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
                 {matchPct >= 70
                   ? `You already have ${matchedSkills} of the key skills for ${selectedRole}. Focus on the gaps below to become a top candidate.`
                   : matchPct >= 40
                     ? `You're on the right track. Building the missing skills will significantly boost your interview success rate.`
-                    : `Start with the high-demand skills below. Even 2â€“3 additions can dramatically improve your match score.`}
+                    : `Start with the high-demand skills below. Even 2–3 additions can dramatically improve your match score.`}
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: 10, padding: "10px 18px" }}>
@@ -1584,7 +1822,7 @@ function MarketDemand({ onNav, user }) {
           {/* Skill comparison list */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
-              Skill-by-Skill Comparison â€” <span style={{ color: roleColor }}>{selectedRole}</span>
+              Skill-by-Skill Comparison — <span style={{ color: roleColor }}>{selectedRole}</span>
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {enrichedSkills.map((s, i) => (
@@ -1603,14 +1841,14 @@ function MarketDemand({ onNav, user }) {
                         fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
                         background: s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
                         color: s.userHas ? "#34d399" : "#f87171"
-                      }}>{s.userHas ? "âœ“ You have this" : "âœ— Missing"}</span>
+                      }}>{s.userHas ? "✓ You have this" : "✗ Missing"}</span>
                     </div>
                     <AnimatedBar value={s.demand} color={s.userHas ? "#34d399" : "#f87171"} delay={i * 80} />
                   </div>
                   <div className="mono" style={{ fontSize: 16, fontWeight: 800, color: s.userHas ? "#34d399" : "#f87171", minWidth: 48, textAlign: "right" }}>
                     {s.demand}%
                   </div>
-                  <div style={{ fontSize: 20 }}>{s.userHas ? "âœ…" : "âŒ"}</div>
+                  <div style={{ fontSize: 20 }}>{s.userHas ? "✅" : "❌"}</div>
                 </div>
               ))}
             </div>
@@ -1623,7 +1861,7 @@ function MarketDemand({ onNav, user }) {
               border: "1px solid rgba(248,113,113,0.2)", borderRadius: 16, padding: "22px 24px"
             }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 12 }}>
-                ðŸŽ¯ Priority Skills to Add
+                🎯 Priority Skills to Add
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                 {enrichedSkills.filter(s => !s.userHas).sort((a, b) => b.demand - a.demand).map((s, i) => (
@@ -1642,9 +1880,9 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          TAB 3 â€” ROLE INSIGHTS
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════════════════════════════════════
+          TAB 3 — ROLE INSIGHTS
+      ══════════════════════════════════════════════════════ */}
       {tab === "role" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Role header card */}
@@ -1665,7 +1903,7 @@ function MarketDemand({ onNav, user }) {
                     border: `1px solid ${roleData.trend === "increasing" ? "rgba(52,211,153,0.3)" : "rgba(251,191,36,0.3)"}`,
                     borderRadius: 8, padding: "3px 10px"
                   }}>
-                    {roleData.trend === "increasing" ? "ðŸš€ Hiring Increasing" : "ðŸ“Š Stable Demand"}
+                    {roleData.trend === "increasing" ? "🚀 Hiring Increasing" : "📊 Stable Demand"}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: roleColor, background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 8, padding: "3px 10px" }}>
                     {roleData.trendPct} YoY
@@ -1680,8 +1918,8 @@ function MarketDemand({ onNav, user }) {
             {/* Salary range */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
               {[
-                { label: "Entry Level", val: roleData.salary.min, sub: "0â€“2 years" },
-                { label: "Average CTC", val: roleData.salary.avg, sub: "2â€“5 years", highlight: true },
+                { label: "Entry Level", val: roleData.salary.min, sub: "0–2 years" },
+                { label: "Average CTC", val: roleData.salary.avg, sub: "2–5 years", highlight: true },
                 { label: "Senior Level", val: roleData.salary.max, sub: "5+ years" },
               ].map((s, i) => (
                 <div key={i} style={{
@@ -1699,7 +1937,7 @@ function MarketDemand({ onNav, user }) {
 
           {/* Required skills ranked */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Required Skills â€” Ranked by Demand</h3>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Required Skills — Ranked by Demand</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[...enrichedSkills].sort((a, b) => b.demand - a.demand).map((s, i) => (
                 <div key={i} style={{ display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 14 }}>
@@ -1711,7 +1949,7 @@ function MarketDemand({ onNav, user }) {
                     </div>
                     <AnimatedBar value={s.demand} color={i < 3 ? roleColor : "#94a3b8"} delay={i * 70} />
                   </div>
-                  <div style={{ fontSize: 16 }}>{i === 0 ? "ðŸ¥‡" : i === 1 ? "ðŸ¥ˆ" : i === 2 ? "ðŸ¥‰" : "â­"}</div>
+                  <div style={{ fontSize: 16 }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "⭐"}</div>
                 </div>
               ))}
             </div>
@@ -1719,8 +1957,8 @@ function MarketDemand({ onNav, user }) {
 
           {/* Hiring trend chart */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px" }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Hiring Trend â€” Tech Sector</h3>
-            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Total job postings vs AI/ML roles (Jul 2024 â€“ Feb 2025)</p>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Hiring Trend — Tech Sector</h3>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Total job postings vs AI/ML roles (Jul 2024 – Feb 2025)</p>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={MD_TREND_DATA}>
                 <defs>
@@ -1755,9 +1993,9 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          TAB 4 â€” AI RECOMMENDATIONS
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════════════════════════════════════
+          TAB 4 — AI RECOMMENDATIONS
+      ══════════════════════════════════════════════════════ */}
       {tab === "ai" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* AI header */}
@@ -1766,7 +2004,7 @@ function MarketDemand({ onNav, user }) {
             border: "1px solid rgba(129,140,248,0.25)", borderRadius: 20, padding: "28px 32px",
             display: "flex", alignItems: "center", gap: 20
           }}>
-            <div style={{ fontSize: 52, animation: "float 3s ease-in-out infinite" }}>ðŸ¤–</div>
+            <div style={{ fontSize: 52, animation: "float 3s ease-in-out infinite" }}>🤖</div>
             <div>
               <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
                 AI Career Advisor
@@ -1806,15 +2044,15 @@ function MarketDemand({ onNav, user }) {
 
           {/* General market insights */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>ðŸ“Š Market Intelligence â€” 2025</h3>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📊 Market Intelligence — 2025</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               {[
-                { icon: "ðŸ”¥", title: "Hottest Skill", val: "TypeScript", desc: "+22% demand growth YoY. Now required at 80% of frontend roles.", color: "#f87171" },
-                { icon: "ðŸš€", title: "Fastest Growing", val: "LLM / AI Engineering", desc: "+47% YoY. Entry-level AI skills expected at 34% of tech companies.", color: "#34d399" },
-                { icon: "ðŸŽ¯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: "#fbbf24" },
-                { icon: "ðŸ’¼", title: "Highest Paying", val: "DevOps / Cloud", desc: "Average â‚¹24L. Kubernetes + AWS combo commands premium offers.", color: "#22d3ee" },
-                { icon: "âš¡", title: "Quick Win", val: "Docker Basics", desc: "2-week learning curve, required in 78% of backend job postings.", color: "#c084fc" },
-                { icon: "ðŸŒ", title: "Remote Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: "#818cf8" },
+                { icon: "🔥", title: "Hottest Skill", val: "TypeScript", desc: "+22% demand growth YoY. Now required at 80% of frontend roles.", color: "#f87171" },
+                { icon: "🚀", title: "Fastest Growing", val: "LLM / AI Engineering", desc: "+47% YoY. Entry-level AI skills expected at 34% of tech companies.", color: "#34d399" },
+                { icon: "🎯", title: "Most Underrated", val: "System Design", desc: "Only 28% of candidates can demonstrate system design skills.", color: "#fbbf24" },
+                { icon: "💼", title: "Highest Paying", val: "DevOps / Cloud", desc: "Average ₹24L. Kubernetes + AWS combo commands premium offers.", color: "#22d3ee" },
+                { icon: "⚡", title: "Quick Win", val: "Docker Basics", desc: "2-week learning curve, required in 78% of backend job postings.", color: "#c084fc" },
+                { icon: "🌐", title: "Remote Demand", val: "JavaScript + APIs", desc: "92% of remote tech jobs require strong JavaScript fundamentals.", color: "#818cf8" },
               ].map((c, i) => (
                 <div key={i} style={{
                   background: `${c.color}08`, border: `1px solid ${c.color}20`,
@@ -1845,10 +2083,10 @@ function MarketDemand({ onNav, user }) {
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               <button className="btn-primary" style={{ fontSize: 13, padding: "10px 22px" }} onClick={() => onNav("resume")}>
-                ðŸ“„ Update Resume
+                📄 Update Resume
               </button>
               <button className="btn-outline" style={{ fontSize: 13, padding: "9px 22px" }} onClick={() => onNav("assessment")}>
-                ðŸŽ¯ Re-assess Skills
+                🎯 Re-assess Skills
               </button>
             </div>
           </div>
@@ -1859,12 +2097,12 @@ function MarketDemand({ onNav, user }) {
 }
 
 
-// RESUME BUILDER â€” delegates to the premium standalone component
+// RESUME BUILDER — delegates to the premium standalone component
 function ResumeBuilder({ user }) {
   return <PremiumResumeBuilder user={user} />;
 }
 
-// OLD RESUME BUILDER (replaced) â€” keeping stub for reference
+// OLD RESUME BUILDER (replaced) — keeping stub for reference
 function _OldResumeBuilder_UNUSED({ user }) {
   const [form, setForm] = useState({
     name: user.name || "",
@@ -1874,9 +2112,9 @@ function _OldResumeBuilder_UNUSED({ user }) {
     location: "Bangalore, India",
     summary: "Passionate developer with strong skills in modern web technologies. Seeking opportunities to build impactful products.",
     skills: Object.keys(user.skills || {}).filter(k => (user.skills[k] || 0) >= 50).join(", ") || "JavaScript, React, Node.js",
-    exp: "Final Year Student | XYZ University | 2022â€“Present\nWorked on full-stack projects using React and Node.js",
-    projects: "RejexIQ â€“ Career Readiness Platform | React, Node.js, JWT | github.com\nPersonal Portfolio â€“ responsive design website | HTML, CSS, JS",
-    education: "B.Tech Computer Science | XYZ University | 2022â€“2026 | CGPA: 8.2",
+    exp: "Final Year Student | XYZ University | 2022–Present\nWorked on full-stack projects using React and Node.js",
+    projects: "RejexIQ – Career Readiness Platform | React, Node.js, JWT | github.com\nPersonal Portfolio – responsive design website | HTML, CSS, JS",
+    education: "B.Tech Computer Science | XYZ University | 2022–2026 | CGPA: 8.2",
     certifications: "AWS Cloud Practitioner | FreeCodeCamp Full Stack Cert"
   });
   const [template, setTemplate] = useState("modern");
@@ -1917,7 +2155,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
             <button key={t} style={{ padding: "6px 16px", borderRadius: 8, border: `1px solid ${template === t ? G.accent : G.border}`, background: template === t ? G.accentDim : "transparent", color: template === t ? G.accent : G.muted, cursor: "pointer", fontSize: 12, fontWeight: 600 }}
               onClick={() => setTemplate(t)}>{t}</button>
           ))}
-          <button className="btn-primary" style={{ fontSize: 13, padding: "8px 20px" }} onClick={handlePrint}>ðŸ“¥ Download PDF</button>
+          <button className="btn-primary" style={{ fontSize: 13, padding: "8px 20px" }} onClick={handlePrint}>📥 Download PDF</button>
         </div>
       </div>
 
@@ -1941,7 +2179,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
                 style={{ resize: "vertical" }} />
               {key === "skills" && suggestion && (
                 <div style={{ marginTop: 4, fontSize: 11, color: G.warning }}>
-                  ðŸ’¡ Consider adding: <span style={{ cursor: "pointer", textDecoration: "underline" }}
+                  💡 Consider adding: <span style={{ cursor: "pointer", textDecoration: "underline" }}
                     onClick={() => setForm({ ...form, skills: form.skills + `, ${suggestion}` })}>{suggestion}</span>
                 </div>
               )}
@@ -1961,7 +2199,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
                 <h1 style={{ fontSize: 26, fontWeight: 800, color: "white", marginBottom: 4 }}>{form.name || "Your Name"}</h1>
                 <div style={{ fontSize: 15, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>{form.title}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 6 }}>
-                  {form.email} {form.phone && `â€¢ ${form.phone}`} {form.location && `â€¢ ${form.location}`}
+                  {form.email} {form.phone && `• ${form.phone}`} {form.location && `• ${form.location}`}
                 </div>
               </div>
             )}
@@ -1981,7 +2219,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
                 <h1 style={{ fontSize: 24, fontWeight: 600, color: "#222", marginBottom: 2 }}>{form.name || "Your Name"}</h1>
                 <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>{form.title}</div>
                 <div style={{ fontSize: 11, color: "#888" }}>
-                  {form.email} â€¢ {form.phone} â€¢ {form.location}
+                  {form.email} • {form.phone} • {form.location}
                 </div>
               </div>
             )}
@@ -2127,7 +2365,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
 // AI ASSISTANT - Real AI Integration
 function AIAssistant({ user }) {
   const [messages, setMessages] = useState([
-    { role: "assistant", text: `Hi ${user.name}! ðŸ‘‹ I'm your AI Career Assistant powered by Google Gemini. I can help you with skill improvement tips, career guidance, interview preparation, and learning resources. What would you like to know?` }
+    { role: "assistant", text: `Hi ${user.name}! 👋 I'm your AI Career Assistant powered by Google Gemini. I can help you with skill improvement tips, career guidance, interview preparation, and learning resources. What would you like to know?` }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2196,7 +2434,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
     if (apiKey.trim()) {
       localStorage.setItem("gemini_api_key", apiKey.trim());
       setShowApiKeyInput(false);
-      setMessages([{ role: "assistant", text: `API key saved! I'm now connected to Google Gemini AI. Ask me anything about your career! ðŸš€` }]);
+      setMessages([{ role: "assistant", text: `API key saved! I'm now connected to Google Gemini AI. Ask me anything about your career! 🚀` }]);
     }
   }
 
@@ -2225,7 +2463,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
         </div>
 
         <div className="card" style={{ padding: 40, maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 64, marginBottom: 24 }}>ðŸ¤–</div>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>🤖</div>
           <h2 className="syne" style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Connect to AI</h2>
           <p style={{ color: G.muted, marginBottom: 24, lineHeight: 1.6 }}>
             To use the AI Career Assistant, you need a free Google Gemini API key.
@@ -2264,7 +2502,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
           </button>
 
           <div style={{ marginTop: 16, padding: 12, background: G.accentDim, borderRadius: 8, fontSize: 12, color: G.muted }}>
-            ðŸ’¡ The Gemini API is free for personal use with generous limits
+            💡 The Gemini API is free for personal use with generous limits
           </div>
         </div>
       </div>
@@ -2287,10 +2525,10 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
         <div className="card" style={{ padding: 0, display: "flex", flexDirection: "column", height: 520 }}>
           {/* Header */}
           <div style={{ padding: "16px 24px", borderBottom: `1px solid ${G.border}`, display: "flex", alignItems: "center", gap: 12 }}>
-            <div className="float-anim" style={{ fontSize: 28 }}>ðŸ¤–</div>
+            <div className="float-anim" style={{ fontSize: 28 }}>🤖</div>
             <div>
               <div className="syne" style={{ fontWeight: 700 }}>Gemini AI</div>
-              <div style={{ fontSize: 12, color: G.success }}>â— Online</div>
+              <div style={{ fontSize: 12, color: G.success }}>● Online</div>
             </div>
           </div>
 
@@ -2298,7 +2536,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
           <div ref={msgRef} style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
-                {m.role === "assistant" && <div style={{ fontSize: 20, marginBottom: 4 }}>ðŸ¤–</div>}
+                {m.role === "assistant" && <div style={{ fontSize: 20, marginBottom: 4 }}>🤖</div>}
                 <div className={`chat-bubble ${m.role}`} style={{ maxWidth: "80%", whiteSpace: "pre-line" }}>
                   {m.text}
                 </div>
@@ -2306,7 +2544,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             ))}
             {loading && (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 20 }}>ðŸ¤–</span>
+                <span style={{ fontSize: 20 }}>🤖</span>
                 <div className="chat-bubble" style={{ display: "flex", gap: 4 }}>
                   {[0, 1, 2].map(i => <span key={i} className="pulse-anim" style={{ width: 8, height: 8, background: G.accent, borderRadius: "50%", display: "inline-block", animationDelay: `${i * 0.2}s` }} />)}
                 </div>
@@ -2319,7 +2557,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             <input className="input-field" placeholder="Ask me anything..." value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && send()} style={{ flex: 1 }} />
-            <button className="btn-primary" onClick={() => send()} style={{ padding: "10px 16px", fontSize: 16 }}>â†’</button>
+            <button className="btn-primary" onClick={() => send()} style={{ padding: "10px 16px", fontSize: 16 }}>→</button>
           </div>
         </div>
 
@@ -2353,15 +2591,15 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
 // LEADERBOARD
 function Leaderboard() {
   const entries = [
-    { name: "Rahul Sharma", score: 94, role: "Frontend Dev", badge: "ðŸ¥‡" },
-    { name: "Priya Patel", score: 91, role: "Full Stack", badge: "ðŸ¥ˆ" },
-    { name: "Arjun Singh", score: 88, role: "Backend Dev", badge: "ðŸ¥‰" },
-    { name: "Sneha Rao", score: 84, role: "Data Analyst", badge: "4ï¸âƒ£" },
-    { name: "Dev Kumar", score: 81, role: "DevOps", badge: "5ï¸âƒ£" },
-    { name: "Ananya Iyer", score: 78, role: "Frontend Dev", badge: "6ï¸âƒ£" },
-    { name: "Karan Mehta", score: 75, role: "Full Stack", badge: "7ï¸âƒ£" },
-    { name: "Lakshmi N.", score: 72, role: "Backend Dev", badge: "8ï¸âƒ£" },
-    { name: "You", score: 68, role: "In Progress", badge: "â€”", isYou: true },
+    { name: "Rahul Sharma", score: 94, role: "Frontend Dev", badge: "🥇" },
+    { name: "Priya Patel", score: 91, role: "Full Stack", badge: "🥈" },
+    { name: "Arjun Singh", score: 88, role: "Backend Dev", badge: "🥉" },
+    { name: "Sneha Rao", score: 84, role: "Data Analyst", badge: "4️⃣" },
+    { name: "Dev Kumar", score: 81, role: "DevOps", badge: "5️⃣" },
+    { name: "Ananya Iyer", score: 78, role: "Frontend Dev", badge: "6️⃣" },
+    { name: "Karan Mehta", score: 75, role: "Full Stack", badge: "7️⃣" },
+    { name: "Lakshmi N.", score: 72, role: "Backend Dev", badge: "8️⃣" },
+    { name: "You", score: 68, role: "In Progress", badge: "—", isYou: true },
   ];
 
   return (
@@ -2403,15 +2641,15 @@ function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
       <div className="tour-popup" style={{ top: targetPos.y || "50%", left: targetPos.x || "50%", transform: "translateY(-50%)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <span className="tag" style={{ background: G.accentDim, color: G.accent }}>Step {step + 1} of {total}</span>
-          <button onClick={onSkip} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 18 }}>Ã—</button>
+          <button onClick={onSkip} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 18 }}>×</button>
         </div>
         <h3 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{TOUR_STEPS[step].title}</h3>
         <p style={{ color: G.muted, fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>{TOUR_STEPS[step].text}</p>
         <div style={{ display: "flex", gap: 8 }}>
           {step < total - 1 ? (
-            <button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }} onClick={onNext}>Next â†’</button>
+            <button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }} onClick={onNext}>Next →</button>
           ) : (
-            <button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }} onClick={onSkip}>Let's Go! ðŸš€</button>
+            <button className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }} onClick={onSkip}>Let's Go! 🚀</button>
           )}
           <button className="btn-ghost" style={{ padding: "8px 16px", fontSize: 12 }} onClick={onSkip}>Skip Tour</button>
         </div>
@@ -2420,7 +2658,7 @@ function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
   );
 }
 
-// â”€â”€â”€ MAIN APP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [page, setPage] = useState("home");
@@ -2505,7 +2743,7 @@ export default function App() {
     }
   }
 
-  // Tour navigation labels â†’ app pages
+  // Tour navigation labels → app pages
   const tourPageMap = ["dashboard", "assessment", "career", "market", "resume"];
 
   const tourPositions = [
@@ -2520,7 +2758,7 @@ export default function App() {
     <>
       <style>{css}</style>
 
-      {page === "home" && <CareerLanding onNav={navigate} onDemo={handleDemo} />}
+      {page === "home" && <LandingPage onNav={navigate} onDemo={handleDemo} />}
       {page === "login" && <AuthPage type="login" onLogin={handleLogin} onNav={navigate} />}
       {page === "signup" && <AuthPage type="signup" onLogin={handleLogin} onNav={navigate} />}
       {page === "assessment" && !user && (
@@ -2535,7 +2773,7 @@ export default function App() {
                 <span style={{ background: `linear-gradient(135deg, ${G.accent}, ${G.purple})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Rejex</span>IQ
               </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <button className="btn-ghost" onClick={() => navigate("home")}>â† Home</button>
+                <button className="btn-ghost" onClick={() => navigate("home")}>← Home</button>
                 <button className="btn-primary" onClick={() => navigate("login")}>Login to Save Progress</button>
               </div>
             </div>
@@ -2562,7 +2800,7 @@ export default function App() {
             {/* Demo badge */}
             {user.email === "demo@rejexiq.com" && (
               <div style={{ marginBottom: 16, padding: "8px 16px", background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, fontSize: 12, color: G.warning, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                âœ¨ Demo Mode â€” All features available. Data is pre-loaded for demonstration.
+                ✨ Demo Mode — All features available. Data is pre-loaded for demonstration.
               </div>
             )}
 
