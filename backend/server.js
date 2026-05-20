@@ -23,10 +23,24 @@ const PORT = process.env.PORT || 5000;
 const storyRoutes = require("./storyRoutes");
 // Career Match routes
 const careerRoutes = require("./careerRoutes");
+// New auth routes (JWT + MongoDB)
+const { router: authRouter, authMiddleware: newAuthMiddleware } = require("./authRoutes");
+
 const JWT_SECRET = process.env.JWT_SECRET || "rejexiq_dev_secret_2025";
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const MONGO_URI  = process.env.MONGO_URI  || "";
 
-// ── IN-MEMORY DATABASE (for demo — replace with MongoDB in production) ──────
+// ── MongoDB connection (optional — falls back to in-memory) ──────────────────
+if (MONGO_URI) {
+  const mongoose = require("mongoose");
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.warn("⚠️  MongoDB connection failed — using in-memory store:", err.message));
+} else {
+  console.log("ℹ️  No MONGO_URI set — using in-memory user store (data resets on restart)");
+}
+
+// ── IN-MEMORY DATABASE (legacy — kept for non-auth routes) ──────────────────
 const users = [];          // Simulates user collection
 const assessments = [];    // Simulates assessments collection
 
@@ -104,6 +118,9 @@ function generateReport(userSkills) {
 }
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
+
+// NEW: Auth routes (signup, signin, google, me)
+app.use("/api/auth", authRouter);
 
 // Story Mode routes
 app.use("/api", storyRoutes);
