@@ -1040,6 +1040,34 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   // Use updatedResumeData as the main data source
   const data = updatedResumeData;
   const setData = setUpdatedResumeData;
+
+  // ── PERSIST to localStorage so the hero section can read real data ──
+  // Key is user-specific so different accounts never share data
+  const storageKey = `resume_builder_data_${(user && (user.email || user.username || user.name || "guest")).replace(/\s+/g,"_").toLowerCase()}`;
+
+  // On mount: restore last saved session for this user
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only restore if it has meaningful content (not just empty placeholders)
+        if (parsed && (parsed.name || parsed.email || (parsed.skills && parsed.skills.length > 0))) {
+          setData(prev => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (_) {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  // On every data change: save to localStorage (debounced via useEffect)
+  useEffect(() => {
+    try {
+      // Also write to the generic key so computeHeroStats can find it
+      localStorage.setItem("resume_builder_data", JSON.stringify(data));
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (_) {}
+  }, [data, storageKey]);
   
   const ats=calcATS(data);
   const done=calcDone(data);
@@ -1506,73 +1534,229 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                     <div className={"rounded-2xl border "+card} style={{padding:"20px 32px"}}>
                       {sec==="experience"&&(<>
                         <br></br><SecHead icon="💼" title="Experience" onAdd={()=>addI("experience",{role:"",company:"",duration:"",description:""})} addLabel="Add Role" collapsed={col.experience} onToggle={()=>togC("experience")}/>
-                        <AnimatePresence>{!col.experience&&data.experience.map(exp=>(
-                          <motion.div key={exp.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                              <input className={iCls} style={iStyle} value={exp.role} onChange={e=>updI("experience",exp.id,"role",e.target.value)} placeholder="Job Title"/>
-                              <input className={iCls} style={iStyle} value={exp.company} onChange={e=>updI("experience",exp.id,"company",e.target.value)} placeholder="Company"/>
+                        <AnimatePresence>{!col.experience&&data.experience.map((exp,idx)=>(
+                          <motion.div key={exp.id} initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10,scale:0.97}} transition={{duration:0.2}}
+                            style={{
+                              marginBottom:16,
+                              borderRadius:16,
+                              border: dark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(99,102,241,0.18)",
+                              background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
+                              padding:"20px 20px 16px 20px",
+                            }}>
+                            {/* Card header */}
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
+                                <span style={{fontSize:11,fontWeight:700,color:dark?"rgba(255,255,255,0.5)":"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>
+                                  {exp.role||"Experience Entry"}
+                                </span>
+                              </div>
+                              {data.experience.length>1&&(
+                                <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>remI("experience",exp.id)}
+                                  style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.2)",color:"rgba(239,68,68,0.5)",background:"transparent",cursor:"pointer",transition:"all 0.15s",flexShrink:0}}
+                                  onMouseEnter={e=>{e.target.style.color="rgb(239,68,68)";e.target.style.borderColor="rgba(239,68,68,0.5)";}}
+                                  onMouseLeave={e=>{e.target.style.color="rgba(239,68,68,0.5)";e.target.style.borderColor="rgba(239,68,68,0.2)";}}>
+                                  ✕ Remove
+                                </motion.button>
+                              )}
                             </div>
-                            <br></br><input className={iCls+" mb-4"} style={iStyle} value={exp.duration} onChange={e=>updI("experience",exp.id,"duration",e.target.value)} placeholder="Jan 2023 – Present"/><br></br><br></br>
-                            <textarea className={tCls+" mb-4"} style={iStyle} rows={5} value={exp.description} onChange={e=>updI("experience",exp.id,"description",e.target.value)} placeholder="Describe responsibilities and achievements..."/>
-                            <div className="flex gap-3 flex-wrap items-center mt-1">
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Job Title</label>
+                                <input className={iCls} style={iStyle} value={exp.role} onChange={e=>updI("experience",exp.id,"role",e.target.value)} placeholder="Software Engineer"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Company</label>
+                                <input className={iCls} style={iStyle} value={exp.company} onChange={e=>updI("experience",exp.id,"company",e.target.value)} placeholder="Company Name"/>
+                              </div>
+                            </div>
+                            <div style={{marginBottom:10}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Duration</label>
+                              <input className={iCls} style={iStyle} value={exp.duration} onChange={e=>updI("experience",exp.id,"duration",e.target.value)} placeholder="Jan 2023 – Present"/>
+                            </div>
+                            <div style={{marginBottom:12}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Description</label>
+                              <textarea className={tCls} style={iStyle} rows={5} value={exp.description} onChange={e=>updI("experience",exp.id,"description",e.target.value)} placeholder="Describe responsibilities and achievements..."/>
+                            </div>
+                            <div className="flex gap-3 flex-wrap items-center">
                               <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("exp",exp.id)} disabled={aiL[exp.id]} className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all" style={{padding:"5px 12px",background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[exp.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
                               <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("bul",exp.id)} className={"text-xs rounded-lg border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"5px 12px"}}>⚡ Auto Bullets</motion.button>
-                              {data.experience.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("experience",exp.id)} className="ml-auto text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                             </div>
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}<br></br>
                       {sec==="projects"&&(<>
                         <SecHead icon="🚀" title="Projects" onAdd={()=>addI("projects",{name:"",tech:"",link:"",description:""})} addLabel="Add Project" collapsed={col.projects} onToggle={()=>togC("projects")}/>
-                        <AnimatePresence>{!col.projects&&data.projects.map(proj=>(
-                          <motion.div key={proj.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                              <input className={iCls} style={iStyle} value={proj.name} onChange={e=>updI("projects",proj.id,"name",e.target.value)} placeholder="Project Name"/>
-                              <input className={iCls} style={iStyle} value={proj.tech} onChange={e=>updI("projects",proj.id,"tech",e.target.value)} placeholder="Tech Stack"/>
+                        <AnimatePresence>{!col.projects&&data.projects.map((proj,idx)=>(
+                          <motion.div key={proj.id} initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10,scale:0.97}} transition={{duration:0.2}}
+                            style={{
+                              marginBottom:16,
+                              borderRadius:16,
+                              border: dark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(99,102,241,0.18)",
+                              background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
+                              padding:"20px 20px 16px 20px",
+                            }}>
+                            {/* Card header */}
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
+                                <span style={{fontSize:11,fontWeight:700,color:dark?"rgba(255,255,255,0.5)":"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>
+                                  {proj.name||"Project Entry"}
+                                </span>
+                              </div>
+                              {data.projects.length>1&&(
+                                <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>remI("projects",proj.id)}
+                                  style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.2)",color:"rgba(239,68,68,0.5)",background:"transparent",cursor:"pointer",transition:"all 0.15s",flexShrink:0}}
+                                  onMouseEnter={e=>{e.target.style.color="rgb(239,68,68)";e.target.style.borderColor="rgba(239,68,68,0.5)";}}
+                                  onMouseLeave={e=>{e.target.style.color="rgba(239,68,68,0.5)";e.target.style.borderColor="rgba(239,68,68,0.2)";}}>
+                                  ✕ Remove
+                                </motion.button>
+                              )}
                             </div>
-                            <br></br><input className={iCls+" mb-4"} style={iStyle} value={proj.link} onChange={e=>updI("projects",proj.id,"link",e.target.value)} placeholder="GitHub / Live URL"/><br></br><br></br>
-                            <textarea className={tCls+" mb-4"} style={iStyle} rows={5} value={proj.description} onChange={e=>updI("projects",proj.id,"description",e.target.value)} placeholder="Describe what you built and its impact..."/>
-                            <div className="flex gap-3 items-center mt-1">
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Project Name</label>
+                                <input className={iCls} style={iStyle} value={proj.name} onChange={e=>updI("projects",proj.id,"name",e.target.value)} placeholder="AI-Powered Smart Glasses"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Tech Stack</label>
+                                <input className={iCls} style={iStyle} value={proj.tech} onChange={e=>updI("projects",proj.id,"tech",e.target.value)} placeholder="React, Node.js, Python..."/>
+                              </div>
+                            </div>
+                            <div style={{marginBottom:10}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>GitHub / Live URL</label>
+                              <input className={iCls} style={iStyle} value={proj.link} onChange={e=>updI("projects",proj.id,"link",e.target.value)} placeholder="github.com/username/repo"/>
+                            </div>
+                            <div style={{marginBottom:12}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Description</label>
+                              <textarea className={tCls} style={iStyle} rows={5} value={proj.description} onChange={e=>updI("projects",proj.id,"description",e.target.value)} placeholder="Describe what you built and its impact..."/>
+                            </div>
+                            <div className="flex gap-3 items-center">
                               <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("proj",proj.id)} disabled={aiL[proj.id]} className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all" style={{padding:"5px 12px",background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[proj.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
-                              {data.projects.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("projects",proj.id)} className="ml-auto text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                             </div>
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
                       {sec==="education"&&(<>
                         <SecHead icon="🎓" title="Education" onAdd={()=>addI("education",{degree:"",institution:"",year:"",gpa:"",board:"",classLevel:"",coursework:""})} addLabel="Add" collapsed={col.education} onToggle={()=>togC("education")}/>
-                        <AnimatePresence>{!col.education&&data.education.map(edu=>(
-                          <motion.div key={edu.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
-                            <div className="grid grid-cols-2 gap-4 mb-3">
-                              <input className={iCls} style={iStyle} value={edu.degree||""} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="Degree / Course"/>
-                              <input className={iCls} style={iStyle} value={edu.institution||""} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="Institution (full name)"/>
-                              <input className={iCls} style={iStyle} value={edu.year||""} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
-                              <input className={iCls} style={iStyle} value={edu.gpa||""} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="GPA / Score / %"/>
+                        <AnimatePresence>{!col.education&&data.education.map((edu,idx)=>(
+                          <motion.div key={edu.id} initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10,scale:0.97}} transition={{duration:0.2}}
+                            style={{
+                              marginBottom:16,
+                              borderRadius:16,
+                              border: dark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(99,102,241,0.18)",
+                              background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
+                              padding:"20px 20px 16px 20px",
+                              position:"relative",
+                            }}>
+                            {/* Card header row */}
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
+                                <span style={{fontSize:11,fontWeight:700,color:dark?"rgba(255,255,255,0.5)":"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em"}}>
+                                  {edu.degree||edu.institution||"Education Entry"}
+                                </span>
+                              </div>
+                              {data.education.length>1&&(
+                                <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>remI("education",edu.id)}
+                                  style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.2)",color:"rgba(239,68,68,0.5)",background:"transparent",cursor:"pointer",transition:"all 0.15s"}}
+                                  onMouseEnter={e=>{e.target.style.color="rgb(239,68,68)";e.target.style.borderColor="rgba(239,68,68,0.5)";}}
+                                  onMouseLeave={e=>{e.target.style.color="rgba(239,68,68,0.5)";e.target.style.borderColor="rgba(239,68,68,0.2)";}}>
+                                  ✕ Remove
+                                </motion.button>
+                              )}
                             </div>
-                            <div className="grid grid-cols-2 gap-4 mb-3">
-                              <input className={iCls} style={iStyle} value={edu.board||""} onChange={e=>updI("education",edu.id,"board",e.target.value)} placeholder="Board (e.g. CBSE)"/>
-                              <input className={iCls} style={iStyle} value={edu.classLevel||""} onChange={e=>updI("education",edu.id,"classLevel",e.target.value)} placeholder="Class (e.g. 12th Grade)"/>
+                            {/* Row 1: Degree + Institution */}
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Degree / Course</label>
+                                <input className={iCls} style={iStyle} value={edu.degree||""} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="B.E. in Computer Science"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Institution</label>
+                                <input className={iCls} style={iStyle} value={edu.institution||""} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="University / School name"/>
+                              </div>
                             </div>
-                            <div className="mb-3">
-                              <input className={iCls} style={iStyle} value={edu.coursework||""} onChange={e=>updI("education",edu.id,"coursework",e.target.value)} placeholder="Relevant Coursework (optional)"/>
+                            {/* Row 2: Year + GPA */}
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Year</label>
+                                <input className={iCls} style={iStyle} value={edu.year||""} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>GPA / Score / %</label>
+                                <input className={iCls} style={iStyle} value={edu.gpa||""} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="9.12 / 90%"/>
+                              </div>
                             </div>
-                            {data.education.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("education",edu.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
+                            {/* Row 3: Board + Class */}
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Board</label>
+                                <input className={iCls} style={iStyle} value={edu.board||""} onChange={e=>updI("education",edu.id,"board",e.target.value)} placeholder="CBSE / ICSE"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Class</label>
+                                <input className={iCls} style={iStyle} value={edu.classLevel||""} onChange={e=>updI("education",edu.id,"classLevel",e.target.value)} placeholder="12th Grade"/>
+                              </div>
+                            </div>
+                            {/* Row 4: Coursework full width */}
+                            <div>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Relevant Coursework</label>
+                              <input className={iCls} style={iStyle} value={edu.coursework||""} onChange={e=>updI("education",edu.id,"coursework",e.target.value)} placeholder="Data Structures, Algorithms, OS... (optional)"/>
+                            </div>
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
                       {sec==="certifications"&&(<>
                         <SecHead icon="🏆" title="Certifications" onAdd={()=>addI("certifications",{name:"",issuer:"",year:"",url:""})} addLabel="Add" collapsed={col.certifications} onToggle={()=>togC("certifications")}/>
-                        <AnimatePresence>{!col.certifications&&data.certifications.map(cert=>(
-                          <motion.div key={cert.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
-                            <div className="grid grid-cols-3 gap-4 mb-3">
-                              <input className={iCls} style={iStyle} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="Certification"/>
-                              <input className={iCls} style={iStyle} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="Issuer"/>
-                              <input className={iCls} style={iStyle} value={cert.year} onChange={e=>updI("certifications",cert.id,"year",e.target.value)} placeholder="Year"/>
+                        <AnimatePresence>{!col.certifications&&data.certifications.map((cert,idx)=>(
+                          <motion.div key={cert.id} initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10,scale:0.97}} transition={{duration:0.2}}
+                            style={{
+                              marginBottom:16,
+                              borderRadius:16,
+                              border: dark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(99,102,241,0.18)",
+                              background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
+                              padding:"20px 20px 16px 20px",
+                              position:"relative",
+                            }}>
+                            {/* Card header row */}
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
+                                <span style={{fontSize:11,fontWeight:700,color:dark?"rgba(255,255,255,0.5)":"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:220}}>
+                                  {cert.name||"Certificate"}
+                                </span>
+                              </div>
+                              {data.certifications.length>1&&(
+                                <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>remI("certifications",cert.id)}
+                                  style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.2)",color:"rgba(239,68,68,0.5)",background:"transparent",cursor:"pointer",transition:"all 0.15s",flexShrink:0}}
+                                  onMouseEnter={e=>{e.target.style.color="rgb(239,68,68)";e.target.style.borderColor="rgba(239,68,68,0.5)";}}
+                                  onMouseLeave={e=>{e.target.style.color="rgba(239,68,68,0.5)";e.target.style.borderColor="rgba(239,68,68,0.2)";}}>
+                                  ✕ Remove
+                                </motion.button>
+                              )}
                             </div>
-                            <div className="mb-3">
-                              <input className={iCls} style={iStyle} value={cert.url||""} onChange={e=>updI("certifications",cert.id,"url",e.target.value)} placeholder="Certificate URL (optional)"/>
+                            {/* Row 1: Name full width */}
+                            <div style={{marginBottom:10}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Certificate Name</label>
+                              <input className={iCls} style={iStyle} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="e.g. Python Game Development – Advanced | CERTIFICATE"/>
                             </div>
-                            {data.certifications.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("certifications",cert.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
+                            {/* Row 2: Issuer full width */}
+                            <div style={{marginBottom:10}}>
+                              <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Issuer</label>
+                              <input className={iCls} style={iStyle} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="e.g. Infosys Springboard / Coursera"/>
+                            </div>
+                            {/* Row 3: Year + URL side by side */}
+                            <div className="grid grid-cols-2 gap-3" style={{marginBottom:0}}>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Year</label>
+                                <input className={iCls} style={iStyle} value={cert.year} onChange={e=>updI("certifications",cert.id,"year",e.target.value)} placeholder="2025 / May 2025"/>
+                              </div>
+                              <div>
+                                <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Certificate URL</label>
+                                <input className={iCls} style={iStyle} value={cert.url||""} onChange={e=>updI("certifications",cert.id,"url",e.target.value)} placeholder="https://... (optional)"/>
+                              </div>
+                            </div>
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
