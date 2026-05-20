@@ -253,3 +253,43 @@ section {
   animation: shimmer 3s linear infinite;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   RESUME BUILDER — FIXED VIEWPORT LAYOUT (Canva/Figma style)
+═══════════════════════════════════════════════════════════════ */
+
+/* The 3-col row fills the viewport — no page scroll */
+.resume-builder-layout {
+  overflow: hidden;
+}
+
+/* All text inside the resume preview wraps — never overflows */
+.resume-preview-sheet * {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* Left and right columns scroll internally — thin scrollbar */
+.resume-builder-layout ::-webkit-scrollbar { width: 4px; }
+.resume-builder-layout ::-webkit-scrollbar-track { background: transparent; }
+.resume-builder-layout ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+/* Mobile: stack vertically, restore normal page scroll */
+@media (max-width: 1024px) {
+  .resume-builder-layout {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .resume-three-col {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .resume-three-col > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+}

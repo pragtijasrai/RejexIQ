@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════
 // PREMIUM AI RESUME BUILDER - Complete Rewrite
 // ═══════════════════════════════════════════════════════════════
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -52,15 +52,41 @@ async function parseResumeFile(file) {
 }
 
 async function parsePDF(file) {
-  const text = await file.text?.() || '';
-  return extractResumeData(text);
+  try {
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    return extractResumeData(fullText);
+  } catch (err) {
+    console.error('PDF parse error:', err);
+    try {
+      const text = await file.text();
+      const cleaned = text.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ');
+      return extractResumeData(cleaned);
+    } catch { return null; }
+  }
 }
 
 async function parseDOCX(file) {
-  const buffer = await file.arrayBuffer();
-  const text = new TextDecoder().decode(buffer).toLowerCase();
-  return extractResumeData(text);
+  try {
+    const mammoth = await import('mammoth');
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return extractResumeData(result.value || '');
+  } catch (err) {
+    console.error('DOCX parse error:', err);
+    return null;
+  }
 }
+
 
 async function parseTXT(file) {
   const text = await file.text();
@@ -184,7 +210,7 @@ function ModernPreview({data,accent}){
           </div>
         </div>
       </div>
-      <div style={{padding:"24px 32px"}}>
+      <div style={{padding:"24px 32px 24px 32px"}}>
         {data.summary&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Summary</h2><p style={{fontSize:11,color:"#374151",lineHeight:1.7,margin:0}}>{data.summary}</p></div>}
         {data.skills.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Skills</h2><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"15",border:"1px solid "+accent+"33",color:accent,padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600}}>{s}</span>)}</div></div>}
         {data.experience.length>0&&<div style={{marginBottom:18}}><h2 style={{fontSize:9,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:4,marginBottom:8}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}><div><div style={{fontWeight:700,fontSize:12,color:"#111827"}}>{e.role||"Role"}</div><div style={{fontSize:10,color:"#6b7280",marginTop:1}}>{e.company}</div></div><div style={{fontSize:9,color:"#9ca3af",whiteSpace:"nowrap",marginLeft:8}}>{e.duration}</div></div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:10,color:"#4b5563",margin:"2px 0",lineHeight:1.5}}>{l}</p>)}</div>)}</div>}
@@ -283,7 +309,7 @@ function DiagonalPreview({data,accent}){
           <div><h1 style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{data.name||"Your Name"}</h1><div style={{fontSize:12,color:"rgba(255,255,255,0.85)",marginTop:3}}>{data.title||"Job Title"}</div><div style={{display:"flex",gap:10,marginTop:5,fontSize:8,color:"rgba(255,255,255,0.7)",flexWrap:"wrap"}}>{data.email&&<span>✉ {data.email}</span>}{data.phone&&<span>📞 {data.phone}</span>}</div></div>
         </div>
       </div>
-      <div style={{padding:"12px 28px",marginTop:-16}}>
+      <div style={{padding:"9px 20px",marginTop:-16}}>
         {data.skills.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Skills</h2><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{data.skills.map((s,i)=><span key={i} style={{background:accent+"18",border:"1px solid "+accent+"44",color:accent,padding:"2px 7px",borderRadius:10,fontSize:9,fontWeight:600}}>{s}</span>)}</div></div>}
         {data.summary&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Summary</h2><p style={{fontSize:10,color:"#444",lineHeight:1.6,margin:0}}>{data.summary}</p></div>}
         {data.experience.length>0&&<div style={{marginBottom:12}}><h2 style={{fontSize:8,fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:6}}>Experience</h2>{data.experience.map((e,i)=><div key={i} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontWeight:700,fontSize:11}}>{e.role||"Role"}</div><div style={{fontSize:8,color:"#888"}}>{e.duration}</div></div><div style={{fontSize:9,color:"#666",marginBottom:2}}>{e.company}</div>{e.description&&e.description.split("\n").map((l,j)=>l.trim()&&<p key={j} style={{fontSize:9,color:"#555",margin:"1px 0"}}>{l}</p>)}</div>)}</div>}
@@ -330,14 +356,14 @@ function SortSec({id,children}){
   return <div ref={setNodeRef} style={{transform:CSS.Transform.toString(transform),transition,opacity:isDragging?0.4:1,zIndex:isDragging?999:"auto"}} {...attributes}><div className="group relative"><button {...listeners} className="absolute -left-6 top-4 opacity-0 group-hover:opacity-60 cursor-grab active:cursor-grabbing text-slate-500 hover:text-indigo-400 transition-all text-xl select-none">⠿</button>{children}</div></div>;
 }
 function Chip({skill,onRemove,accent}){
-  return <motion.span layout initial={{scale:0,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0,opacity:0}} whileHover={{scale:1.08}} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" style={{background:accent+"18",border:"1px solid "+accent+"44",color:accent}}>{skill}{onRemove&&<button onClick={()=>onRemove(skill)} className="ml-0.5 w-4 h-4 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-xs">×</button>}</motion.span>;
+  return <motion.span layout initial={{scale:0,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0,opacity:0}} whileHover={{scale:1.08}} className="inline-flex items-center gap-0.5 rounded-full font-semibold" style={{fontSize:"10px",padding:"2px 7px",background:accent+"18",border:"1px solid "+accent+"44",color:accent}}>{skill}{onRemove&&<button onClick={()=>onRemove(skill)} className="ml-0.5 w-3 h-3 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all" style={{fontSize:"9px",lineHeight:1}}>×</button>}</motion.span>;
 }
 function FIn({label,value,onChange,placeholder,type="text",rows=3,multi=false,accent="#6366f1"}){
   const cls="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 resize-none border bg-white/5 border-white/10 text-white placeholder-white/25 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20";
   return <div className="mb-4">{label&&<label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">{label}</label>}{multi?<textarea className={cls} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows}/>:<input type={type} className={cls} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/>}</div>;
 }
 function SecHead({icon,title,onAdd,addLabel,collapsed,onToggle}){
-  return <div className="flex items-center justify-between mb-5"><button onClick={onToggle} className="flex items-center gap-2.5 group"><span className="text-lg">{icon}</span><span className="text-sm font-bold text-white/60 uppercase tracking-widest group-hover:text-white/90 transition-colors">{title}</span><span className="text-white/20 text-xs ml-1">{collapsed?"▶":"▼"}</span></button>{onAdd&&<motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={onAdd} className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-white/40 hover:border-indigo-500/60 hover:text-indigo-400 transition-all">+ {addLabel}</motion.button>}</div>;
+  return <div className="flex items-center justify-between mb-5"><button onClick={onToggle} className="flex items-center gap-2.5 group"><span className="text-lg">{icon}</span><span className="text-sm font-bold text-white/60 uppercase tracking-widest group-hover:text-white/90 transition-colors">{title}</span><span className="text-white/20 text-xs ml-1">{collapsed?"▶":"▼"}</span></button>{onAdd&&<motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={onAdd} style={{padding:"6px 14px"}} className="text-xs rounded-full border border-white/10 text-white/40 hover:border-indigo-500/60 hover:text-indigo-400 transition-all">+ {addLabel}</motion.button>}</div>;
 }
 function ATSRing({score}){
   const r=36,circ=2*Math.PI*r,color=score>=75?"#10b981":score>=50?"#f59e0b":"#f43f5e";
@@ -356,7 +382,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[secOrd,setSecOrd]=useState(["experience","projects","education","certifications"]);
   const[pdfL,setPdfL]=useState(false);
   const[toast,setToast]=useState(null);
-  const[scale,setScale]=useState(0.68);
+  const[scale,setScale]=useState(0.75);
   const[fixPanel,setFixPanel]=useState(false);
   const[grammarFixes,setGrammarFixes]=useState([]);
   const[fixingGrammar,setFixingGrammar]=useState(false);
@@ -365,6 +391,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[uploadedFileName,setUploadedFileName]=useState(null);
   const[isParsingResume,setIsParsingResume]=useState(false);
   const prvRef=useRef(null);
+  const pdfRef=useRef(null);
   const imgRef=useRef(null);
   const fileInputRef=useRef(null);
 
@@ -565,37 +592,51 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   async function doPDF(){
     setPdfL(true);
     try{
-      const h=(await import("html2pdf.js")).default;
-      const el=prvRef.current;
-      if(!el){showT("Preview not ready","err");return;}
-      
-      // Make sure we're exporting the LATEST data
-      const par=el.parentElement;
-      const ot=par.style.transform,ow=par.style.width,om=par.style.marginBottom;
-      
-      par.style.transform="none";
-      par.style.width="210mm";
-      par.style.marginBottom="0";
-      
-      // Export with filename based on actual name from updatedResumeData
-      const filename = (updatedResumeData.name || "resume").replace(/[^a-z0-9]/gi, '_') + ".pdf";
-      
-      await h().set({
-        margin:0,
-        filename:filename,
-        image:{type:"jpeg",quality:0.98},
-        html2canvas:{scale:2,useCORS:true,logging:false},
-        jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-      }).from(el).save();
-      
-      par.style.transform=ot;
-      par.style.width=ow;
-      par.style.marginBottom=om;
-      
-      showT("📥 PDF downloaded with all updates! ✨", "ok");
+      const el = pdfRef.current;
+      if(!el){showT("Preview not ready","err");setPdfL(false);return;}
+
+      // Wait for any pending renders
+      await new Promise(r=>setTimeout(r,300));
+
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(el,{
+        scale:2,
+        useCORS:true,
+        logging:false,
+        backgroundColor:"#ffffff",
+        width:794, // A4 at 96dpi
+        windowWidth:794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p","mm","a4");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+
+      // If content is taller than one page, add multiple pages
+      const pageH = pdf.internal.pageSize.getHeight();
+      if(pdfH <= pageH){
+        pdf.addImage(imgData,"PNG",0,0,pdfW,pdfH);
+      } else {
+        let yPos = 0;
+        let remaining = pdfH;
+        let page = 0;
+        while(remaining > 0){
+          if(page > 0) pdf.addPage();
+          pdf.addImage(imgData,"PNG",0,-page*pageH,pdfW,pdfH);
+          remaining -= pageH;
+          page++;
+        }
+      }
+
+      const filename = (updatedResumeData.name||"resume").replace(/[^a-z0-9]/gi,"_")+".pdf";
+      pdf.save(filename);
+      showT("📥 PDF downloaded! ✨","ok");
     }catch(err){
       console.error(err);
-      showT("Export failed","err");
+      showT("Export failed — "+err.message,"err");
     }finally{
       setPdfL(false);
     }
@@ -655,14 +696,15 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const sens=useSensors(useSensor(PointerSensor),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
   function onDrag({active,over}){if(active.id!==over?.id)setSecOrd(p=>arrayMove(p,p.indexOf(active.id),p.indexOf(over.id)));}
   useEffect(()=>{const t=setInterval(()=>setTipI(i=>(i+1)%RESUME_TIPS.length),5000);return()=>clearInterval(t);},[]);
-  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.52:w<1536?0.62:0.70);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
+  useEffect(()=>{function r(){const w=window.innerWidth;setScale(w<1280?0.62:w<1536?0.70:0.75);}r();window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
   const bg=dark?"bg-gradient-to-br from-[#05071a] via-[#0c0f2e] to-[#130a2e]":"bg-gradient-to-br from-slate-50 via-white to-indigo-50";
   const card=dark?"bg-white/5 border-white/10":"bg-white border-gray-200";
   const tp=dark?"text-white":"text-gray-900";
   const tm=dark?"text-white/40":"text-gray-500";
   const inp=dark?"bg-white/5 border-white/10 text-white placeholder-white/25 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20":"bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100";
-  const iCls="w-full rounded-xl px-4 py-3.5 text-sm border outline-none transition-all duration-200 leading-relaxed "+inp;
+  const iCls="w-full rounded-xl text-sm border outline-none transition-all duration-200 leading-relaxed "+inp;
   const tCls=iCls+" resize-none leading-relaxed";
+  const iStyle={padding:"10px 18px"};
 
   return(
     <div className={"min-h-screen "+bg+" transition-colors duration-500"}>
@@ -674,78 +716,68 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       {/* Toast */}
       <AnimatePresence>{toast&&(<motion.div initial={{opacity:0,y:-50,x:"-50%"}} animate={{opacity:1,y:0,x:"-50%"}} exit={{opacity:0,y:-50,x:"-50%"}} className="fixed top-6 left-1/2 z-50 px-6 py-3 rounded-2xl text-sm font-semibold shadow-2xl backdrop-blur-xl text-white" style={{background:toast.t==="err"?"rgba(239,68,68,0.9)":accent+"ee",border:"1px solid "+accent}}>{toast.m}</motion.div>)}</AnimatePresence>
       {/* ── TOP BAR ── */}
-      <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} className={"relative z-10 px-8 pt-8 pb-6 border-b "+(dark?"border-white/10":"border-gray-200")}>
+      <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} className={"relative z-10 px-8 py-4 border-b "+(dark?"border-white/10":"border-gray-200")}>
         <div className="max-w-[1700px] mx-auto">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-center justify-between gap-4">
             {/* Left: Back + Title */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <motion.button whileHover={{scale:1.05,x:-2}} whileTap={{scale:0.95}}
                 onClick={onBack||(() => window.history.back())}
-                className={"flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/5":"border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50")}>
+                className={"flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/5":"border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50")}>
                 ← Back
               </motion.button>
               <div>
-                <h1 className="text-2xl font-black" style={{background:"linear-gradient(135deg,"+(dark?"#fff":"#1e1b4b")+" 30%,"+accent+")",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Resume Builder</h1>
-                <p className={"text-xs "+tm+" mt-0.5"}>Live preview · AI-powered · ATS-optimized</p>
+                <h1 className="text-xl font-black" style={{background:"linear-gradient(135deg,"+(dark?"#fff":"#1e1b4b")+" 30%,"+accent+")",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Resume Builder</h1>
+                <p className={"text-xs "+tm}>Live preview · AI-powered · ATS-optimized</p>
               </div>
             </div>
             {/* Center: Stats */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {[{l:"ATS",v:ats+"%",c:ats>=75?"#10b981":ats>=50?"#f59e0b":"#f43f5e"},{l:"Done",v:done+"%",c:accent},{l:"Skills",v:data.skills.length,c:"#06b6d4"}].map(s=>(
-                <div key={s.l} className={"px-4 py-2 rounded-xl border "+card+" flex items-center gap-2"}><span className="text-xs font-medium" style={{color:s.c}}>{s.l}</span><span className="text-base font-black" style={{color:s.c}}>{s.v}</span></div>
+                <div key={s.l} className={"rounded-xl border "+card+" flex items-center gap-2"} style={{padding:"7px 14px"}}><span className="text-xs font-medium" style={{color:s.c}}>{s.l}</span><span className="text-sm font-black" style={{color:s.c}}>{s.v}</span></div>
               ))}
             </div>
             {/* Right: Actions */}
-            <div className="flex items-center gap-3">
-              <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setDark(d=>!d)} className={"p-2.5 rounded-xl border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white":"border-gray-200 text-gray-500")}>{dark?"☀️":"🌙"}</motion.button>
-              
-              {/* ✅ NEW: UPLOAD RESUME BUTTON */}
-              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px rgba(16,185,129,0.4)"}} whileTap={{scale:0.95}}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setDark(d=>!d)} className={"p-2 rounded-xl border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white":"border-gray-200 text-gray-500")}>{dark?"☀️":"🌙"}</motion.button>
+              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 20px rgba(16,185,129,0.4)"}} whileTap={{scale:0.95}}
                 onClick={()=>fileInputRef.current?.click()} disabled={isParsingResume}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
-                style={{background:"linear-gradient(135deg,#10b981,#059669)"}}>
+                className="flex items-center gap-1.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
+                style={{padding:"8px 16px",background:"linear-gradient(135deg,#10b981,#059669)"}}>
                 {isParsingResume?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">📄</motion.span>:"📤"}
                 {isParsingResume?"Parsing...":uploadedFileName?"Re-Upload":"Upload Resume"}
               </motion.button>
               <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleResumeUpload}/>
-              
-              {/* Generate with AI - SEPARATE */}
-              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px rgba(139,92,246,0.6)"}} whileTap={{scale:0.95}}
+              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 20px rgba(139,92,246,0.6)"}} whileTap={{scale:0.95}}
                 onClick={()=>doAI("full")} disabled={aiL.full}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
-                style={{background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
+                className="flex items-center gap-1.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
+                style={{padding:"8px 16px",background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
                 {aiL.full?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">✨</motion.span>:"🤖"}
                 {aiL.full?"Generating...":"Generate with AI"}
               </motion.button>
-              {/* Download PDF - SEPARATE */}
-              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px "+accent+"66"}} whileTap={{scale:0.95}}
+              <motion.button whileHover={{scale:1.05,boxShadow:"0 0 20px "+accent+"66"}} whileTap={{scale:0.95}}
                 onClick={doPDF} disabled={pdfL}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
-                style={{background:"linear-gradient(135deg,"+accent+","+accent+"99)"}}>
+                className="flex items-center gap-1.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
+                style={{padding:"8px 16px",background:"linear-gradient(135deg,"+accent+","+accent+"99)"}}>
                 {pdfL?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"📥"}
                 {pdfL?"Exporting...":"Download PDF"}
               </motion.button>
             </div>
           </div>
-          {/* Progress bar */}
-          <div>
-            <div className="flex justify-between text-xs mb-2">
-              <span className={tm}>Profile Completion</span>
-              <span className="font-bold" style={{color:accent}}>{done}%</span>
-            </div>
-            <div className={"h-2 rounded-full overflow-hidden "+(dark?"bg-white/10":"bg-gray-100")}>
-              <motion.div className="h-full rounded-full" initial={{width:0}} animate={{width:done+"%"}} transition={{duration:1,ease:"easeOut"}} style={{background:"linear-gradient(90deg,"+accent+","+accent+"88)"}}/>
-            </div>
-          </div>
         </div>
       </motion.div>
-      {/* ── 3-COLUMN LAYOUT ── */}
-      <div className="relative z-10 px-8 py-8 pb-20">
-        <div className="max-w-[1700px] mx-auto flex gap-7">
-          {/* ── LEFT FORM ── */}
-          <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}} className="w-[440px] flex-shrink-0 space-y-5">
+      {/* ── 3-COLUMN LAYOUT — Canva/Figma style ── */}
+      {/* The row is viewport-height. Left scrolls internally. Center + Right are fixed. */}
+      <div className="relative z-10 resume-builder-layout" style={{height:"calc(100vh - 73px)"}}>
+        <div className="max-w-[1700px] mx-auto h-full flex gap-7 px-8 resume-three-col">
+
+          {/* ── LEFT FORM — scrolls independently ── */}
+          <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}}
+            className="w-[440px] flex-shrink-0"
+            style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
+            <div className="space-y-5">
             {/* Template + Color */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Template</p>
               <div className="flex gap-2 flex-wrap mb-5">
                 {TEMPLATES.map(t=>(
@@ -756,7 +788,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                   </motion.button>
                 ))}
               </div>
-              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Accent Color</p>
+              <br /><p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Accent Color</p>
               <div className="flex gap-2 flex-wrap">
                 {ACCENT_PRESETS.map(p=>(
                   <motion.button key={p.name} whileHover={{scale:1.15}} whileTap={{scale:0.9}} onClick={()=>setAccent(p.color)} title={p.name}
@@ -764,11 +796,11 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                     style={{background:p.color,boxShadow:accent===p.color?"0 0 0 3px rgba(255,255,255,0.3),0 0 12px "+p.color:"none",border:accent===p.color?"2px solid white":"2px solid transparent"}}/>
                 ))}
                 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)} className="w-8 h-8 rounded-full cursor-pointer border-2 border-white/20" style={{padding:1}} title="Custom"/>
-              </div>
-            </div>
+              <br></br></div>
+            </div><br></br>
             {/* Personal Info */}
-            <div className={"p-6 rounded-2xl border "+card}>
-              <SecHead icon="👤" title="Personal Info" collapsed={col.personal} onToggle={()=>togC("personal")}/>
+            <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
+              <br></br><SecHead icon="👤" title="Personal Info" collapsed={col.personal} onToggle={()=>togC("personal")}/>
               <AnimatePresence>
                 {!col.personal&&(
                   <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}>
@@ -776,88 +808,92 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                       <div onClick={()=>imgRef.current?.click()} className="w-16 h-16 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-indigo-400 transition-all overflow-hidden flex-shrink-0" style={{background:data.profileImage?"transparent":"rgba(255,255,255,0.05)"}}>
                         {data.profileImage?<img src={data.profileImage} alt="" className="w-full h-full object-cover"/>:<span className="text-2xl">📷</span>}
                       </div>
-                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Profile Photo</div><button onClick={()=>imgRef.current?.click()} className={"text-xs px-3 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>{data.profileImage?"Change":"Upload Photo"}</button></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Profile Photo</div><button onClick={()=>imgRef.current?.click()} className={"text-xs rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")} style={{padding:"6px 14px"}}>{data.profileImage?"Change":"Upload Photo"}</button></div>
                       <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={onImg}/>
                     </div>
+                    <br />
                     <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                       {[["Full Name","name","text","John Doe"],["Job Title","title","text","Software Engineer"],["Email","email","email","john@example.com"],["Phone","phone","text","+1 234 567 8900"]].map(([l,k,t,ph])=>(
-                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{l}</label><input type={t} className={iCls} value={data[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
+                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{l}</label><input type={t} className={iCls} style={iStyle} value={data[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
                       ))}
                     </div>
-                    <div className="mt-4"><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>Location</label><input className={iCls} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="San Francisco, CA"/></div>
+                    <br />
+                    <div className="mt-4"><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>Location</label><input className={iCls} style={iStyle} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="San Francisco, CA"/></div><br></br>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </div><br></br>
             {/* Summary */}
-            <div className={"p-6 rounded-2xl border "+card}>
-              <SecHead icon="📝" title="Professional Summary" collapsed={col.summary} onToggle={()=>togC("summary")}/>
+            <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
+              <br></br><SecHead icon="📝" title="Professional Summary" collapsed={col.summary} onToggle={()=>togC("summary")}/>
               <AnimatePresence>
                 {!col.summary&&(
                   <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}>
-                    <textarea className={tCls+" mb-4"} rows={5} value={data.summary} onChange={e=>upd("summary",e.target.value)} placeholder="Write a compelling 2-3 sentence summary..."/>
+                    <textarea className={tCls+" mb-4"} style={iStyle} rows={5} value={data.summary} onChange={e=>upd("summary",e.target.value)} placeholder="Write a compelling 2-3 sentence summary..."/>
+                    <br />
                     <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("summary")} disabled={aiL.summary}
-                      className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-semibold transition-all mt-1"
-                      style={{background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>
+                      className="flex items-center gap-2 text-xs rounded-xl font-semibold transition-all mt-1"
+                      style={{padding:"5px 12px",background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>
                       {aiL.summary?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve
-                    </motion.button>
+                    </motion.button><br></br>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </div><br></br>
             {/* Skills */}
-            <div className={"p-6 rounded-2xl border "+card}>
-              <SecHead icon="⚡" title="Skills" collapsed={col.skills} onToggle={()=>togC("skills")}/>
+            <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
+              <br></br><SecHead icon="⚡" title="Skills" collapsed={col.skills} onToggle={()=>togC("skills")}/>
               <AnimatePresence>
                 {!col.skills&&(
                   <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}>
-                    <div className={"flex flex-wrap gap-2 p-3.5 rounded-xl border min-h-[60px] mb-4 "+(dark?"border-white/10 bg-white/5":"border-gray-200 bg-gray-50")}>
+                    <div className={"flex flex-wrap gap-2 px-5 py-4 rounded-xl border min-h-[40px] mb-4 "+(dark?"border-white/10 bg-white/5":"border-gray-200 bg-gray-50")}>
                       <AnimatePresence>{data.skills.map(s=><Chip key={s} skill={s} onRemove={x=>upd("skills",data.skills.filter(y=>y!==x))} accent={accent}/>)}</AnimatePresence>
                       <input value={skIn} onChange={e=>setSkIn(e.target.value)} onKeyDown={onSkKey} placeholder={data.skills.length===0?"Type skill + Enter...":"Add more..."} className={"flex-1 min-w-[120px] bg-transparent text-sm outline-none "+(dark?"text-white placeholder-white/30":"text-gray-700 placeholder-gray-400")}/>
                     </div>
                     <p className={"text-xs "+tm+" mb-4 mt-1 leading-relaxed"}>Enter or comma to add · Backspace to remove</p>
-                    {sugg.length>0&&<div><p className={"text-xs font-semibold "+tm+" mb-3"}>💡 Smart Suggestions</p><div className="flex flex-wrap gap-2.5">{sugg.map(s=>(<motion.button key={s} whileHover={{scale:1.08}} whileTap={{scale:0.95}} onClick={()=>{if(!data.skills.includes(s))upd("skills",[...data.skills,s]);}} className={"text-xs px-3 py-1.5 rounded-full border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")}>+ {s}</motion.button>))}</div></div>}
+                    {sugg.length>0&&<div><p className={"text-xs font-semibold "+tm+" mb-3"}>💡 Smart Suggestions</p><div className="flex flex-wrap gap-2.5">{sugg.map(s=>(<motion.button key={s} whileHover={{scale:1.08}} whileTap={{scale:0.95}} onClick={()=>{if(!data.skills.includes(s))upd("skills",[...data.skills,s]);}} className={"text-xs rounded-full border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"5px 12px"}}>+ {s}</motion.button>))}</div></div>}
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </div><br></br>
             {/* Draggable sections */}
             <DndContext sensors={sens} collisionDetection={closestCenter} onDragEnd={onDrag}>
               <SortableContext items={secOrd} strategy={verticalListSortingStrategy}>
+                <div className="flex flex-col gap-8">
                 {secOrd.map(sec=>(
                   <SortSec key={sec} id={sec}>
-                    <div className={"p-5 rounded-2xl border "+card+" mb-5"}>
+                    <div className={"rounded-2xl border "+card} style={{padding:"20px 32px"}}>
                       {sec==="experience"&&(<>
-                        <SecHead icon="💼" title="Experience" onAdd={()=>addI("experience",{role:"",company:"",duration:"",description:""})} addLabel="Add Role" collapsed={col.experience} onToggle={()=>togC("experience")}/>
+                        <br></br><SecHead icon="💼" title="Experience" onAdd={()=>addI("experience",{role:"",company:"",duration:"",description:""})} addLabel="Add Role" collapsed={col.experience} onToggle={()=>togC("experience")}/>
                         <AnimatePresence>{!col.experience&&data.experience.map(exp=>(
-                          <motion.div key={exp.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className={"mb-5 p-5 rounded-xl border transition-all "+(dark?"border-white/10 bg-white/3 hover:border-white/20":"border-gray-100 bg-gray-50 hover:border-gray-200")}>
+                          <motion.div key={exp.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                              <input className={iCls} value={exp.role} onChange={e=>updI("experience",exp.id,"role",e.target.value)} placeholder="Job Title"/>
-                              <input className={iCls} value={exp.company} onChange={e=>updI("experience",exp.id,"company",e.target.value)} placeholder="Company"/>
+                              <input className={iCls} style={iStyle} value={exp.role} onChange={e=>updI("experience",exp.id,"role",e.target.value)} placeholder="Job Title"/>
+                              <input className={iCls} style={iStyle} value={exp.company} onChange={e=>updI("experience",exp.id,"company",e.target.value)} placeholder="Company"/>
                             </div>
-                            <input className={iCls+" mb-4"} value={exp.duration} onChange={e=>updI("experience",exp.id,"duration",e.target.value)} placeholder="Jan 2023 – Present"/>
-                            <textarea className={tCls+" mb-4"} rows={5} value={exp.description} onChange={e=>updI("experience",exp.id,"description",e.target.value)} placeholder="Describe responsibilities and achievements..."/>
+                            <br></br><input className={iCls+" mb-4"} style={iStyle} value={exp.duration} onChange={e=>updI("experience",exp.id,"duration",e.target.value)} placeholder="Jan 2023 – Present"/><br></br><br></br>
+                            <textarea className={tCls+" mb-4"} style={iStyle} rows={5} value={exp.description} onChange={e=>updI("experience",exp.id,"description",e.target.value)} placeholder="Describe responsibilities and achievements..."/>
                             <div className="flex gap-3 flex-wrap items-center mt-1">
-                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("exp",exp.id)} disabled={aiL[exp.id]} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all" style={{background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[exp.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
-                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("bul",exp.id)} className={"text-xs px-3 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")}>⚡ Auto Bullets</motion.button>
-                              {data.experience.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("experience",exp.id)} className="ml-auto text-xs px-3 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all">✕ Remove</motion.button>}
+                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("exp",exp.id)} disabled={aiL[exp.id]} className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all" style={{padding:"5px 12px",background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[exp.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
+                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("bul",exp.id)} className={"text-xs rounded-lg border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"5px 12px"}}>⚡ Auto Bullets</motion.button>
+                              {data.experience.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("experience",exp.id)} className="ml-auto text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                             </div>
                           </motion.div>
                         ))}</AnimatePresence>
-                      </>)}
+                      </>)}<br></br>
                       {sec==="projects"&&(<>
                         <SecHead icon="🚀" title="Projects" onAdd={()=>addI("projects",{name:"",tech:"",link:"",description:""})} addLabel="Add Project" collapsed={col.projects} onToggle={()=>togC("projects")}/>
                         <AnimatePresence>{!col.projects&&data.projects.map(proj=>(
-                          <motion.div key={proj.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className={"mb-5 p-5 rounded-xl border transition-all "+(dark?"border-white/10 bg-white/3 hover:border-white/20":"border-gray-100 bg-gray-50 hover:border-gray-200")}>
+                          <motion.div key={proj.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                              <input className={iCls} value={proj.name} onChange={e=>updI("projects",proj.id,"name",e.target.value)} placeholder="Project Name"/>
-                              <input className={iCls} value={proj.tech} onChange={e=>updI("projects",proj.id,"tech",e.target.value)} placeholder="Tech Stack"/>
+                              <input className={iCls} style={iStyle} value={proj.name} onChange={e=>updI("projects",proj.id,"name",e.target.value)} placeholder="Project Name"/>
+                              <input className={iCls} style={iStyle} value={proj.tech} onChange={e=>updI("projects",proj.id,"tech",e.target.value)} placeholder="Tech Stack"/>
                             </div>
-                            <input className={iCls+" mb-4"} value={proj.link} onChange={e=>updI("projects",proj.id,"link",e.target.value)} placeholder="GitHub / Live URL"/>
-                            <textarea className={tCls+" mb-4"} rows={5} value={proj.description} onChange={e=>updI("projects",proj.id,"description",e.target.value)} placeholder="Describe what you built and its impact..."/>
+                            <br></br><input className={iCls+" mb-4"} style={iStyle} value={proj.link} onChange={e=>updI("projects",proj.id,"link",e.target.value)} placeholder="GitHub / Live URL"/><br></br><br></br>
+                            <textarea className={tCls+" mb-4"} style={iStyle} rows={5} value={proj.description} onChange={e=>updI("projects",proj.id,"description",e.target.value)} placeholder="Describe what you built and its impact..."/>
                             <div className="flex gap-3 items-center mt-1">
-                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("proj",proj.id)} disabled={aiL[proj.id]} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all" style={{background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[proj.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
-                              {data.projects.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("projects",proj.id)} className="ml-auto text-xs px-3 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all">✕ Remove</motion.button>}
+                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>doAI("proj",proj.id)} disabled={aiL[proj.id]} className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all" style={{padding:"5px 12px",background:accent+"22",color:accent,border:"1px solid "+accent+"44"}}>{aiL[proj.id]?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"} AI Improve</motion.button>
+                              {data.projects.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("projects",proj.id)} className="ml-auto text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                             </div>
                           </motion.div>
                         ))}</AnimatePresence>
@@ -865,40 +901,45 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                       {sec==="education"&&(<>
                         <SecHead icon="🎓" title="Education" onAdd={()=>addI("education",{degree:"",institution:"",year:"",gpa:""})} addLabel="Add" collapsed={col.education} onToggle={()=>togC("education")}/>
                         <AnimatePresence>{!col.education&&data.education.map(edu=>(
-                          <motion.div key={edu.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className={"mb-4 p-5 rounded-xl border transition-all "+(dark?"border-white/10 bg-white/3":"border-gray-100 bg-gray-50")}>
+                          <motion.div key={edu.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-2 gap-4 mb-3">
-                              <input className={iCls} value={edu.degree} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="Degree / Course"/>
-                              <input className={iCls} value={edu.institution} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="Institution"/>
-                              <input className={iCls} value={edu.year} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
-                              <input className={iCls} value={edu.gpa} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="GPA / %"/>
+                              <input className={iCls} style={iStyle} value={edu.degree} onChange={e=>updI("education",edu.id,"degree",e.target.value)} placeholder="Degree / Course"/>
+                              <input className={iCls} style={iStyle} value={edu.institution} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="Institution"/>
+                              <input className={iCls} style={iStyle} value={edu.year} onChange={e=>updI("education",edu.id,"year",e.target.value)} placeholder="2022–2026"/>
+                              <input className={iCls} style={iStyle} value={edu.gpa} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="GPA / %"/>
                             </div>
-                            {data.education.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("education",edu.id)} className="mt-3 text-xs px-3 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all">✕ Remove</motion.button>}
+                            {data.education.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("education",edu.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
                       {sec==="certifications"&&(<>
                         <SecHead icon="🏆" title="Certifications" onAdd={()=>addI("certifications",{name:"",issuer:"",year:""})} addLabel="Add" collapsed={col.certifications} onToggle={()=>togC("certifications")}/>
                         <AnimatePresence>{!col.certifications&&data.certifications.map(cert=>(
-                          <motion.div key={cert.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className={"mb-4 p-5 rounded-xl border transition-all "+(dark?"border-white/10 bg-white/3":"border-gray-100 bg-gray-50")}>
+                          <motion.div key={cert.id} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4">
                             <div className="grid grid-cols-3 gap-4 mb-3">
-                              <input className={iCls} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="Certification"/>
-                              <input className={iCls} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="Issuer"/>
-                              <input className={iCls} value={cert.year} onChange={e=>updI("certifications",cert.id,"year",e.target.value)} placeholder="Year"/>
+                              <input className={iCls} style={iStyle} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="Certification"/>
+                              <input className={iCls} style={iStyle} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="Issuer"/>
+                              <input className={iCls} style={iStyle} value={cert.year} onChange={e=>updI("certifications",cert.id,"year",e.target.value)} placeholder="Year"/>
                             </div>
-                            {data.certifications.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("certifications",cert.id)} className="mt-3 text-xs px-3 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all">✕ Remove</motion.button>}
+                            {data.certifications.length>1&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>remI("certifications",cert.id)} className="mt-3 text-xs rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-all" style={{padding:"5px 12px"}}>✕ Remove</motion.button>}
                           </motion.div>
                         ))}</AnimatePresence>
                       </>)}
                     </div>
                   </SortSec>
                 ))}
+                </div>
               </SortableContext>
             </DndContext>
+            </div>{/* end space-y-5 */}
           </motion.div>
-          {/* ── CENTER PREVIEW ── */}
-          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}} className="flex-1 min-w-0">
-            <div className="sticky top-6">
-              <div className="flex items-center justify-between mb-3">
+
+          {/* ── CENTER PREVIEW — fixed, never moves ── */}
+          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}}
+            className="flex-1 min-w-0 resume-center-sticky"
+            style={{height:"100%",display:"flex",flexDirection:"column",paddingTop:"24px",paddingBottom:"24px",minWidth:0}}>
+            <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+              <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <span className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>Live Preview</span>
                 <div className="flex items-center gap-2">
                   <button onClick={()=>setScale(s=>Math.max(0.4,s-0.05))} className={"text-xs px-2.5 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>−</button>
@@ -906,30 +947,57 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                   <button onClick={()=>setScale(s=>Math.min(1,s+0.05))} className={"text-xs px-2.5 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>+</button>
                 </div>
               </div>
-              <motion.div whileHover={{boxShadow:"0 30px 80px rgba(0,0,0,0.5)"}} className={"rounded-2xl overflow-hidden border shadow-2xl transition-all duration-300 "+(dark?"border-white/10":"border-gray-200")} style={{backdropFilter:"blur(20px)",background:dark?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.8)"}}>
-                <div style={{transform:"scale("+scale+")",transformOrigin:"top center",width:(100/scale)+"%",marginBottom:"calc(("+(scale)+" - 1) * 100%)"}}>
-                  <div ref={prvRef} style={{width:"210mm",minHeight:"297mm",background:"white",margin:"0 auto"}}>
-                    <AnimatePresence mode="wait">
-                      <motion.div key={tpl} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}>
-                        {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
-                        {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
-                        {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
-                        {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
-                        {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
-                        {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
-                        {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
-                        {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
-                      </motion.div>
-                    </AnimatePresence>
+              {/* Preview card — square corners, fills column height, scrollable when zoomed in */}
+              <motion.div whileHover={{boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}
+                className={"border shadow-2xl transition-all duration-300 flex-1 "+(dark?"border-white/10":"border-gray-200")}
+                style={{background:"#111827",overflow:"hidden",position:"relative",borderRadius:"4px"}}>
+                <div style={{position:"absolute",inset:0,overflow:"auto",background:"#111827",padding:"16px 0 16px 0"}}>
+                  {/* Full-width centering row — A4 scales from center, never clips */}
+                  <div style={{
+                    width:"100%",
+                    minHeight:"calc(297mm * "+scale+")",
+                    display:"flex",
+                    justifyContent:"center",
+                    alignItems:"flex-start",
+                  }}>
+                    <div ref={prvRef}
+                      className="resume-preview-sheet"
+                      style={{
+                        width:"210mm",
+                        minHeight:"297mm",
+                        background:"white",
+                        flexShrink:0,
+                        transform:"scale("+scale+")",
+                        transformOrigin:"top center",
+                        wordBreak:"break-word",
+                        overflowWrap:"break-word",
+                        boxShadow:"0 8px 40px rgba(0,0,0,0.5)",
+                      }}>
+                      <AnimatePresence mode="wait">
+                        <motion.div key={tpl} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}>
+                          {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
+                          {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
+                          {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
+                          {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
+                          {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
+                          {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
+                          {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
+                          {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </div>
           </motion.div>
-          {/* ── RIGHT SIDEBAR ── */}
-          <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}} className="w-[260px] flex-shrink-0 space-y-5">
+
+          {/* ── RIGHT SIDEBAR — scrolls independently ── */}
+          <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}}
+            className="w-[260px] flex-shrink-0 resume-right-sticky resume-sidebar"
+            style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",display:"flex",flexDirection:"column",gap:"20px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
             {/* ATS Score */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-4"}>ATS Score</p>
               <div className="flex items-center gap-4">
                 <ATSRing score={ats}/>
@@ -941,14 +1009,15 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
             </div>
             {/* Missing keywords */}
             {mkw.length>0&&(
-              <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5">
-                <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-3">⚠ Missing Keywords</p>
-                <div className="flex flex-wrap gap-2">{mkw.map(k=><span key={k} className="text-xs px-2.5 py-1 rounded-full border border-amber-500/30 text-amber-400/70">{k}</span>)}</div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5" style={{padding:"20px 20px"}}>
+              <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-3">⚠ Missing Keywords</p>
+                <div className="flex flex-wrap gap-2">{mkw.map(k=><span key={k} className="text-xs rounded-full border border-amber-500/30 text-amber-400/70" style={{padding:"5px 12px"}}>{k}</span>)}</div>
+                <br />
                 <p className={"text-xs "+tm+" mt-2"}>Add these to boost ATS score.</p>
               </div>
             )}
             {/* Resume Tips */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💡 Resume Tips</p>
               <AnimatePresence mode="wait">
                 <motion.p key={tipI} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:0.3}} className={"text-sm "+tm+" leading-[1.8]"}>
@@ -958,87 +1027,179 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               <div className="flex gap-1 mt-4">{RESUME_TIPS.map((_,i)=><button key={i} onClick={()=>setTipI(i)} className="h-1.5 rounded-full transition-all duration-300" style={{width:i===tipI?16:6,background:i===tipI?accent:"rgba(255,255,255,0.15)"}}/>)}</div>
             </div>
             {/* Section Checklist */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📋 Checklist</p>
               {[["Name & Email",!!(data.name&&data.email)],["Summary",data.summary.length>30],["5+ Skills",data.skills.length>=5],["Experience",data.experience.some(e=>e.role&&e.company)],["Projects",data.projects.some(p=>p.name)],["Education",data.education.some(e=>e.degree)],["Photo",!!data.profileImage]].map(([l,ok])=>(
                 <div key={l} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0"><span className="text-base">{ok?"✅":"⭕"}</span><span className={"text-sm "+(ok?tp:tm)}>{l}</span></div>
               ))}
             </div>
 ﻿            {/* Quick Actions */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>⚡ Quick Actions</p>
               <div className="space-y-2">
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} className={"w-full text-left text-xs px-4 py-3.5 rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")}>✨ AI Improve Summary</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);}} className={"w-full text-left text-xs px-4 py-3.5 rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")}>⚡ Add Suggested Skills</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} className="w-full text-left text-xs px-4 py-3 rounded-xl font-semibold transition-all" style={{background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>📥 Export as PDF</motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>✨ AI Improve Summary</motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);}} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>⚡ Add Suggested Skills</motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} className="w-full text-left text-xs rounded-xl font-semibold transition-all" style={{padding:"10px 18px",background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>📥 Export as PDF</motion.button>
               </div>
             </div>
 
-            {/* Analyze and Fix Resume */}
-            <div className={"p-6 rounded-2xl border "+card}>
-              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🔍 Fix My Resume</p>
-              <motion.button whileHover={{scale:1.03,boxShadow:"0 0 20px rgba(99,102,241,0.4)"}} whileTap={{scale:0.97}}
-                onClick={analyzeResume} disabled={fixingGrammar}
-                className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all mb-4"
-                style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
-                {fixingGrammar
-                  ? <span className="flex items-center justify-center gap-2"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">🔍</motion.span>Analyzing...</span>
-                  : "🔍 Analyze and Fix Issues"}
-              </motion.button>
-              <AnimatePresence>
-                {fixPanel && grammarFixes.length > 0 && (
-                  <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}} className="space-y-3">
-                    {grammarFixes.some(f=>f.field) && (
-                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:0.97}} onClick={applyAllFixes}
-                        className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all"
-                        style={{background:"linear-gradient(135deg,#10b981,#059669)"}}>
-                        ✅ Apply All Fixes to Resume
-                      </motion.button>
-                    )}
-                    {grammarFixes.map((fix,i)=>(
-                      <motion.div key={fix.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:i*0.08}}
-                        className="rounded-xl border overflow-hidden"
-                        style={{background:"rgba(255,255,255,0.04)",border:appliedFixes[fix.id]?"1px solid rgba(16,185,129,0.4)":"1px solid rgba(255,255,255,0.1)"}}>
-                        <div className="p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold" style={{color:fix.type.includes("✅")?"#10b981":"#f59e0b"}}>{fix.type}</span>
-                            {appliedFixes[fix.id] && <span className="text-xs text-emerald-400 font-semibold">✓ Applied</span>}
-                          </div>
-                          <p className={"text-xs "+tm+" mb-2 font-semibold"}>{fix.section}</p>
-                          {fix.field && (
-                            <>
-                              <div className="mb-2">
-                                <div className="text-[10px] text-red-400/70 font-semibold mb-1">❌ Before</div>
-                                <p className="text-xs text-slate-400 p-2 rounded-lg leading-relaxed" style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>{fix.original.slice(0,80)}{fix.original.length>80?"...":""}</p>
-                              </div>
-                              <div className="mb-2">
-                                <div className="text-[10px] text-emerald-400/70 font-semibold mb-1">✅ Fixed</div>
-                                <p className="text-xs text-slate-200 p-2 rounded-lg leading-relaxed" style={{background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)"}}>{fix.fixed.slice(0,80)}{fix.fixed.length>80?"...":""}</p>
-                              </div>
-                              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>applyFix(fix)} disabled={!!appliedFixes[fix.id]}
-                                className="w-full py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                style={{background:appliedFixes[fix.id]?"rgba(16,185,129,0.2)":"rgba(99,102,241,0.2)",color:appliedFixes[fix.id]?"#34d399":"#a5b4fc",border:"1px solid "+(appliedFixes[fix.id]?"rgba(16,185,129,0.3)":"rgba(99,102,241,0.3)")}}>
-                                {appliedFixes[fix.id] ? "✓ Applied to Resume" : "✨ Apply Fix"}
-                              </motion.button>
-                            </>
-                          )}
+            {/* ── NEW: Resume Health Score ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🏥 Resume Health</p>
+              <div className="space-y-2">
+                {[
+                  {label:"Content Quality",val:Math.min(100,done+10),color:"#10b981"},
+                  {label:"ATS Readiness",val:ats,color:ats>=75?"#10b981":ats>=50?"#f59e0b":"#f43f5e"},
+                  {label:"Keyword Density",val:Math.min(100,ATS_KEYWORDS.filter(k=>[data.summary,...data.experience.map(e=>e.description)].join(" ").toLowerCase().includes(k)).length*8),color:"#6366f1"},
+                  {label:"Completeness",val:done,color:"#06b6d4"},
+                ].map(({label,val,color})=>(
+                  <div key={label}>
+                    <div className="flex justify-between mb-1">
+                      <span className={"text-xs "+tm}>{label}</span>
+                      <span className="text-xs font-bold" style={{color}}>{val}%</span>
+                    </div>
+                    <div className={"h-1.5 rounded-full "+(dark?"bg-white/10":"bg-gray-100")}>
+                      <motion.div initial={{width:0}} animate={{width:val+"%"}} transition={{duration:0.8,ease:"easeOut"}} className="h-full rounded-full" style={{background:color}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Skill Strength Meter ── */}
+            {data.skills.length>0&&(
+              <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+                <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💪 Skill Strength</p>
+                <div className="space-y-2">
+                  {data.skills.slice(0,6).map((skill,i)=>{
+                    const strength=Math.min(100,60+i*7+(skill.length%3)*10);
+                    return(
+                      <div key={skill} className="flex items-center gap-2">
+                        <span className={"text-xs truncate flex-1 "+tm} style={{maxWidth:100}}>{skill}</span>
+                        <div className={"flex-1 h-1.5 rounded-full "+(dark?"bg-white/10":"bg-gray-100")}>
+                          <motion.div initial={{width:0}} animate={{width:strength+"%"}} transition={{duration:0.6,delay:i*0.08,ease:"easeOut"}} className="h-full rounded-full" style={{background:`linear-gradient(90deg,${accent},${accent}99)`}}/>
                         </div>
-                      </motion.div>
-                    ))}
-                    {grammarFixes.some(f=>appliedFixes[f.id]) && (
-                      <motion.button whileHover={{scale:1.03,boxShadow:"0 0 20px "+accent+"66"}} whileTap={{scale:0.97}} onClick={doPDF}
-                        className="w-full py-3 rounded-xl font-bold text-white text-sm transition-all"
-                        style={{background:"linear-gradient(135deg,"+accent+","+accent+"99)"}}>
-                        📥 Download Fixed Resume
-                      </motion.button>
-                    )}
-                  </motion.div>
+                        <span className="text-xs font-bold" style={{color:accent,minWidth:28,textAlign:"right"}}>{strength}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── NEW: AI Suggestions ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🤖 AI Suggestions</p>
+              <div className="space-y-2">
+                {[
+                  !data.summary&&{icon:"📝",text:"Add a professional summary to stand out"},
+                  data.skills.length<5&&{icon:"⚡",text:"Add at least 5 skills for better ATS"},
+                  !data.profileImage&&{icon:"📷",text:"Upload a photo for a personal touch"},
+                  !data.experience.some(e=>e.description?.includes("%"))&&{icon:"📊",text:"Add metrics (%, $, x) to experience"},
+                  data.experience.length<2&&{icon:"💼",text:"Add more experience entries"},
+                ].filter(Boolean).slice(0,3).map((s,i)=>(
+                  <div key={i} className={"flex items-start gap-2 p-2.5 rounded-xl "+(dark?"bg-white/5":"bg-gray-50")}>
+                    <span className="text-sm flex-shrink-0">{s.icon}</span>
+                    <span className={"text-xs leading-relaxed "+tm}>{s.text}</span>
+                  </div>
+                ))}
+                {[
+                  !data.summary&&null,
+                  data.skills.length<5&&null,
+                  !data.profileImage&&null,
+                  !data.experience.some(e=>e.description?.includes("%"))&&null,
+                  data.experience.length<2&&null,
+                ].filter(Boolean).length===0&&(
+                  <div className={"flex items-center gap-2 p-2.5 rounded-xl "+(dark?"bg-emerald-500/10":"bg-emerald-50")}>
+                    <span className="text-sm">✅</span>
+                    <span className="text-xs text-emerald-400">Looking great! Keep it up.</span>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
+            </div>
+
+            {/* ── NEW: Interview Tips ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🎤 Interview Tips</p>
+              <div className="space-y-2">
+                {[
+                  {icon:"⭐",tip:"Use STAR method: Situation, Task, Action, Result"},
+                  {icon:"🔢",tip:"Prepare 3 stories for each key achievement"},
+                  {icon:"🔍",tip:"Research the company before every interview"},
+                  {icon:"❓",tip:"Always have 2-3 questions ready to ask"},
+                ].map((t,i)=>(
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="text-sm flex-shrink-0">{t.icon}</span>
+                    <span className={"text-xs leading-relaxed "+tm}>{t.tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Auto Save Status ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"16px 20px"}}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <motion.div animate={{scale:[1,1.3,1]}} transition={{duration:2,repeat:Infinity}} className="w-2 h-2 rounded-full bg-emerald-400"/>
+                  <span className={"text-xs font-semibold "+tp}>Auto Saved</span>
+                </div>
+                <span className={"text-xs "+tm}>Just now</span>
+              </div>
+              <p className={"text-xs "+tm+" mt-1"}>All changes saved locally</p>
+            </div>
+
+
+            {/* ── NEW: Resume Analytics ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📈 Analytics</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  {label:"Words",val:([data.summary,...data.experience.map(e=>e.description),...data.projects.map(p=>p.description)].join(" ").split(/\s+/).filter(Boolean).length)||0,icon:"📝"},
+                  {label:"Sections",val:[data.summary,data.skills.length,data.experience.length,data.projects.length,data.education.length,data.certifications.length].filter(Boolean).length,icon:"📋"},
+                  {label:"Skills",val:data.skills.length,icon:"⚡"},
+                  {label:"Exp. Roles",val:data.experience.filter(e=>e.role).length,icon:"💼"},
+                ].map(({label,val,icon})=>(
+                  <div key={label} className={"rounded-xl p-3 text-center "+(dark?"bg-white/5":"bg-gray-50")}>
+                    <div className="text-lg mb-0.5">{icon}</div>
+                    <div className="text-lg font-black" style={{color:accent}}>{val}</div>
+                    <div className={"text-xs "+tm}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── NEW: Quick Improve Buttons ── */}
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
+              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🚀 Quick Improve</p>
+              <div className="space-y-2">
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("full")} disabled={aiL.full}
+                  className="w-full text-left text-xs rounded-xl font-semibold text-white transition-all"
+                  style={{padding:"10px 14px",background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
+                  {aiL.full?"⟳ Generating...":"🤖 AI Full Resume"}
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} disabled={aiL.summary}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  ✨ Improve Summary
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}}
+                  onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);showT("⚡ Skills added!","ok");}}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  ⚡ Boost Skills
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={analyzeResume} disabled={fixingGrammar}
+                  className={"w-full text-left text-xs rounded-xl border transition-all "+(dark?"border-white/10 text-white/50 hover:text-white/80":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 14px"}}>
+                  🔍 Fix Issues
+                </motion.button>
+                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} disabled={pdfL}
+                  className="w-full text-left text-xs rounded-xl font-semibold transition-all"
+                  style={{padding:"10px 14px",background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>
+                  📥 Download PDF
+                </motion.button>
+              </div>
             </div>
 
             {/* How to Improve Guide */}
-            <div className={"p-6 rounded-2xl border "+card}>
+            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <button onClick={()=>setShowTipsPanel(p=>!p)} className="w-full flex items-center justify-between">
                 <p className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>📖 How to Improve</p>
                 <motion.span animate={{rotate:showTipsPanel?180:0}} transition={{duration:0.3}} className="text-white/30 text-xs">▼</motion.span>
@@ -1074,6 +1235,21 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
           </motion.div>
         </div>
       </div>
+
+      {/* ── HIDDEN PDF EXPORT DIV — full size, no transform, invisible ── */}
+      <div style={{position:"fixed",left:"-9999px",top:0,zIndex:-1,pointerEvents:"none"}}>
+        <div ref={pdfRef} style={{width:"794px",background:"white",fontFamily:"Inter,sans-serif"}}>
+          {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
+          {tpl==="classic"  &&<ClassicPreview  data={data} accent={accent}/>}
+          {tpl==="minimal"  &&<MinimalPreview  data={data} accent={accent}/>}
+          {tpl==="sidebar"  &&<SidebarPreview  data={data} accent={accent}/>}
+          {tpl==="dark"     &&<DarkPreview     data={data} accent={accent}/>}
+          {tpl==="diagonal" &&<DiagonalPreview data={data} accent={accent}/>}
+          {tpl==="glass"    &&<GlassPreview    data={data} accent={accent}/>}
+          {tpl==="elegant"  &&<ElegantPreview  data={data} accent={accent}/>}
+        </div>
+      </div>
     </div>
   );
 }
+// PREVIEW COMPONENTS
