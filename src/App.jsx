@@ -3,6 +3,7 @@ import NewAuthPage from "./AuthPage.jsx";
 import NewProfilePage from "./ProfilePage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
+import CareerLanding from "./CareerLanding.jsx";
 const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
@@ -2758,7 +2759,7 @@ export default function App() {
     <>
       <style>{css}</style>
 
-      {page === "home" && <LandingPage onNav={navigate} onDemo={handleDemo} />}
+      {page === "home" && <CareerLanding onNav={navigate} onDemo={handleDemo} />}
       {page === "login" && <AuthPage type="login" onLogin={handleLogin} onNav={navigate} />}
       {page === "signup" && <AuthPage type="signup" onLogin={handleLogin} onNav={navigate} />}
       {page === "assessment" && !user && (
@@ -2810,7 +2811,7 @@ export default function App() {
             {appPage === "dsa" && <DSAGame />}
             {appPage === "story" && (
               <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", overflowX: "hidden" }}>
                   <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
                 </div>
               </Suspense>
