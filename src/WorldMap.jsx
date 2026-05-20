@@ -58,9 +58,14 @@ function LevelUpModal({level,onClose}) {
 
 // ── WORLD CARD ────────────────────────────────────────────────────────────────
 const WMETA = {
-  arrays:    {bg:"linear-gradient(135deg,#020d1a 0%,#0a1f35 100%)",particle:"#00e5ff",difficulty:"Beginner",   missions:5},
-  recursion: {bg:"linear-gradient(135deg,#0e0520 0%,#1e0d3a 100%)",particle:"#c084fc",difficulty:"Intermediate",missions:3},
-  graphs:    {bg:"linear-gradient(135deg,#020e08 0%,#071a10 100%)",particle:"#34d399",difficulty:"Advanced",   missions:3}
+  arrays:     {bg:"linear-gradient(135deg,#020d1a 0%,#0a1f35 100%)", particle:"#00e5ff", difficulty:"Beginner",     missions:5},
+  linkedlist: {bg:"linear-gradient(135deg,#1a0d00 0%,#2d1a00 100%)", particle:"#f59e0b", difficulty:"Beginner",     missions:6},
+  stacks:     {bg:"linear-gradient(135deg,#1a0010 0%,#2d0020 100%)", particle:"#ff6b9d", difficulty:"Beginner",     missions:6},
+  queues:     {bg:"linear-gradient(135deg,#001a0d 0%,#002d1a 100%)", particle:"#34d399", difficulty:"Intermediate", missions:6},
+  trees:      {bg:"linear-gradient(135deg,#0d0020 0%,#1a0035 100%)", particle:"#a78bfa", difficulty:"Intermediate", missions:6},
+  sorting:    {bg:"linear-gradient(135deg,#1a1500 0%,#2d2200 100%)", particle:"#fbbf24", difficulty:"Intermediate", missions:6},
+  recursion:  {bg:"linear-gradient(135deg,#0e0520 0%,#1e0d3a 100%)", particle:"#c084fc", difficulty:"Advanced",    missions:3},
+  graphs:     {bg:"linear-gradient(135deg,#020e08 0%,#071a10 100%)", particle:"#34d399", difficulty:"Advanced",    missions:3},
 };
 const DIFF_COLOR = {Beginner:"#34d399",Intermediate:"#f59e0b",Advanced:"#ef4444"};
 
@@ -147,6 +152,20 @@ function StatsRow({progress}) {
   );
 }
 
+// ── STATIC WORLDS (fallback when backend is offline) ─────────────────────────
+const STATIC_WORLDS = [
+  { id:"arrays",     name:"Array Kingdom",        description:"Master the land of indexed elements",       icon:"🏰", color:"#00e5ff" },
+  { id:"linkedlist", name:"Linked List Labyrinth", description:"Traverse the chains of connected nodes",    icon:"🔗", color:"#f59e0b" },
+  { id:"stacks",     name:"Stack Fortress",        description:"Conquer the LIFO tower of power",           icon:"🗼", color:"#ff6b9d" },
+  { id:"queues",     name:"Queue Citadel",          description:"Command the FIFO order of operations",     icon:"🏛️", color:"#34d399" },
+  { id:"trees",      name:"Tree Temple",            description:"Climb the hierarchical forest of data",    icon:"🌳", color:"#a78bfa" },
+  { id:"sorting",    name:"Sorting Sanctum",        description:"Bring order to the chaos of unsorted data",icon:"⚔️", color:"#fbbf24" },
+  { id:"recursion",  name:"Recursion Dungeon",      description:"Descend into the depths of self-reference",icon:"🌀", color:"#c084fc" },
+  { id:"graphs",     name:"Graph Maze",             description:"Navigate the web of connected nodes",      icon:"🕸️", color:"#34d399" },
+];
+
+const STATIC_PROGRESS = { userId:"guest", xp:0, level:"Beginner", completedMissions:[] };
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function WorldMap({userId,onSelectWorld,onBack}) {
   const [worlds,setWorlds]=useState([]);
@@ -158,7 +177,13 @@ export default function WorldMap({userId,onSelectWorld,onBack}) {
   useEffect(()=>{
     Promise.all([fetchWorlds(),fetchProgress(userId)])
       .then(([w,p])=>{setWorlds(w.worlds);setProgress(p);prevLevel.current=p.level;})
-      .catch(console.error).finally(()=>setLoading(false));
+      .catch(()=>{
+        // Backend offline — use static data so all worlds are always visible
+        setWorlds(STATIC_WORLDS);
+        setProgress(STATIC_PROGRESS);
+        prevLevel.current=STATIC_PROGRESS.level;
+      })
+      .finally(()=>setLoading(false));
   },[userId]);
 
   useEffect(()=>{
@@ -180,6 +205,24 @@ export default function WorldMap({userId,onSelectWorld,onBack}) {
     <div style={S.page}>
       <style>{KF}</style>
       {levelUpMsg&&<LevelUpModal level={levelUpMsg} onClose={()=>setLevelUpMsg(null)}/>}
+
+      {/* Sticky top bar with back button — always visible */}
+      <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(6,9,18,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(255,255,255,0.06)",padding:"10px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <button onClick={onBack} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#94a3b8",padding:"8px 18px",borderRadius:20,cursor:"pointer",fontSize:13,fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:6,transition:"all 0.2s"}}
+          onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.1)";e.currentTarget.style.color="#f0f4ff";}}
+          onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.color="#94a3b8";}}>
+          ← Exit Story Mode
+        </button>
+        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:"#00e5ff",letterSpacing:1}}>
+          STORY MODE
+        </div>
+        {progress && (
+          <div style={{fontSize:12,color:"#64748b",display:"flex",alignItems:"center",gap:6}}>
+            <span style={{color:"#c084fc",fontWeight:600}}>{progress.level}</span>
+            <span>· {progress.xp} XP</span>
+          </div>
+        )}
+      </div>
 
       {/* Hero */}
       <div style={S.hero}>
