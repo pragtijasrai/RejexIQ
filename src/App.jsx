@@ -2813,7 +2813,7 @@ export default function App() {
             {appPage === "dsa" && <DSAGame />}
             {appPage === "story" && (
               <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto" }}>
                   <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
                 </div>
               </Suspense>
