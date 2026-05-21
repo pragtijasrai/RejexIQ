@@ -580,7 +580,7 @@ function SolveView({ problem, onBack }) {
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, background:G.bg, zIndex:200, display:"flex", flexDirection:"column", fontFamily:"'Inter',sans-serif" }}>
+    <div style={{ position:"absolute", inset:0, background:G.bg, zIndex:200, display:"flex", flexDirection:"column", fontFamily:"'Inter',sans-serif" }}>
 
       {/* TOP BAR */}
       <div style={{ height:46, background:G.surface, borderBottom:"1px solid " + G.border, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", flexShrink:0 }}>
@@ -944,7 +944,7 @@ export default function CodeArena({ user }) {
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", minHeight:"100vh" }}>
       <div style={{ marginBottom:20 }}>
-        <h1 className="syne" style={{ fontSize:26, fontWeight:800, marginBottom:4, background:"linear-gradient(135deg," + G.text + "," + G.accent + ")", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Code Arena</h1>
+        <h1 className="syne" style={{ fontSize:26, fontWeight:800, marginBottom:4, background:"linear-gradient(135deg," + "#1a0a0c" + "," + G.accent + ")", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Code Arena</h1>
         <p style={{ color:G.muted, fontSize:13 }}>Practice coding problems and improve your interview skills.</p>
       </div>
 
@@ -981,7 +981,7 @@ export default function CodeArena({ user }) {
           {/* ── QUEST VIEW ── */}
           {leftNav === "quest" && (
             <div>
-              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>
                 Daily Quest <span style={{ fontSize:11, color:"#fff", background:`linear-gradient(135deg,${G.accent},${G.purple})`, borderRadius:20, padding:"2px 8px", marginLeft:6 }}>NEW</span>
               </div>
               <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Complete daily challenges to earn XP and maintain your streak.</p>
@@ -1027,7 +1027,7 @@ export default function CodeArena({ user }) {
           {/* ── EXPLORE VIEW ── */}
           {leftNav === "explore" && (
             <div>
-              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Explore Topics</div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>Explore Topics</div>
               <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Browse problems by topic and difficulty.</p>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:12 }}>
                 {[
@@ -1058,7 +1058,7 @@ export default function CodeArena({ user }) {
           {/* ── STUDY PLAN VIEW ── */}
           {leftNav === "study" && (
             <div>
-              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Study Plans</div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>Study Plans</div>
               <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Structured learning paths to ace your interviews.</p>
               <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
                 {[

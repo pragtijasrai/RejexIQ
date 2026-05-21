@@ -18,6 +18,10 @@ import DSAGame from "./DSAGame.jsx";
 import Sorting from "./Sorting.jsx";
 import Searching from "./Searching.jsx";
 import Backtracking from "./Backtracking.jsx";
+import CodeArena from "./CodeArena.jsx";
+import CuteAIAssistant from "./components/AIAssistant.jsx";
+import Leaderboard from "./Leaderboard.jsx";
+import Community from "./Community.jsx";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -174,11 +178,6 @@ const css = `
     min-height: 100vh;
     overflow-x: hidden;
   }
-  
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: ${G.bg}; }
-  ::-webkit-scrollbar-thumb { background: ${G.border}; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: ${G.accent}; }
 
   .syne { font-family: 'Space Grotesk', sans-serif; }
   .mono { font-family: 'Fira Code', monospace; }
@@ -283,6 +282,7 @@ const css = `
     border-radius: 16px;
     padding: 24px;
     transition: all 0.3s ease;
+    color: ${G.text};
   }
   .card:hover { border-color: rgba(0,229,255,0.3); box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
 
@@ -498,6 +498,47 @@ const css = `
     border-radius: 8px; 
     padding: 8px 12px;
     font-size: 12px;
+  }
+
+  .nav-link-premium {
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-link-premium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(255, 122, 90, 0.05) 0%, rgba(190, 18, 60, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+    border-radius: 10px;
+  }
+  .nav-link-premium:hover::after {
+    opacity: 1;
+  }
+  .nav-link-premium:hover {
+    color: #be123c !important;
+    transform: translateY(-1px);
+  }
+  .nav-link-premium img {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+    z-index: 1;
+  }
+  .nav-link-premium:hover img {
+    transform: scale(1.25) rotate(6deg);
+    filter: drop-shadow(0 4px 8px rgba(190, 18, 60, 0.15));
+  }
+  .nav-link-premium.active img {
+    filter: drop-shadow(0 4px 8px rgba(190, 18, 60, 0.25));
+    transform: scale(1.1);
+  }
+  @media (max-width: 768px) {
+    .mobile-toggle-btn { display: block !important; }
+    .desktop-collapse-btn { display: none !important; }
+    .sidebar-premium { left: -260px !important; }
+    .sidebar-premium.mobile-open { left: 0 !important; box-shadow: 10px 0 40px rgba(0,0,0,0.25) !important; }
+    .main-content-area { margin-left: 0 !important; }
   }
 `;
 
@@ -808,62 +849,484 @@ function AuthPage({ type, onLogin, onNav }) {
   return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
 
-// SIDEBAR
-function Sidebar({ active, onNav, user, onLogout }) {
+function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobileOpen, setMobileOpen, onHoverChange }) {
   const navItems = [
-    { key: "dashboard", icon: "🏠", label: "Dashboard" },
-    { key: "profile", icon: "👤", label: "Profile" },
-    { key: "assessment", icon: "🎯", label: "Skill Assessment" },
-    { key: "dsa", icon: "📚", label: "DSA Tutorial" },
-    { key: "story", icon: "⚔️", label: "Story Mode" },
-    { key: "career", icon: "🏆", label: "Career Match" },
-    { key: "market", icon: "📈", label: "Market Demand" },
-    { key: "resume", icon: "📄", label: "Resume Builder" },
-    { key: "assistant", icon: "🤖", label: "AI Assistant" },
-    { key: "leaderboard", icon: "🥇", label: "Leaderboard" }
+    { key: "dashboard", icon: "https://img.icons8.com/fluency/48/dashboard.png", label: "Dashboard" },
+    { key: "assessment", icon: "https://img.icons8.com/fluency/48/test.png", label: "Skill Assessment" },
+    { key: "dsa", icon: "https://img.icons8.com/fluency/48/opened-folder.png", label: "DSA Tutorial" },
+    { key: "story", icon: "https://img.icons8.com/fluency/48/controller.png", label: "Story Mode" },
+    { key: "career", icon: "https://img.icons8.com/fluency/48/trophy.png", label: "Career Match" },
+    { key: "market", icon: "https://img.icons8.com/fluency/48/line-chart.png", label: "Market Demand" },
+    { key: "resume", icon: "https://img.icons8.com/fluency/48/resume.png", label: "Resume Builder" },
+    { key: "assistant", icon: "https://img.icons8.com/fluency/48/bot.png", label: "AI Assistant" },
+    { key: "arena", icon: "https://img.icons8.com/fluency/48/domain.png", label: "Code Arena" },
+    { key: "leaderboard", icon: "https://img.icons8.com/fluency/48/star.png", label: "Leaderboard" },
+    { key: "community", icon: "https://img.icons8.com/fluency/48/people-working-together.png", label: "Community" }
   ];
 
+  const [isHovered, setIsHovered] = useState(false);
+  const visuallyExpanded = !collapsed || isHovered;
+  const sidebarWidth = visuallyExpanded ? 240 : 72;
+
   return (
-    <div style={{
-      width: 240, background: G.surface, borderRight: `1px solid ${G.border}`,
-      display: "flex", flexDirection: "column", height: "100vh", position: "fixed", left: 0, top: 0, zIndex: 100
-    }}>
+    <div
+      className={`sidebar-premium ${mobileOpen ? "mobile-open" : ""}`}
+      onMouseEnter={() => { setIsHovered(true); if (onHoverChange) onHoverChange(true); }}
+      onMouseLeave={() => { setIsHovered(false); if (onHoverChange) onHoverChange(false); }}
+      style={{
+        width: sidebarWidth,
+        background: "rgba(255, 255, 255, 0.45)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.8)",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        zIndex: 100,
+        transition: "width 0.3s cubic-bezier(0.22, 1, 0.36, 1), left 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease",
+        color: "#1a0a0c",
+        boxShadow: visuallyExpanded ? "8px 0 28px rgba(120, 10, 30, 0.06)" : "4px 0 30px rgba(0, 0, 0, 0.08)"
+      }}
+    >
+      {/* Desktop Floating Lock Toggle */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setCollapsed(!collapsed);
+        }}
+        className="desktop-collapse-btn"
+        style={{
+          position: "absolute",
+          top: 24,
+          right: -12,
+          width: 24,
+          height: 24,
+          background: "#be123c",
+          color: "white",
+          border: "none",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 4px 10px rgba(190,18,60,0.3)",
+          zIndex: 110,
+          fontSize: 10,
+          transition: "transform 0.3s, background 0.2s, opacity 0.2s",
+          opacity: isHovered || !collapsed ? 1 : 0,
+          pointerEvents: isHovered || !collapsed ? "auto" : "none"
+        }}
+        title={collapsed ? "Lock Sidebar (Expand)" : "Unlock Sidebar (Collapse)"}
+      >
+        {collapsed ? "»" : "«"}
+      </button>
+
       {/* Logo */}
-      <div style={{ padding: "24px 20px", borderBottom: `1px solid ${G.border}` }}>
-        <div className="syne" style={{ fontSize: 22, fontWeight: 800 }}>
-          <span style={{ color: G.accent }}>Rejex</span>IQ
+      <div style={{
+        padding: visuallyExpanded ? "24px 20px" : "24px 0",
+        borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
+        textAlign: visuallyExpanded ? "left" : "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: visuallyExpanded ? "flex-start" : "center",
+        transition: "padding 0.3s"
+      }}>
+        <div className="syne" style={{
+          fontSize: visuallyExpanded ? 22 : 24,
+          fontWeight: 800,
+          color: "#be123c",
+          transition: "all 0.3s ease",
+          display: "flex",
+          alignItems: "center",
+          gap: 8
+        }}>
+          {visuallyExpanded ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden", whiteSpace: "nowrap" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                <rect x="2" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+                <rect x="2" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+                <rect x="2" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              </svg>
+              <span style={{ color: "#1a0a0c" }}>RejexIQ</span>
+            </div>
+          ) : (
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+              <rect x="2" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              <rect x="2" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              <rect x="2" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+            </svg>
+          )}
         </div>
-        <div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>Career Intelligence</div>
       </div>
 
       {/* User */}
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${G.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: `linear-gradient(135deg, ${G.accent}, #7c3aed)`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-            {user.name?.[0]?.toUpperCase() || "U"}
+      <div style={{
+        padding: visuallyExpanded ? "16px 20px" : "16px 0",
+        borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
+        display: "flex",
+        justifyContent: "center",
+        transition: "padding 0.3s"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, width: visuallyExpanded ? "100%" : "auto" }}>
+          <div style={{
+            width: 36,
+            height: 36,
+            background: "linear-gradient(135deg, #ff7a5a, #be123c)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 16,
+            color: "white",
+            fontWeight: 600,
+            flexShrink: 0,
+            boxShadow: "0 4px 10px rgba(190, 18, 60, 0.15)",
+            overflow: "hidden"
+          }}>
+            {user.avatar ? (
+              <img src={user.avatar} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              user.name?.[0]?.toUpperCase() || "U"
+            )}
           </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: G.text }}>{user.name}</div>
-            <div style={{ fontSize: 11, color: G.muted }}>{user.email}</div>
-          </div>
+          {visuallyExpanded && (
+            <div style={{ minWidth: 0, flex: 1, animation: "fadeIn 0.3s ease" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1a0a0c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
+              <div style={{ fontSize: 11, color: "rgba(120, 10, 30, 0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 12px", overflowY: "auto" }}>
-        {navItems.map(item => (
-          <button key={item.key} className={`nav-link ${active === item.key ? "active" : ""}`}
-            onClick={() => onNav(item.key)}>
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
+        {navItems.map(item => {
+          const isActive = active === item.key;
+          return (
+            <button
+              key={item.key}
+              className={`nav-link-premium ${isActive ? "active" : ""}`}
+              onClick={() => {
+                onNav(item.key);
+                if (setMobileOpen) setMobileOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: visuallyExpanded ? 10 : 0,
+                justifyContent: visuallyExpanded ? "flex-start" : "center",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? "#be123c" : "rgba(26, 10, 12, 0.75)",
+                background: isActive ? "rgba(190, 18, 60, 0.08)" : "transparent",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                width: "100%",
+                textAlign: "left",
+                marginBottom: "2px",
+                position: "relative"
+              }}
+              title={!visuallyExpanded ? item.label : ""}
+            >
+              {/* Active vertical line indicator */}
+              {isActive && (
+                <div style={{
+                  position: "absolute",
+                  left: 0,
+                  top: "15%",
+                  bottom: "15%",
+                  width: 3,
+                  borderRadius: "0 4px 4px 0",
+                  background: "#be123c",
+                  boxShadow: "0 0 8px #be123c"
+                }} />
+              )}
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+                <img src={item.icon} alt={item.label} style={{ width: 20, height: 20, objectFit: "contain" }} />
+              </span>
+              {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", whiteSpace: "nowrap", overflow: "hidden", zIndex: 1 }}>{item.label}</span>}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Logout */}
-      <div style={{ padding: "12px 12px", borderTop: `1px solid ${G.border}` }}>
-        <button className="nav-link" onClick={onLogout} style={{ color: G.danger }}>
-          <span>🚪</span><span>Log Out</span>
+      {/* Footer Actions: Profile, Settings, Logout */}
+      <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(120, 10, 30, 0.08)", display: "flex", flexDirection: "column", gap: "4px" }}>
+
+        {/* Profile */}
+        <button
+          onClick={() => { onNav("profile"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
+          className={`nav-link-premium ${active === "profile" ? "active" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: visuallyExpanded ? 10 : 0,
+            justifyContent: visuallyExpanded ? "flex-start" : "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: active === "profile" ? 600 : 500,
+            color: active === "profile" ? "#be123c" : "rgba(26, 10, 12, 0.75)",
+            background: active === "profile" ? "rgba(190, 18, 60, 0.08)" : "transparent",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            width: "100%",
+            textAlign: "left",
+            position: "relative"
+          }}
+          title={!visuallyExpanded ? "Profile" : ""}
+        >
+          {active === "profile" && (
+            <div style={{
+              position: "absolute", left: 0, top: "15%", bottom: "15%", width: 3,
+              borderRadius: "0 4px 4px 0", background: "#be123c", boxShadow: "0 0 8px #be123c"
+            }} />
+          )}
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" style={{ width: 20, height: 20, objectFit: "contain" }} />
+          </span>
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Profile</span>}
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={() => { onNav("settings"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
+          className={`nav-link-premium ${active === "settings" ? "active" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: visuallyExpanded ? 10 : 0,
+            justifyContent: visuallyExpanded ? "flex-start" : "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: active === "settings" ? 600 : 500,
+            color: active === "settings" ? "#be123c" : "rgba(26, 10, 12, 0.75)",
+            background: active === "settings" ? "rgba(190, 18, 60, 0.08)" : "transparent",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            width: "100%",
+            textAlign: "left",
+            position: "relative"
+          }}
+          title={!visuallyExpanded ? "Settings" : ""}
+        >
+          {active === "settings" && (
+            <div style={{
+              position: "absolute", left: 0, top: "15%", bottom: "15%", width: 3,
+              borderRadius: "0 4px 4px 0", background: "#be123c", boxShadow: "0 0 8px #be123c"
+            }} />
+          )}
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/settings.png" alt="Settings" style={{ width: 20, height: 20, objectFit: "contain" }} />
+          </span>
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Settings</span>}
+        </button>
+
+        {/* Log Out */}
+        <button
+          onClick={onLogout}
+          className="nav-link-premium"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: visuallyExpanded ? 10 : 0,
+            justifyContent: visuallyExpanded ? "flex-start" : "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "#be123c",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            width: "100%",
+            textAlign: "left",
+            position: "relative",
+            overflow: "hidden"
+          }}
+          title={!visuallyExpanded ? "Log Out" : ""}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/logout-rounded.png" alt="Log Out" style={{ width: 20, height: 20, objectFit: "contain" }} />
+          </span>
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Log Out</span>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// TRACK SELECTION — Onboarding screen for new users
+function TrackSelection({ onSelect }) {
+  const tracks = [
+    { key: "Learning Student", title: "Learning Student", desc: "Start from scratch, learn programming fundamentals, DSA, and build your foundation.", icon: "🎒" },
+    { key: "Frontend Developer", title: "Frontend Developer", desc: "Build gorgeous, interactive user interfaces with React, CSS, and modern web tech.", icon: "🎨" },
+    { key: "Backend Developer", title: "Backend Developer", desc: "Architect robust APIs, databases, and microservices with Node.js, Python, and SQL.", icon: "⚙️" },
+    { key: "Full-Stack Developer", title: "Full-Stack Developer", desc: "Own the entire stack, bridging elegant user experiences with powerful backend systems.", icon: "🚀" },
+    { key: "DevOps Engineer", title: "DevOps Engineer", desc: "Master cloud infrastructure, CI/CD pipelines, Docker, Kubernetes, and AWS.", icon: "☁️" },
+    { key: "Data Analyst", title: "Data Analyst", desc: "Uncover insights, build predictive models, and parse complex datasets with Python & SQL.", icon: "📊" },
+    { key: "Educator / Teacher", title: "Educator / Teacher", desc: "Design custom challenges, track class progress, and guide student learning pathways.", icon: "👨‍🏫" },
+    { key: "Company / Recruiter", title: "Company / Recruiter", desc: "Identify top talents, evaluate skill assessments, and source perfect matches for your jobs.", icon: "🏢" }
+  ];
+
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "60px 20px",
+      fontFamily: "'Inter', sans-serif",
+      position: "relative",
+      overflow: "hidden"
+    }}>
+      {/* Background Glows */}
+      <div style={{ position: "absolute", top: "10%", left: "10%", width: 350, height: 350, background: "radial-gradient(circle, rgba(255,107,157,0.12) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(50px)" }} />
+      <div style={{ position: "absolute", bottom: "10%", right: "10%", width: 450, height: 450, background: "radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(50px)" }} />
+
+      <div style={{
+        maxWidth: 1100,
+        width: "100%",
+        background: "rgba(20, 27, 58, 0.75)",
+        backdropFilter: "blur(16px)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: 24,
+        padding: "48px 32px",
+        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.4)",
+        textAlign: "center",
+        zIndex: 10
+      }}>
+        <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, color: "#f0f4ff", marginBottom: 12, letterSpacing: "-0.02em" }}>
+          Choose Your Focus <span style={{ background: "linear-gradient(135deg, #ff6b9d, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Track & Persona</span>
+        </h2>
+        <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 40, maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.6 }}>
+          Select the option that matches your current goal. We'll tailor your dashboard, roadmaps, and tools to fit your specific needs perfectly.
+        </p>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 20,
+          marginBottom: 40
+        }}>
+          {tracks.map(t => {
+            const isSel = selected === t.key;
+            return (
+              <div
+                key={t.key}
+                onClick={() => setSelected(t.key)}
+                style={{
+                  background: isSel ? "rgba(255, 107, 157, 0.08)" : "rgba(26, 35, 71, 0.4)",
+                  border: isSel ? "2px solid #ff6b9d" : "1.5px solid rgba(255, 255, 255, 0.06)",
+                  borderRadius: 20,
+                  padding: "24px 20px",
+                  cursor: "pointer",
+                  transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
+                  textAlign: "left",
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  boxShadow: isSel ? "0 10px 24px rgba(255, 107, 157, 0.15), inset 0 1px 1px rgba(255,255,255,0.1)" : "none",
+                  transform: isSel ? "translateY(-3px)" : "none"
+                }}
+              >
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  background: isSel ? "linear-gradient(135deg, #ff6b9d, #be123c)" : "rgba(255, 255, 255, 0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 22,
+                  marginBottom: 16,
+                  transition: "all 0.25s ease"
+                }}>
+                  {t.icon}
+                </div>
+                <h3 style={{ fontSize: 17, fontWeight: 650, color: "#f0f4ff", marginBottom: 8, letterSpacing: "-0.01em" }}>{t.title}</h3>
+                <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, margin: 0, flex: 1 }}>{t.desc}</p>
+
+                {isSel && (
+                  <div style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 16,
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: "#ff6b9d",
+                    color: "#0a0e27",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: "bold",
+                    boxShadow: "0 0 8px rgba(255, 107, 157, 0.5)"
+                  }}>
+                    ✓
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => selected && onSelect(selected)}
+          disabled={!selected}
+          style={{
+            padding: "14px 54px",
+            background: selected ? "linear-gradient(135deg, #ff6b9d, #c084fc)" : "rgba(255,255,255,0.06)",
+            border: "none",
+            borderRadius: 50,
+            color: selected ? "#0a0e27" : "#94a3b8",
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: selected ? "pointer" : "not-allowed",
+            transition: "all 0.25s",
+            boxShadow: selected ? "0 10px 25px rgba(255, 107, 157, 0.3)" : "none",
+            transform: selected ? "translateY(0)" : "none",
+          }}
+          onMouseEnter={e => {
+            if (selected) {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 12px 30px rgba(255, 107, 157, 0.4)";
+            }
+          }}
+          onMouseLeave={e => {
+            if (selected) {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 10px 25px rgba(255, 107, 157, 0.3)";
+            }
+          }}
+        >
+          Confirm Focus & Setup Profile
         </button>
       </div>
     </div>
@@ -1537,7 +2000,7 @@ function MarketDemand({ onNav, user }) {
       <div style={{
         position: "relative", borderRadius: 24, overflow: "hidden",
         background: "linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(124,58,237,0.12) 50%, rgba(255,107,157,0.08) 100%)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid rgba(0,0,0,0.05)",
         padding: "36px 40px", marginBottom: 32
       }}>
         {/* Glow orbs */}
@@ -1550,26 +2013,26 @@ function MarketDemand({ onNav, user }) {
               <span style={{ width: 6, height: 6, background: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "pulse 2s infinite" }} />
               LIVE MARKET DATA · 2025
             </div>
-            <h1 className="syne" style={{ fontSize: "clamp(24px,3vw,36px)", fontWeight: 800, marginBottom: 10, lineHeight: 1.2 }}>
+            <h1 className="syne" style={{ fontSize: "clamp(24px,3vw,36px)", fontWeight: 800, marginBottom: 10, lineHeight: 1.2, color: "#1e293b" }}>
               Market Demand{" "}
               <span style={{ background: "linear-gradient(135deg, #00e5ff, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 Analytics
               </span>
             </h1>
-            <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.6, maxWidth: 520 }}>
+            <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.6, maxWidth: 520 }}>
               Real-time skill demand data, job market trends, and personalized AI recommendations to accelerate your career.
             </p>
           </div>
 
           {/* Role selector */}
           <div style={{ minWidth: 220 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#94a3b8", marginBottom: 8, letterSpacing: 1 }}>SELECT JOB ROLE</label>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 8, letterSpacing: 1 }}>SELECT JOB ROLE</label>
             <select
               value={selectedRole}
               onChange={e => setSelectedRole(e.target.value)}
               style={{
-                width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 12, padding: "12px 16px", color: "#f0f4ff", fontSize: 14, fontWeight: 600,
+                width: "100%", background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.08)",
+                borderRadius: 12, padding: "12px 16px", color: "#1e293b", fontSize: 14, fontWeight: 600,
                 cursor: "pointer", outline: "none", fontFamily: "inherit",
                 appearance: "none",
                 backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300e5ff' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
@@ -1577,7 +2040,7 @@ function MarketDemand({ onNav, user }) {
               }}
             >
               {Object.keys(MD_ROLES).map(r => (
-                <option key={r} value={r} style={{ background: "#1a2347" }}>{MD_ROLES[r].icon} {r}</option>
+                <option key={r} value={r} style={{ background: "#ffffff", color: "#1e293b" }}>{MD_ROLES[r].icon} {r}</option>
               ))}
             </select>
           </div>
@@ -1635,7 +2098,7 @@ function MarketDemand({ onNav, user }) {
             },
           ].map((kpi, i) => (
             <div key={i} style={{
-              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)",
               borderRadius: 14, padding: "16px 18px",
               transition: "all 0.3s ease", cursor: "default"
             }}
@@ -1644,8 +2107,8 @@ function MarketDemand({ onNav, user }) {
             >
               <div style={{ fontSize: 22, marginBottom: 6 }}>{kpi.icon}</div>
               <div className="syne mono" style={{ fontSize: 22, fontWeight: 800, color: kpi.color, lineHeight: 1 }}>{kpi.val}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#f0f4ff", marginTop: 4 }}>{kpi.label}</div>
-              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{kpi.sub}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", marginTop: 4 }}>{kpi.label}</div>
+              <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{kpi.sub}</div>
               {kpi.deltaLabel && (
                 <div style={{
                   marginTop: 8, fontSize: 11, fontWeight: 700,
@@ -1666,9 +2129,9 @@ function MarketDemand({ onNav, user }) {
       <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
-            padding: "10px 22px", borderRadius: 10, border: `1px solid ${tab === t.key ? roleColor : "rgba(255,255,255,0.1)"}`,
+            padding: "10px 22px", borderRadius: 10, border: `1px solid ${tab === t.key ? roleColor : "rgba(0,0,0,0.08)"}`,
             background: tab === t.key ? `${roleColor}18` : "transparent",
-            color: tab === t.key ? roleColor : "#94a3b8",
+            color: tab === t.key ? roleColor : "#64748b",
             cursor: "pointer", fontSize: 13, fontWeight: 700, transition: "all 0.2s",
             fontFamily: "inherit",
             boxShadow: tab === t.key ? `0 0 16px ${roleColor}30` : "none"
@@ -1685,9 +2148,9 @@ function MarketDemand({ onNav, user }) {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {roleCategories.map(cat => (
               <button key={cat} onClick={() => setFilterCat(cat)} style={{
-                padding: "6px 16px", borderRadius: 20, border: `1px solid ${filterCat === cat ? "#22d3ee" : "rgba(255,255,255,0.1)"}`,
-                background: filterCat === cat ? "rgba(0,229,255,0.12)" : "transparent",
-                color: filterCat === cat ? "#22d3ee" : "#94a3b8",
+                padding: "6px 16px", borderRadius: 20, border: `1px solid ${filterCat === cat ? "#0ea5e9" : "rgba(0,0,0,0.1)"}`,
+                background: filterCat === cat ? "rgba(14,165,233,0.1)" : "transparent",
+                color: filterCat === cat ? "#0ea5e9" : "#64748b",
                 cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.2s", fontFamily: "inherit"
               }}>{cat}</button>
             ))}
@@ -1701,9 +2164,9 @@ function MarketDemand({ onNav, user }) {
                 onMouseLeave={() => setHoveredSkill(null)}
                 style={{
                   background: hoveredSkill === s.skill
-                    ? `linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04))`
-                    : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${hoveredSkill === s.skill ? s.color + "50" : "rgba(255,255,255,0.08)"}`,
+                    ? `linear-gradient(135deg, rgba(0,0,0,0.03), rgba(0,0,0,0.01))`
+                    : "rgba(0,0,0,0.02)",
+                  border: `1px solid ${hoveredSkill === s.skill ? s.color + "50" : "rgba(0,0,0,0.05)"}`,
                   borderRadius: 16, padding: "20px 22px",
                   transition: "all 0.3s ease",
                   transform: hoveredSkill === s.skill ? "translateY(-4px) scale(1.02)" : "none",
@@ -1716,8 +2179,8 @@ function MarketDemand({ onNav, user }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 24 }}>{s.icon}</span>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{s.skill}</div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{s.category}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{s.skill}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>{s.category}</div>
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -1729,7 +2192,7 @@ function MarketDemand({ onNav, user }) {
                   </div>
                 </div>
                 <AnimatedBar value={s.demand} color={s.color} delay={i * 60} />
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11, color: "#94a3b8" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11, color: "#64748b" }}>
                   <span>Demand Index</span>
                   <span style={{ color: s.demand >= 85 ? "#34d399" : s.demand >= 70 ? "#fbbf24" : "#f87171", fontWeight: 600 }}>
                     {s.demand >= 85 ? "🔥 Very High" : s.demand >= 70 ? "📈 High" : "📊 Moderate"}
@@ -1741,15 +2204,15 @@ function MarketDemand({ onNav, user }) {
 
           {/* Bar chart */}
           <div key={roleChangeKey} style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)",
             borderRadius: 20, padding: "28px 24px"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div>
-                <h3 className="syne" style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
+                <h3 className="syne" style={{ fontSize: 17, fontWeight: 700, marginBottom: 4, color: "#1e293b" }}>
                   {roleData.icon} {selectedRole} — Skill Demand Index
                 </h3>
-                <p style={{ fontSize: 13, color: "#94a3b8" }}>Top skills ranked by market demand for this role · 2025</p>
+                <p style={{ fontSize: 13, color: "#64748b" }}>Top skills ranked by market demand for this role · 2025</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
@@ -1762,10 +2225,10 @@ function MarketDemand({ onNav, user }) {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[40, 100]} tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[40, 100]} tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <RechartsTooltip
-                  contentStyle={{ background: "#1a2347", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#f0f4ff", fontSize: 13 }}
-                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  contentStyle={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 10, color: "#1e293b", fontSize: 13 }}
+                  cursor={{ fill: "rgba(0,0,0,0.04)" }}
                   formatter={(val, name) => [`${val}% demand`, "Market Demand"]}
                 />
                 <Bar dataKey="demand" fill="url(#mdGrad1)" radius={[6, 6, 0, 0]} />
@@ -1783,22 +2246,22 @@ function MarketDemand({ onNav, user }) {
           {/* Match overview */}
           <div style={{
             display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "32px 36px"
+            background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "32px 36px"
           }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               <CircleMatch pct={matchPct} color={roleColor} size={140} />
               <div style={{ textAlign: "center" }}>
-                <div className="syne" style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff" }}>{selectedRole}</div>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                <div className="syne" style={{ fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{selectedRole}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
                   {matchedSkills}/{enrichedSkills.length} skills matched
                 </div>
               </div>
             </div>
             <div>
-              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+              <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: "#1e293b" }}>
                 {matchPct >= 70 ? "Strong Match! 🎉" : matchPct >= 40 ? "Good Progress 📈" : "Room to Grow 🌱"}
               </h3>
-              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+              <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
                 {matchPct >= 70
                   ? `You already have ${matchedSkills} of the key skills for ${selectedRole}. Focus on the gaps below to become a top candidate.`
                   : matchPct >= 40
@@ -1807,15 +2270,15 @@ function MarketDemand({ onNav, user }) {
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: 10, padding: "10px 18px" }}>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills You Have</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Skills You Have</div>
                   <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#34d399" }}>{matchedSkills}</div>
                 </div>
                 <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 10, padding: "10px 18px" }}>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Skills to Add</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Skills to Add</div>
                   <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: "#f87171" }}>{enrichedSkills.length - matchedSkills}</div>
                 </div>
                 <div style={{ background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 10, padding: "10px 18px" }}>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>Match Score</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Match Score</div>
                   <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: roleColor }}>{matchPct}%</div>
                 </div>
               </div>
@@ -1823,8 +2286,8 @@ function MarketDemand({ onNav, user }) {
           </div>
 
           {/* Skill comparison list */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+          <div style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: "#1e293b" }}>
               Skill-by-Skill Comparison — <span style={{ color: roleColor }}>{selectedRole}</span>
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1839,7 +2302,7 @@ function MarketDemand({ onNav, user }) {
                 }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{s.name}</span>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
                         background: s.userHas ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
@@ -1870,10 +2333,10 @@ function MarketDemand({ onNav, user }) {
                 {enrichedSkills.filter(s => !s.userHas).sort((a, b) => b.demand - a.demand).map((s, i) => (
                   <div key={i} style={{
                     display: "flex", alignItems: "center", gap: 8,
-                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)",
                     borderRadius: 10, padding: "8px 14px", fontSize: 13
                   }}>
-                    <span style={{ fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
+                    <span style={{ fontWeight: 600, color: "#1e293b" }}>{s.name}</span>
                     <span className="mono" style={{ fontSize: 11, color: "#f87171", fontWeight: 700 }}>{s.demand}%</span>
                   </div>
                 ))}
@@ -1898,7 +2361,7 @@ function MarketDemand({ onNav, user }) {
             <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
               <div style={{ fontSize: 52 }}>{roleData.icon}</div>
               <div>
-                <h2 className="syne" style={{ fontSize: 26, fontWeight: 800, color: "#f0f4ff", marginBottom: 4 }}>{selectedRole}</h2>
+                <h2 className="syne" style={{ fontSize: 26, fontWeight: 800, color: "#1e293b", marginBottom: 4 }}>{selectedRole}</h2>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <span style={{
                     fontSize: 12, fontWeight: 700, color: roleData.trend === "increasing" ? "#34d399" : "#fbbf24",
@@ -1911,7 +2374,7 @@ function MarketDemand({ onNav, user }) {
                   <span style={{ fontSize: 12, fontWeight: 700, color: roleColor, background: `${roleColor}15`, border: `1px solid ${roleColor}30`, borderRadius: 8, padding: "3px 10px" }}>
                     {roleData.trendPct} YoY
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "3px 10px" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 8, padding: "3px 10px" }}>
                     {roleData.openings} openings
                   </span>
                 </div>
@@ -1926,25 +2389,25 @@ function MarketDemand({ onNav, user }) {
                 { label: "Senior Level", val: roleData.salary.max, sub: "5+ years" },
               ].map((s, i) => (
                 <div key={i} style={{
-                  background: s.highlight ? `${roleColor}18` : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${s.highlight ? roleColor + "40" : "rgba(255,255,255,0.08)"}`,
+                  background: s.highlight ? `${roleColor}18` : "rgba(0,0,0,0.02)",
+                  border: `1px solid ${s.highlight ? roleColor + "40" : "rgba(0,0,0,0.05)"}`,
                   borderRadius: 14, padding: "18px 20px", textAlign: "center"
                 }}>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6, fontWeight: 600 }}>{s.label}</div>
-                  <div className="syne" style={{ fontSize: 24, fontWeight: 800, color: s.highlight ? roleColor : "#f0f4ff" }}>{s.val}</div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{s.sub}</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6, fontWeight: 600 }}>{s.label}</div>
+                  <div className="syne" style={{ fontSize: 24, fontWeight: 800, color: s.highlight ? roleColor : "#1e293b" }}>{s.val}</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{s.sub}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Required skills ranked */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
-            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Top Required Skills — Ranked by Demand</h3>
+          <div style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "28px 28px" }}>
+            <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: "#1e293b" }}>Top Required Skills — Ranked by Demand</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[...enrichedSkills].sort((a, b) => b.demand - a.demand).map((s, i) => (
                 <div key={i} style={{ display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 14 }}>
-                  <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: i < 3 ? roleColor : "#94a3b8" }}>#{i + 1}</div>
+                  <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: i < 3 ? roleColor : "#64748b" }}>#{i + 1}</div>
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f4ff" }}>{s.name}</span>
@@ -2012,7 +2475,7 @@ function MarketDemand({ onNav, user }) {
               <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
                 AI Career Advisor
               </h3>
-              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
+              <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.6 }}>
                 Personalized recommendations for <strong style={{ color: roleColor }}>{selectedRole}</strong> based on current market demand and your profile gaps.
               </p>
             </div>
@@ -2039,7 +2502,7 @@ function MarketDemand({ onNav, user }) {
                       {typeLabels[rec.type]}
                     </span>
                   </div>
-                  <p style={{ fontSize: 14, color: "#f0f4ff", lineHeight: 1.7 }}>{rec.text}</p>
+                  <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.7 }}>{rec.text}</p>
                 </div>
               );
             })}
@@ -2068,7 +2531,7 @@ function MarketDemand({ onNav, user }) {
                   <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
                   <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>{c.title.toUpperCase()}</div>
                   <div className="syne" style={{ fontSize: 16, fontWeight: 800, color: c.color, marginBottom: 6 }}>{c.val}</div>
-                  <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }}>{c.desc}</div>
+                  <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>{c.desc}</div>
                 </div>
               ))}
             </div>
@@ -2082,7 +2545,7 @@ function MarketDemand({ onNav, user }) {
           }}>
             <div>
               <div className="syne" style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Ready to close the skill gap?</div>
-              <p style={{ fontSize: 13, color: "#94a3b8" }}>Update your resume with the skills you've added and track your progress.</p>
+              <p style={{ fontSize: 13, color: "#475569" }}>Update your resume with the skills you've added and track your progress.</p>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               <button className="btn-primary" style={{ fontSize: 13, padding: "10px 22px" }} onClick={() => onNav("resume")}>
@@ -2601,51 +3064,6 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
   );
 }
 
-// LEADERBOARD
-function Leaderboard() {
-  const entries = [
-    { name: "Rahul Sharma", score: 94, role: "Frontend Dev", badge: "🥇" },
-    { name: "Priya Patel", score: 91, role: "Full Stack", badge: "🥈" },
-    { name: "Arjun Singh", score: 88, role: "Backend Dev", badge: "🥉" },
-    { name: "Sneha Rao", score: 84, role: "Data Analyst", badge: "4️⃣" },
-    { name: "Dev Kumar", score: 81, role: "DevOps", badge: "5️⃣" },
-    { name: "Ananya Iyer", score: 78, role: "Frontend Dev", badge: "6️⃣" },
-    { name: "Karan Mehta", score: 75, role: "Full Stack", badge: "7️⃣" },
-    { name: "Lakshmi N.", score: 72, role: "Backend Dev", badge: "8️⃣" },
-    { name: "You", score: 68, role: "In Progress", badge: "—", isYou: true },
-  ];
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Skill Leaderboard</h1>
-        <p style={{ color: G.muted }}>See how you rank among other students</p>
-      </div>
-
-      <div className="card">
-        <div style={{ display: "grid", gridTemplateColumns: "50px 1fr 100px 100px", padding: "8px 16px", marginBottom: 8, fontSize: 11, fontWeight: 700, color: G.muted, textTransform: "uppercase", letterSpacing: 1 }}>
-          <span>Rank</span><span>Student</span><span>Best Role</span><span style={{ textAlign: "right" }}>Score</span>
-        </div>
-        {entries.map((e, i) => (
-          <div key={i} className="leaderboard-row" style={{ gridTemplateColumns: "50px 1fr 100px 100px", display: "grid", background: e.isYou ? `${G.accentDim}` : undefined, border: e.isYou ? `1px solid rgba(0,229,255,0.2)` : "1px solid transparent", borderRadius: 10 }}>
-            <span style={{ fontSize: 20, textAlign: "center" }}>{e.badge}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 32, height: 32, background: `linear-gradient(135deg, ${G.accent}30, #7c3aed30)`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
-                {e.name[0]}
-              </div>
-              <span style={{ fontWeight: e.isYou ? 700 : 400, color: e.isYou ? G.accent : G.text }}>{e.name}</span>
-            </div>
-            <span style={{ fontSize: 12, color: G.muted, display: "flex", alignItems: "center" }}>{e.role}</span>
-            <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-              <span className="mono" style={{ fontWeight: 700, color: i === 0 ? G.warning : i < 3 ? G.success : G.text }}>{e.score}%</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // TOUR COMPONENT
 function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
   return (
@@ -2676,10 +3094,13 @@ function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
-  const [appPage, setAppPage] = useState("dashboard");
+  const [appPage, setAppPage] = useState("profile");
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
 
   // Load user data from localStorage on mount
   useEffect(() => {
@@ -2689,6 +3110,11 @@ export default function App() {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setPage("app");
+        if (!userData.trackSelected) {
+          setAppPage("track-select");
+        } else {
+          setAppPage("profile");
+        }
       } catch (e) {
         console.error("Failed to load user data:", e);
         localStorage.removeItem("rejexiq_user");
@@ -2709,11 +3135,28 @@ export default function App() {
     const isNew = !userData.assessmentDone;
     setUser(userData);
     setPage("app");
-    setAppPage("dashboard");
-    if (isNew) {
-      setIsFirstLogin(true);
-      setTimeout(() => setShowTour(true), 600);
+    if (!userData.trackSelected) {
+      setAppPage("track-select");
+    } else {
+      setAppPage("profile");
+      if (isNew) {
+        setIsFirstLogin(true);
+        setTimeout(() => setShowTour(true), 600);
+      }
     }
+  }
+
+  function handleSelectTrack(selectedTrack) {
+    setUser(prev => {
+      const updated = {
+        ...prev,
+        track: selectedTrack,
+        trackSelected: true
+      };
+      localStorage.setItem("rejexiq_user", JSON.stringify(updated));
+      return updated;
+    });
+    setAppPage("profile"); // Navigate straight to profile view
   }
 
   function handleDemo() {
@@ -2805,54 +3248,89 @@ export default function App() {
       )}
 
       {page === "app" && user && (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-          <Sidebar active={appPage} onNav={setAppPage} user={user} onLogout={handleLogout} />
-
-          {/* Main content */}
-          <div style={{ marginLeft: 240, flex: 1, padding: 32, overflowY: "auto", minHeight: "100vh" }}>
-            {/* Demo badge */}
-            {user.email === "demo@rejexiq.com" && (
-              <div style={{ marginBottom: 16, padding: "8px 16px", background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, fontSize: 12, color: G.warning, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                ✨ Demo Mode — All features available. Data is pre-loaded for demonstration.
-              </div>
-            )}
-
-            {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
-            {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
-            {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
-            {appPage === "dsa" && <DSAGame />}
-            {appPage === "story" && (
-              <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", overflowX: "hidden" }}>
-                  <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
-                </div>
-              </Suspense>
-            )}
-            {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
-            {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
-            {appPage === "resume" && <ResumeBuilder user={user} />}
-            {appPage === "assistant" && <AIAssistantPage user={user} />}
-            {appPage === "leaderboard" && <Leaderboard />}
-          </div>
-
-          {/* Guided Tour */}
-          {showTour && (
-            <GuidedTour
-              step={tourStep}
-              total={TOUR_STEPS.length}
-              targetPos={tourPositions[tourStep]}
-              onNext={() => {
-                if (tourStep < TOUR_STEPS.length - 1) {
-                  setTourStep(t => t + 1);
-                  setAppPage(tourPageMap[tourStep + 1]);
-                } else {
-                  setShowTour(false);
-                }
-              }}
-              onSkip={() => { setShowTour(false); setTourStep(0); setAppPage("dashboard"); }}
+        appPage === "track-select" ? (
+          <TrackSelection onSelect={handleSelectTrack} />
+        ) : (
+          <div style={{ display: "flex", minHeight: "100vh", background: "#fdfdfb", position: "relative" }}>
+            {/* Background Orbs to make Glassmorphism visible */}
+            <div style={{ position: "fixed", top: -150, left: -150, width: 500, height: 500, background: "radial-gradient(circle, rgba(190,18,60,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+            <div style={{ position: "fixed", bottom: -100, left: -50, width: 450, height: 450, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+            <Sidebar
+              active={appPage}
+              onNav={setAppPage}
+              user={user}
+              onLogout={handleLogout}
+              collapsed={sidebarCollapsed}
+              setCollapsed={setSidebarCollapsed}
+              mobileOpen={sidebarMobileOpen}
+              setMobileOpen={setSidebarMobileOpen}
+              onHoverChange={setSidebarHovered}
             />
-          )}
-        </div>
+
+            {/* Main content */}
+            <div style={{
+              marginLeft: !sidebarCollapsed ? 240 : 72,
+              width: `calc(100vw - ${!sidebarCollapsed ? 240 : 72}px)`,
+              minWidth: 0,
+              flex: 1,
+              padding: 0,
+              overflowY: "auto",
+              overflowX: "hidden",
+              minHeight: "100vh",
+              transition: "margin-left 0.3s cubic-bezier(0.22,1,0.36,1), width 0.3s cubic-bezier(0.22,1,0.36,1)",
+              background: "transparent",
+              color: "#1a0a0c",
+              position: "relative",
+              zIndex: 1
+            }} className="main-content-area">
+
+
+              {/* Demo badge */}
+              {user.email === "demo@rejexiq.com" && (
+                <div style={{ marginBottom: 16, padding: "8px 16px", background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, fontSize: 12, color: G.warning, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  ✨ Demo Mode — All features available. Data is pre-loaded for demonstration.
+                </div>
+              )}
+
+              {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
+              {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
+              {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
+              {appPage === "dsa" && <DSAGame />}
+              {appPage === "story" && (
+                <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
+                  <div style={{ position: "absolute", inset: 0, zIndex: 20, overflowY: "auto", overflowX: "hidden" }}>
+                    <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
+                  </div>
+                </Suspense>
+              )}
+              {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
+              {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
+              {appPage === "resume" && <ResumeBuilder user={user} />}
+              {appPage === "assistant" && <CuteAIAssistant user={user} />}
+              {appPage === "arena" && <CodeArena user={user} />}
+              {appPage === "leaderboard" && <Leaderboard />}
+              {appPage === "community" && <Community />}
+            </div>
+
+            {/* Guided Tour */}
+            {showTour && (
+              <GuidedTour
+                step={tourStep}
+                total={TOUR_STEPS.length}
+                targetPos={tourPositions[tourStep]}
+                onNext={() => {
+                  if (tourStep < TOUR_STEPS.length - 1) {
+                    setTourStep(t => t + 1);
+                    setAppPage(tourPageMap[tourStep + 1]);
+                  } else {
+                    setShowTour(false);
+                  }
+                }}
+                onSkip={() => { setShowTour(false); setTourStep(0); setAppPage("dashboard"); }}
+              />
+            )}
+          </div>
+        )
       )}
     </>
   );
