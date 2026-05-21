@@ -501,8 +501,12 @@ function SolveView({ problem, onBack }) {
   const [activeTC, setActiveTC] = useState(0);
   const [seconds,  setSeconds]  = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [hint,     setHint]     = useState("");
+  const [hintLoading, setHintLoading] = useState(false);
   const [showSol,  setShowSol]  = useState(false);
   const [history,  setHistory]  = useState([]);
+  const [customInput, setCustomInput] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
   const timerRef = useRef();
 
   useEffect(() => {
@@ -513,9 +517,36 @@ function SolveView({ problem, onBack }) {
   useEffect(() => {
     setCode(problem.starterCode && problem.starterCode[language] || "");
     setResult(null);
+    setHint("");
+    setShowHint(false);
   }, [language, problem.id]);
 
   const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+
+  // Real AI hint via Groq backend
+  async function fetchHint() {
+    setShowHint(true);
+    setHintLoading(true);
+    setHint("");
+    try {
+      const res = await fetch("/api/ai/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemTitle: problem.title,
+          problemDescription: problem.description,
+          userCode: code,
+          language,
+        })
+      });
+      const data = await res.json();
+      setHint(data.hint || problem.hint || "Think about the time complexity. Can you use a hash map?");
+    } catch {
+      setHint(problem.hint || "Think about the time complexity. Can you use a hash map?");
+    } finally {
+      setHintLoading(false);
+    }
+  }
 
   function execute(isSubmit) {
     if (language !== "JavaScript") {
@@ -526,8 +557,14 @@ function SolveView({ problem, onBack }) {
     setRunning(true);
     setResult(null);
     setRightTab("results");
+
+    // If custom input provided, add it as a test case
+    const problemToRun = showCustom && customInput.trim()
+      ? { ...problem, testCases: [...problem.testCases, { input: customInput.trim(), expected: "custom" }] }
+      : problem;
+
     setTimeout(() => {
-      const r = runJS(code, problem);
+      const r = runJS(code, problemToRun);
       const now = new Date().toLocaleTimeString();
       if (isSubmit) {
         const mem = (Math.random() * 5 + 38).toFixed(1);
@@ -563,7 +600,9 @@ function SolveView({ problem, onBack }) {
             <span style={{ fontSize:11 }}>Timer:</span>
             <span style={{ fontFamily:"'Fira Code',monospace", fontSize:12, color:seconds > 1800 ? G.danger : G.mutedBright }}>{fmt(seconds)}</span>
           </div>
-          <button onClick={() => setShowHint(h => !h)} style={{ background:"rgba(192,132,252,0.1)", border:"1px solid " + G.purple + "30", borderRadius:8, padding:"5px 12px", color:G.purple, fontSize:12, fontWeight:600, cursor:"pointer" }}>Hint</button>
+          <button onClick={fetchHint} style={{ background:"rgba(192,132,252,0.1)", border:"1px solid " + G.purple + "30", borderRadius:8, padding:"5px 12px", color:G.purple, fontSize:12, fontWeight:600, cursor:"pointer" }}>
+            {hintLoading ? "..." : "💡 Hint"}
+          </button>
           <button onClick={() => setShowSol(s => !s)} style={{ background:"rgba(34,211,238,0.08)", border:"1px solid " + G.cyan + "25", borderRadius:8, padding:"5px 12px", color:G.cyan, fontSize:12, fontWeight:600, cursor:"pointer" }}>Solution</button>
         </div>
       </div>
@@ -571,8 +610,18 @@ function SolveView({ problem, onBack }) {
       {/* HINT BANNER */}
       {showHint && (
         <div style={{ background:"rgba(192,132,252,0.08)", borderBottom:"1px solid " + G.purple + "25", padding:"10px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
-          <span style={{ fontSize:13, color:G.text }}><strong style={{ color:G.purple }}>Hint:</strong> {problem.hint}</span>
-          <button onClick={() => setShowHint(false)} style={{ background:"none", border:"none", color:G.muted, cursor:"pointer", fontSize:18 }}>x</button>
+          <div style={{ display:"flex", alignItems:"center", gap:10, flex:1 }}>
+            <span style={{ fontSize:16 }}>💡</span>
+            {hintLoading ? (
+              <div style={{ display:"flex", gap:4 }}>
+                {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:G.purple, animation:`pulse 1s ease-in-out ${i*0.2}s infinite` }}/>)}
+                <span style={{ fontSize:12, color:G.muted, marginLeft:6 }}>AI is thinking...</span>
+              </div>
+            ) : (
+              <span style={{ fontSize:13, color:G.text }}><strong style={{ color:G.purple }}>AI Hint:</strong> {hint}</span>
+            )}
+          </div>
+          <button onClick={() => setShowHint(false)} style={{ background:"none", border:"none", color:G.muted, cursor:"pointer", fontSize:18, flexShrink:0 }}>x</button>
         </div>
       )}
 
@@ -719,19 +768,42 @@ function SolveView({ problem, onBack }) {
           )}
 
           {/* Bottom action bar */}
-          <div style={{ height:52, borderTop:"1px solid " + G.border, background:"rgba(0,0,0,0.2)", display:"flex", alignItems:"center", justifyContent:"flex-end", padding:"0 16px", gap:10, flexShrink:0 }}>
-            <button onClick={() => execute(false)} disabled={running}
-              style={{ background:running ? "rgba(34,211,238,0.06)" : "rgba(34,211,238,0.12)", border:"1px solid " + G.cyan + "30", borderRadius:8, padding:"7px 20px", color:G.cyan, fontSize:13, fontWeight:600, cursor:running ? "not-allowed" : "pointer", display:"flex", alignItems:"center", gap:6, transition:"all 0.2s" }}
-              onMouseEnter={e => { if (!running) e.currentTarget.style.background = "rgba(34,211,238,0.22)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(34,211,238,0.12)"; }}>
-              {running ? "Running..." : "Run"}
-            </button>
-            <button onClick={() => execute(true)} disabled={running}
-              style={{ background:running ? "rgba(255,107,157,0.1)" : "linear-gradient(135deg," + G.accent + "," + G.purple + ")", border:"none", borderRadius:8, padding:"7px 24px", color:"#fff", fontSize:13, fontWeight:700, cursor:running ? "not-allowed" : "pointer", boxShadow:running ? "none" : "0 4px 14px rgba(255,107,157,0.3)", transition:"all 0.2s" }}
-              onMouseEnter={e => { if (!running) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(255,107,157,0.5)"; } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(255,107,157,0.3)"; }}>
-              Submit
-            </button>
+          <div style={{ borderTop:"1px solid " + G.border, background:"rgba(0,0,0,0.2)", flexShrink:0 }}>
+            {/* Custom test case input */}
+            {showCustom && (
+              <div style={{ padding:"10px 16px", borderBottom:"1px solid " + G.border }}>
+                <div style={{ fontSize:11, fontWeight:700, color:G.muted, marginBottom:6, textTransform:"uppercase", letterSpacing:0.5 }}>Custom Test Case</div>
+                <textarea
+                  value={customInput}
+                  onChange={e => setCustomInput(e.target.value)}
+                  placeholder={"e.g.\nnums = [1,2,3]\ntarget = 5"}
+                  rows={3}
+                  style={{ width:"100%", background:"rgba(0,0,0,0.3)", border:"1px solid " + G.border, borderRadius:8, padding:"8px 12px", color:G.text, fontSize:12, outline:"none", resize:"vertical", fontFamily:"'Fira Code',monospace", lineHeight:1.6 }}
+                  onFocus={e => { e.target.style.borderColor = G.accent; }}
+                  onBlur={e => { e.target.style.borderColor = G.border; }}
+                />
+              </div>
+            )}
+            <div style={{ height:52, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", gap:10 }}>
+              <button onClick={() => setShowCustom(v => !v)}
+                style={{ background:showCustom ? G.accentDim : "rgba(255,255,255,0.04)", border:"1px solid " + (showCustom ? G.accent + "50" : G.border), borderRadius:8, padding:"6px 14px", color:showCustom ? G.accent : G.muted, fontSize:12, cursor:"pointer", transition:"all 0.2s" }}>
+                + Custom Test
+              </button>
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={() => execute(false)} disabled={running}
+                  style={{ background:running ? "rgba(34,211,238,0.06)" : "rgba(34,211,238,0.12)", border:"1px solid " + G.cyan + "30", borderRadius:8, padding:"7px 20px", color:G.cyan, fontSize:13, fontWeight:600, cursor:running ? "not-allowed" : "pointer", display:"flex", alignItems:"center", gap:6, transition:"all 0.2s" }}
+                  onMouseEnter={e => { if (!running) e.currentTarget.style.background = "rgba(34,211,238,0.22)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(34,211,238,0.12)"; }}>
+                  {running ? <><span style={{ animation:"spin 0.8s linear infinite", display:"inline-block" }}>⟳</span> Running...</> : "▶ Run"}
+                </button>
+                <button onClick={() => execute(true)} disabled={running}
+                  style={{ background:running ? "rgba(255,107,157,0.1)" : "linear-gradient(135deg," + G.accent + "," + G.purple + ")", border:"none", borderRadius:8, padding:"7px 24px", color:"#fff", fontSize:13, fontWeight:700, cursor:running ? "not-allowed" : "pointer", boxShadow:running ? "none" : "0 4px 14px rgba(255,107,157,0.3)", transition:"all 0.2s" }}
+                  onMouseEnter={e => { if (!running) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(255,107,157,0.5)"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(255,107,157,0.3)"; }}>
+                  Submit
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -903,9 +975,203 @@ export default function CodeArena({ user }) {
           ))}
         </div>
 
-        {/* CENTER */}
+        {/* CENTER — switches based on leftNav */}
         <div>
-          {/* Promo banners */}
+
+          {/* ── QUEST VIEW ── */}
+          {leftNav === "quest" && (
+            <div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>
+                Daily Quest <span style={{ fontSize:11, color:"#fff", background:`linear-gradient(135deg,${G.accent},${G.purple})`, borderRadius:20, padding:"2px 8px", marginLeft:6 }}>NEW</span>
+              </div>
+              <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Complete daily challenges to earn XP and maintain your streak.</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {[
+                  { title:"Two Sum", diff:"Easy", xp:50, done:true, desc:"Solve the classic two-sum problem using a hash map." },
+                  { title:"Valid Parentheses", diff:"Easy", xp:50, done:true, desc:"Check if brackets are balanced using a stack." },
+                  { title:"Maximum Subarray", diff:"Medium", xp:100, done:false, desc:"Find the contiguous subarray with the largest sum." },
+                  { title:"Merge Intervals", diff:"Medium", xp:100, done:false, desc:"Merge all overlapping intervals." },
+                  { title:"Trapping Rain Water", diff:"Hard", xp:200, done:false, desc:"Compute how much water can be trapped." },
+                ].map((q, i) => (
+                  <div key={i} style={{ background:G.card, border:`1px solid ${q.done ? G.success+"30" : G.border}`, borderRadius:14, padding:"16px 18px", display:"flex", alignItems:"center", gap:16, cursor:"pointer", transition:"all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = q.done ? G.success+"60" : G.accent+"40"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = q.done ? G.success+"30" : G.border; }}
+                    onClick={() => { const p = PROBLEMS.find(x => x.title === q.title); if(p) { /* would set solving */ } }}>
+                    <div style={{ width:40, height:40, borderRadius:10, background:q.done?"rgba(52,211,153,0.15)":"rgba(255,255,255,0.05)", border:`1px solid ${q.done?G.success+"40":G.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>
+                      {q.done ? "✓" : "○"}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                        <span style={{ fontSize:14, fontWeight:600, color:q.done?G.muted:G.text }}>{q.title}</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:DIFF[q.diff.toLowerCase()]?.color||G.muted, background:(DIFF[q.diff.toLowerCase()]?.color||G.muted)+"15", borderRadius:20, padding:"2px 8px" }}>{q.diff}</span>
+                      </div>
+                      <div style={{ fontSize:12, color:G.muted }}>{q.desc}</div>
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:G.warning }}>+{q.xp} XP</div>
+                      <div style={{ fontSize:11, color:G.muted }}>reward</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:20, background:`linear-gradient(135deg,rgba(255,107,157,0.08),rgba(192,132,252,0.08))`, border:`1px solid ${G.accent}20`, borderRadius:14, padding:"16px 18px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:G.text }}>Today's Progress</div>
+                  <div style={{ fontSize:12, color:G.muted, marginTop:2 }}>2/5 quests completed · 100 XP earned</div>
+                </div>
+                <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:28, fontWeight:900, color:G.accent }}>40%</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── EXPLORE VIEW ── */}
+          {leftNav === "explore" && (
+            <div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Explore Topics</div>
+              <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Browse problems by topic and difficulty.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:12 }}>
+                {[
+                  { label:"Arrays", count:214, icon:"📦", color:"#00e5ff", problems:["Two Sum","Maximum Subarray","Trapping Rain Water"] },
+                  { label:"Strings", count:87, icon:"🔤", color:"#c084fc", problems:["Valid Parentheses","Longest Substring Without Repeating"] },
+                  { label:"Dynamic Programming", count:65, icon:"🧩", color:"#f59e0b", problems:["Climbing Stairs","Maximum Subarray"] },
+                  { label:"Trees", count:56, icon:"🌳", color:"#34d399", problems:["Binary Tree Level Order Traversal"] },
+                  { label:"Graphs", count:43, icon:"🕸️", color:"#ff6b9d", problems:["Number of Islands"] },
+                  { label:"Hash Table", count:80, icon:"#️⃣", color:"#a78bfa", problems:["Two Sum","LRU Cache"] },
+                  { label:"Two Pointers", count:38, icon:"👆", color:"#22d3ee", problems:["Trapping Rain Water"] },
+                  { label:"Design", count:22, icon:"🏗️", color:"#fbbf24", problems:["LRU Cache"] },
+                ].map((topic, i) => (
+                  <div key={i} style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:14, padding:"18px 16px", cursor:"pointer", transition:"all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = topic.color+"50"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = G.border; e.currentTarget.style.transform = "translateY(0)"; }}>
+                    <div style={{ fontSize:28, marginBottom:10 }}>{topic.icon}</div>
+                    <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:14, fontWeight:700, color:topic.color, marginBottom:4 }}>{topic.label}</div>
+                    <div style={{ fontSize:12, color:G.muted, marginBottom:10 }}>{topic.count} problems</div>
+                    <div style={{ height:3, background:"rgba(255,255,255,0.07)", borderRadius:2 }}>
+                      <div style={{ height:"100%", width:`${Math.min(100,(topic.count/214)*100)}%`, background:`linear-gradient(90deg,${topic.color},${topic.color}80)`, borderRadius:2 }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── STUDY PLAN VIEW ── */}
+          {leftNav === "study" && (
+            <div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Study Plans</div>
+              <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Structured learning paths to ace your interviews.</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                {[
+                  { title:"Top Interview 150", desc:"Master the most frequently asked interview questions", problems:150, days:30, progress:12, color:"#ff6b9d", icon:"🎯" },
+                  { title:"LeetCode 75", desc:"Essential problems for coding interviews", problems:75, days:21, progress:8, color:"#c084fc", icon:"⚡" },
+                  { title:"DSA Crash Course", desc:"Complete data structures and algorithms from scratch", problems:50, days:14, progress:20, color:"#22d3ee", icon:"🚀" },
+                  { title:"Dynamic Programming Mastery", desc:"From beginner to advanced DP problems", problems:40, days:20, progress:0, color:"#f59e0b", icon:"🧩" },
+                  { title:"Graph Theory", desc:"BFS, DFS, shortest paths and more", problems:35, days:15, progress:0, color:"#34d399", icon:"🕸️" },
+                ].map((plan, i) => (
+                  <div key={i} style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:16, padding:"20px 22px", cursor:"pointer", transition:"all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = plan.color+"40"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = G.border; }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                        <div style={{ width:44, height:44, borderRadius:12, background:plan.color+"15", border:`1px solid ${plan.color}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{plan.icon}</div>
+                        <div>
+                          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:15, fontWeight:700, color:G.text }}>{plan.title}</div>
+                          <div style={{ fontSize:12, color:G.muted, marginTop:2 }}>{plan.desc}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        <div style={{ fontSize:12, color:G.muted }}>{plan.problems} problems</div>
+                        <div style={{ fontSize:12, color:G.muted }}>{plan.days} days</div>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:G.muted, marginBottom:6 }}>
+                      <span>Progress</span>
+                      <span style={{ color:plan.color }}>{plan.progress}/{plan.problems}</span>
+                    </div>
+                    <div style={{ height:4, background:"rgba(255,255,255,0.07)", borderRadius:2 }}>
+                      <div style={{ height:"100%", width:`${(plan.progress/plan.problems)*100}%`, background:`linear-gradient(90deg,${plan.color},${plan.color}80)`, borderRadius:2, transition:"width 1s ease" }}/>
+                    </div>
+                    {plan.progress === 0 && (
+                      <button style={{ marginTop:12, background:`linear-gradient(135deg,${plan.color},${plan.color}bb)`, border:"none", borderRadius:8, padding:"7px 18px", color:"#000", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                        Start Plan →
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── FAVORITE VIEW ── */}
+          {leftNav === "favorite" && (
+            <div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Favorite Problems</div>
+              <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Problems you've bookmarked for later practice.</p>
+              {PROBLEMS.filter(p => p.solved).length === 0 ? (
+                <div style={{ textAlign:"center", padding:"60px 0", color:G.muted }}>
+                  <div style={{ fontSize:48, marginBottom:16 }}>⭐</div>
+                  <div style={{ fontSize:14 }}>No favorites yet. Click the bookmark icon on any problem to save it here.</div>
+                </div>
+              ) : (
+                <div style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:16, overflow:"hidden" }}>
+                  {PROBLEMS.filter(p => p.solved).map((p, i) => {
+                    const d = DIFF[p.difficulty];
+                    return (
+                      <div key={p.id} style={{ display:"grid", gridTemplateColumns:"36px 1fr 90px 80px", padding:"12px 16px", borderBottom:`1px solid ${G.border}`, cursor:"pointer", transition:"background 0.15s", alignItems:"center" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+                        <span style={{ color:G.success, fontSize:14 }}>✓</span>
+                        <span style={{ fontSize:13, color:G.text }}>{p.id}. {p.title}</span>
+                        <span style={{ fontSize:12, color:G.muted }}>{p.acceptance}%</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:d.color }}>{d.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── REWIND 2025 VIEW ── */}
+          {leftNav === "rewind" && (
+            <div>
+              <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Rewind 2025</div>
+              <p style={{ color:G.muted, fontSize:13, marginBottom:20 }}>Your coding journey this year — problems solved, streaks, and milestones.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12, marginBottom:20 }}>
+                {[
+                  { label:"Problems Solved", value:"4", icon:"✅", color:G.success },
+                  { label:"Days Active", value:"19", icon:"🔥", color:G.warning },
+                  { label:"Best Streak", value:"7 days", icon:"⚡", color:G.accent },
+                  { label:"Total XP", value:"350", icon:"⭐", color:G.purple },
+                ].map((s, i) => (
+                  <div key={i} style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:14, padding:"16px", textAlign:"center" }}>
+                    <div style={{ fontSize:28, marginBottom:8 }}>{s.icon}</div>
+                    <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:22, fontWeight:800, color:s.color }}>{s.value}</div>
+                    <div style={{ fontSize:11, color:G.muted, marginTop:2 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:16, padding:"20px" }}>
+                <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:14, fontWeight:700, color:G.text, marginBottom:16 }}>Problems Solved This Year</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                  {Array.from({length:52}).map((_, week) => (
+                    <div key={week} style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                      {Array.from({length:7}).map((_, day) => {
+                        const active = Math.random() > 0.7;
+                        return <div key={day} style={{ width:12, height:12, borderRadius:2, background:active?"rgba(255,107,157,0.6)":"rgba(255,255,255,0.06)" }}/>;
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginTop:10, fontSize:11, color:G.muted }}>
+                  <span>Jan 2025</span><span>May 2025</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── PROBLEMS VIEW (default) ── */}
+          {(leftNav === "problems") && (<>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:20 }}>
             {PROMOS.map((c, i) => (
               <div key={i} onMouseEnter={() => setHovPromo(i)} onMouseLeave={() => setHovPromo(null)}
@@ -1008,6 +1274,7 @@ export default function CodeArena({ user }) {
               </button>
             ))}
           </div>
+        </>) }
         </div>
 
         {/* RIGHT SIDEBAR */}
