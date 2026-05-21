@@ -44,7 +44,7 @@ function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
         <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--gray-800)" }}>
           {label}
           {editMode && onDelete && (
-            <button 
+            <button
               onClick={onDelete}
               style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", marginLeft: 8, fontSize: "0.75rem" }}
               title="Delete skill"
@@ -56,11 +56,11 @@ function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
         <span style={{ fontSize: "0.75rem", color: "var(--gray-600)" }}>{pct}%</span>
       </div>
       {editMode ? (
-        <input 
-          type="range" 
-          min="0" 
-          max="100" 
-          value={pct} 
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={pct}
           onChange={e => onChangePct(parseInt(e.target.value))}
           style={{ width: "100%", accentColor: "var(--g-light)", cursor: "pointer" }}
         />
@@ -85,7 +85,7 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
 
   useEffect(() => {
     if (!inView || editMode) return;
-    let start = 0; 
+    let start = 0;
     const end = parseInt(String(num).replace(/\D/g, "")) || 0;
     if (end === 0) {
       setCount(0);
@@ -105,17 +105,17 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
       <div className="stat-icon">{icon}</div>
       {editMode ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6 }}>
-          <input 
-            type="text" 
-            value={num || ""} 
-            onChange={e => onNumChange(e.target.value)} 
+          <input
+            type="text"
+            value={num || ""}
+            onChange={e => onNumChange(e.target.value)}
             placeholder="e.g. 4+"
             style={{ width: "100%", textAlign: "center", border: "1px solid var(--gray-200)", borderRadius: 8, padding: "4px", fontSize: "1.2rem", fontWeight: 700, outline: "none", background: "var(--gray-100)", color: "var(--gray-800)" }}
           />
-          <input 
-            type="text" 
-            value={label || ""} 
-            onChange={e => onLabelChange(e.target.value)} 
+          <input
+            type="text"
+            value={label || ""}
+            onChange={e => onLabelChange(e.target.value)}
             placeholder="Label"
             style={{ width: "100%", textAlign: "center", border: "1px solid var(--gray-200)", borderRadius: 6, padding: "2px", fontSize: "0.7rem", color: "var(--gray-600)", outline: "none", background: "var(--gray-100)" }}
           />
@@ -133,7 +133,7 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
 // ─── Timeline Item ───────────────────────────────────────────────────────────
 function TimelineItem({ title, org, period, desc, tags, index, editMode, onUpdate, onDelete }) {
   const [ref, inView] = useInView();
-  
+
   return (
     <div
       ref={ref}
@@ -147,7 +147,7 @@ function TimelineItem({ title, org, period, desc, tags, index, editMode, onUpdat
       <div className="tl-dot" />
       <div className="tl-content" style={{ position: "relative" }}>
         {editMode && onDelete && (
-          <button 
+          <button
             onClick={onDelete}
             style={{ position: "absolute", top: 0, right: 0, background: "rgba(248,113,113,0.1)", border: "none", color: "#f87171", cursor: "pointer", padding: "4px 8px", borderRadius: "50px", fontSize: "0.75rem", fontWeight: 600 }}
           >
@@ -221,10 +221,25 @@ const POPULAR_SKILLS = [
   "UI/UX Design", "Git & GitHub", "Docker & Kubernetes", "Agile Methodologies"
 ];
 
+const SectionEditMenu = ({ section, editSection, setEditSection }) => {
+  const isEditing = editSection === section;
+  return (
+    <div style={{ zIndex: 10 }}>
+      {isEditing ? (
+        <button onClick={() => setEditSection(null)} style={{ padding: "4px 12px", fontSize: "0.75rem", borderRadius: "50px", background: "linear-gradient(90deg, var(--g-mid), var(--g-light))", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Done</button>
+      ) : (
+        <button onClick={() => setEditSection(section)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "4px", display: "flex", alignItems: "center" }} title="Edit Section">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </button>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [scrollY, setScrollY] = useState(0);
-  const [editMode, setEditMode] = useState(false);
+  const [editSection, setEditSection] = useState(null);
   const [githubLoading, setGithubLoading] = useState(false);
   const [githubError, setGithubError] = useState("");
   const heroRef = useRef(null);
@@ -334,7 +349,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [tempFollowing, setTempFollowing] = useState(user?.following || 45);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
-  
+
   // Custom Sections
   const [tempCustomSections, setTempCustomSections] = useState(user?.customSections || []);
 
@@ -345,6 +360,83 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     contestsParticipated: 8
   });
 
+  const [activityGrid] = useState(() => {
+    const data = [];
+    const colors = ["#f8f6f0", "#93c5fd", "#3b82f6", "#1e3a8a", "#0f172a"]; // Adjusted base color to match the cream background of stats cards
+    const today = new Date();
+    const streak = activityStats.currentStreak || 12;
+
+    // Exactly 365 days (1 year)
+    const TOTAL_DAYS = 365;
+
+    for (let i = TOTAL_DAYS - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+
+      // Force "no activity" for dates before February 2026
+      const isBeforeFeb = d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() < 1);
+      const isMissed = isBeforeFeb ? true : (i < streak ? false : Math.random() < 0.75);
+
+      let intensity = 0;
+      let activeMinutes = 0;
+
+      if (!isMissed) {
+        // Random active time between 15 mins and 300 mins (5 hrs)
+        activeMinutes = 15 + Math.floor(Math.random() * 285);
+        if (activeMinutes < 60) intensity = 1;
+        else if (activeMinutes < 120) intensity = 2;
+        else if (activeMinutes < 240) intensity = 3;
+        else intensity = 4;
+      }
+
+      const hours = Math.floor(activeMinutes / 60);
+      const mins = activeMinutes % 60;
+      let statusText = "No activity";
+      if (activeMinutes > 0) {
+        statusText = `Active for ${hours > 0 ? hours + 'h ' : ''}${mins}m`;
+      }
+
+      data.push({
+        dateObj: d,
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        intensity,
+        color: colors[intensity],
+        status: statusText,
+        dayOfWeek: d.getDay()
+      });
+    }
+    return data;
+  });
+
+  const monthLabels = [];
+  let currentMonth = -1;
+  const startDay = activityGrid[0]?.dayOfWeek || 0;
+
+  activityGrid.forEach((day, index) => {
+    const month = day.dateObj.getMonth();
+    const colIndex = Math.floor((index + startDay) / 7);
+
+    if (month !== currentMonth) {
+      const lastLabel = monthLabels[monthLabels.length - 1];
+      if (!lastLabel || (colIndex - lastLabel.colIndex > 2)) {
+        const isFirstLabel = monthLabels.length === 0;
+        const isJanuary = month === 0;
+        let labelText = day.dateObj.toLocaleDateString('en-US', { month: 'short' });
+
+        // Add the year if it's the start of the graph or the start of a new year
+        if (isFirstLabel || isJanuary) {
+          labelText += ` ${day.dateObj.getFullYear()}`;
+        }
+
+        monthLabels.push({
+          label: labelText,
+          colIndex
+        });
+      }
+      currentMonth = month;
+    }
+  });
+
 
   // Onboarding
   const [onboardStep, setOnboardStep] = useState(1);
@@ -353,7 +445,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [onboardSchool, setOnboardSchool] = useState("");
   const [onboardBranch, setOnboardBranch] = useState("");
   const [onboardSkills, setOnboardSkills] = useState([]);
-  
+
   const [schoolSuggestions, setSchoolSuggestions] = useState([]);
   const [branchSuggestions, setBranchSuggestions] = useState([]);
   const [usernameSuggestions, setUsernameSuggestions] = useState([]);
@@ -386,7 +478,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       if (user.languages && Array.isArray(user.languages)) setTempLanguages(user.languages);
       if (user.certifications && Array.isArray(user.certifications)) setTempCertifications(user.certifications);
       if (user.projects && Array.isArray(user.projects)) setTempProjects(user.projects);
-      
+
       if (user.name && !onboardName) {
         setOnboardName(user.name);
       }
@@ -404,7 +496,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     const first = parts[0] || "";
     const last = parts[1] || "";
     const base = parts.join("");
-    
+
     const sug = [];
     if (first && last) {
       sug.push(`${first}_${last}`);
@@ -424,7 +516,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setSchoolSuggestions([]);
       return;
     }
-    const filtered = FAMOUS_SCHOOLS.filter(s => 
+    const filtered = FAMOUS_SCHOOLS.filter(s =>
       s.toLowerCase().includes(val.toLowerCase())
     ).slice(0, 5);
     setSchoolSuggestions(filtered);
@@ -436,7 +528,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setBranchSuggestions([]);
       return;
     }
-    const filtered = FAMOUS_BRANCHS.filter(b => 
+    const filtered = FAMOUS_BRANCHS.filter(b =>
       b.toLowerCase().includes(val.toLowerCase())
     ).slice(0, 5);
     setBranchSuggestions(filtered);
@@ -464,7 +556,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         projects: tempProjects
       });
     }
-    setEditMode(false);
+    setEditSection(null);
   };
 
   const handleAvatarChange = (e) => {
@@ -498,12 +590,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     let targetUsername = tempUsername;
     // Extract from github social link if available
     if (tempSocials?.github && tempSocials.github.includes("github.com/")) {
-      const parts = tempSocials.github.split("/");
+      let urlStr = tempSocials.github.trim();
+      if (urlStr.endsWith('/')) {
+        urlStr = urlStr.slice(0, -1);
+      }
+      const parts = urlStr.split("/");
       targetUsername = parts[parts.length - 1] || tempUsername;
     }
 
     if (!targetUsername) {
-      setGithubError("Please enter a username or add GitHub link.");
+      setGithubError("Please add a valid GitHub link.");
       return;
     }
     setGithubLoading(true);
@@ -511,9 +607,12 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     try {
       const res = await fetch(`https://api.github.com/users/${targetUsername}/repos?sort=updated&per_page=6`);
       if (!res.ok) {
-        throw new Error("User not found or API limit reached");
+        throw new Error("GitHub user not found or API limit reached.");
       }
       const data = await res.json();
+      if (!data || data.length === 0) {
+        throw new Error("No public repositories found.");
+      }
       const mapped = data.map(repo => {
         // stars count abbreviation
         let stars = String(repo.stargazers_count);
@@ -522,7 +621,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         return {
           name: repo.name,
-          desc: repo.description || "No description provided. Public repository imported dynamically from GitHub API.",
+          desc: repo.description || "No description provided.",
           tech: repo.language ? [repo.language] : ["JavaScript", "HTML"],
           stars: stars,
           link: repo.html_url
@@ -531,14 +630,8 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setTempProjects(mapped);
       setGithubLoading(false);
     } catch (err) {
-      // Fallback to mock data if API limits are hit or network fails
-      console.warn("GitHub API error, using fallback data:", err);
-      setTempProjects([
-        { name: "AwesomeProject", desc: "A great open-source project imported successfully (Mock).", tech: ["React", "JavaScript"], stars: "150", link: "https://github.com" },
-        { name: "DevTools", desc: "Helpful developer tools for everyday use (Mock).", tech: ["TypeScript", "Node.js"], stars: "45", link: "https://github.com" },
-        { name: "AlgorithmPractice", desc: "Collection of DSA solutions and competitive programming (Mock).", tech: ["Python", "C++"], stars: "210", link: "https://github.com" }
-      ]);
-      setGithubError(""); // Clear error since we handled it with mock data
+      console.warn("GitHub API error:", err);
+      setGithubError(err.message || "Failed to fetch from GitHub.");
       setGithubLoading(false);
     }
   };
@@ -569,15 +662,15 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   // Sync custom school schooling to education head
   const dynamicEducation = tempSchool
     ? [
-        {
-          title: tempBranch || "Specialization",
-          org: tempSchool,
-          period: "Present",
-          desc: "Currently pursuing custom learning track and DSA roadmaps on RejexIQ.",
-          tags: user?.skills || ["Algorithms", "Web Development"]
-        },
-        ...tempEducation
-      ]
+      {
+        title: tempBranch || "Specialization",
+        org: tempSchool,
+        period: "Present",
+        desc: "Currently pursuing custom learning track and DSA roadmaps on RejexIQ.",
+        tags: user?.skills || ["Algorithms", "Web Development"]
+      },
+      ...tempEducation
+    ]
     : tempEducation;
 
   const showOnboarding = !user?.onboarded && user?.email !== "demo@rejexiq.com";
@@ -594,7 +687,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   }
 
   // ─── CRUD Helper Functions ─────────────────────────────────────────────────
-  
+
   // Stats
   const updateStatItem = (index, key, val) => {
     if (!tempStats || !tempStats[index]) return;
@@ -1186,42 +1279,13 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
       `}</style>
 
-      {/* ─── Dynamic Creamish Sticky Nav ─── */}
-      <nav className="prof-nav" style={{
-        background: scrollY > 30 ? "rgba(253, 253, 251, 0.95)" : "transparent",
-        boxShadow: scrollY > 30 ? "0 4px 20px rgba(7,10,30,0.04)" : "none",
-        borderBottom: scrollY > 30 ? "1px solid rgba(7,10,30,0.06)" : "1px solid transparent",
-        color: scrollY > 30 ? "var(--gray-800)" : "white",
-      }}>
-        <a className="nav-logo" href="#" style={{ color: scrollY > 30 ? "var(--gray-800)" : "white" }} onClick={(e) => { e.preventDefault(); if (onNav) onNav("dashboard"); }}>
-          <span className="nav-logo-dot" style={{ background: scrollY > 30 ? "var(--g-light)" : "var(--accent)" }} />
-          RejexIQ
-        </a>
-        <div className="nav-actions">
-          <button 
-            className="nav-btn" 
-            style={{
-              background: editMode ? "var(--g-light)" : (scrollY > 30 ? "transparent" : "white"),
-              border: `1.5px solid ${editMode ? "var(--g-light)" : (scrollY > 30 ? "var(--g-light)" : "white")}`,
-              color: editMode ? "white" : (scrollY > 30 ? "var(--g-light)" : "var(--gray-800)"),
-              backdropFilter: scrollY <= 30 ? "none" : "none",
-              boxShadow: scrollY <= 30 ? "0 2px 10px rgba(0,0,0,0.1)" : "none",
-            }}
-            onClick={() => {
-              if (editMode) handleSave();
-              else setEditMode(true);
-            }}
-          >
-            {editMode ? "✓ Save Profile" : "✏ Edit Profile"}
-          </button>
-        </div>
-      </nav>
+      {/* Nav has been removed as requested */}
 
       {/* ─── Compact Hero Cover Photo ─── */}
       <section className="hero-cover" ref={heroRef}>
-        <div 
-          className="hero-bg" 
-          style={{ 
+        <div
+          className="hero-bg"
+          style={{
             position: "absolute", inset: 0,
             transform: `translateY(${parallaxBg}px)`,
             background: tempCoverBackground()
@@ -1245,9 +1309,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           position: "absolute", inset: 0,
           background: "linear-gradient(to top, rgba(253, 253, 251, 0.15) 0%, transparent 100%)"
         }} />
-        
+
         {/* Cover Background Customizer & Presets Bar (Visible in Edit Mode) */}
-        {editMode && (
+        {editSection === 'hero' && (
           <div style={{
             position: "absolute",
             top: "76px",
@@ -1292,9 +1356,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               ))}
             </div>
             <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-            <button 
-              className="hero-btn" 
-              style={{ 
+            <button
+              className="hero-btn"
+              style={{
                 background: "rgba(255, 255, 255, 0.15)",
                 border: "1px solid rgba(255, 255, 255, 0.25)",
                 borderRadius: "50px",
@@ -1316,8 +1380,8 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       <section className="profile-header-card">
         {/* Avatar Container in Column 1 */}
         <div className="profile-header-avatar-container">
-          <div 
-            className="hero-avatar-wrap profile-header-avatar-inner" 
+          <div
+            className="hero-avatar-wrap profile-header-avatar-inner"
             onClick={() => document.getElementById("avatar-input-file").click()}
           >
             {user?.avatar ? (
@@ -1335,97 +1399,98 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         </div>
 
         {/* Text and input details in Column 2 */}
-        <div className="profile-header-info">
-          {editMode ? (
+        <div className="profile-header-info" style={{ position: "relative" }}>
+          <SectionEditMenu section="hero" editSection={editSection} setEditSection={setEditSection} />
+          {editSection === 'hero' ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", marginTop: 8 }} className="profile-header-inputs">
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Full Name</label>
-                <input 
-                  type="text" 
-                  value={tempName || ""} 
-                  onChange={e => setTempName(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempName || ""}
+                  onChange={e => setTempName(e.target.value)}
                   placeholder="Full Name"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Role / Track</label>
-                <input 
-                  type="text" 
-                  value={tempTrack || ""} 
-                  onChange={e => setTempTrack(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempTrack || ""}
+                  onChange={e => setTempTrack(e.target.value)}
                   placeholder="Track e.g. Senior Frontend Engineer"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>College / School</label>
-                <input 
-                  type="text" 
-                  value={tempSchool || ""} 
-                  onChange={e => setTempSchool(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempSchool || ""}
+                  onChange={e => setTempSchool(e.target.value)}
                   placeholder="College"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Branch</label>
-                <input 
-                  type="text" 
-                  value={tempBranch || ""} 
-                  onChange={e => setTempBranch(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempBranch || ""}
+                  onChange={e => setTempBranch(e.target.value)}
                   placeholder="Branch"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Location</label>
-                <input 
-                  type="text" 
-                  value={tempContact?.location || ""} 
-                  onChange={e => setTempContact({ ...tempContact, location: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempContact?.location || ""}
+                  onChange={e => setTempContact({ ...tempContact, location: e.target.value })}
                   placeholder="e.g. Bengaluru, India"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Availability Status</label>
-                <input 
-                  type="text" 
-                  value={tempContact?.availability || ""} 
-                  onChange={e => setTempContact({ ...tempContact, availability: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempContact?.availability || ""}
+                  onChange={e => setTempContact({ ...tempContact, availability: e.target.value })}
                   placeholder="e.g. Available for freelance"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Facebook URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.facebook || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, facebook: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.facebook || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, facebook: e.target.value })}
                   placeholder="e.g. facebook.com/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>LinkedIn URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.linkedin || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, linkedin: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.linkedin || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, linkedin: e.target.value })}
                   placeholder="e.g. linkedin.com/in/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Twitter URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.twitter || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, twitter: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.twitter || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, twitter: e.target.value })}
                   placeholder="e.g. twitter.com/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
             </div>
@@ -1436,17 +1501,17 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 fontSize: "2rem", fontWeight: 700, lineHeight: 1.1, letterSpacing: "-0.01em",
                 margin: 0, marginBottom: 4, color: "var(--gray-800)"
               }}>{tempName}</h1>
-              
+
               {tempTrack && (
                 <div style={{ fontSize: "0.95rem", color: "var(--gray-600)", marginBottom: "16px", fontWeight: "400" }}>
                   {tempTrack}
                 </div>
               )}
-              
+
               <div className="profile-header-meta-row">
                 {tempContact?.location && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                     </span>
                     <span>{tempContact.location}</span>
@@ -1454,7 +1519,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.facebook && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                     </span>
                     <a href={tempSocials.facebook.startsWith('http') ? tempSocials.facebook : `https://${tempSocials.facebook}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.facebook.replace(/https?:\/\/(www\.)?facebook\.com\//, '')}</a>
@@ -1462,7 +1527,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.linkedin && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                     </span>
                     <a href={tempSocials.linkedin.startsWith('http') ? tempSocials.linkedin : `https://${tempSocials.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.linkedin.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//, '')}</a>
@@ -1470,7 +1535,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.twitter && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
                     </span>
                     <a href={tempSocials.twitter.startsWith('http') ? tempSocials.twitter : `https://${tempSocials.twitter}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.twitter.replace(/https?:\/\/(www\.)?twitter\.com\//, '')}</a>
@@ -1484,40 +1549,11 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   <div style={{ cursor: "pointer" }}><strong style={{ color: "var(--gray-800)" }}>{tempFollowers}</strong> Followers</div>
                   <div style={{ cursor: "pointer" }}><strong style={{ color: "var(--gray-800)" }}>{tempFollowing}</strong> Following</div>
                 </div>
-                
-                {/* Simulated other user profile interaction */}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button 
-                    onClick={() => {
-                      setIsFollowing(!isFollowing);
-                      setTempFollowers(prev => isFollowing ? prev - 1 : prev + 1);
-                    }}
-                    style={{
-                      padding: "6px 16px", borderRadius: "50px", border: isFollowing ? "1px solid var(--gray-200)" : "none",
-                      background: isFollowing ? "var(--white)" : "linear-gradient(90deg, var(--g-mid), var(--g-light))",
-                      color: isFollowing ? "var(--gray-800)" : "var(--white)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    {isFollowing ? "Following" : "Follow"}
-                  </button>
-                  <button 
-                    onClick={() => setIsFriend(!isFriend)}
-                    style={{
-                      padding: "6px 16px", borderRadius: "50px", border: "1px solid var(--gray-200)",
-                      background: isFriend ? "var(--gray-100)" : "var(--white)",
-                      color: "var(--gray-800)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
-                      transition: "all 0.2s", display: "flex", alignItems: "center", gap: "4px"
-                    }}
-                  >
-                    {isFriend ? "Friends" : "Add Friend"}
-                  </button>
-                </div>
               </div>
             </>
           )}
 
-          {editMode && (
+          {editSection === 'hero' && (
             <div className="hero-tags" style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: 16 }}>
               {Array.isArray(tempSkills) && tempSkills.slice(0, 5).map(s => (
                 <span key={s.label} className="hero-tag" style={{
@@ -1528,51 +1564,44 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             </div>
           )}
         </div>
-
-        <div style={{ paddingTop: "24px", position: "relative" }}>
-          <button style={{
-            width: "36px", height: "36px", borderRadius: "50%",
-            border: "1px solid var(--gray-200)", background: showOptions ? "var(--gray-100)" : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "var(--gray-400)", transition: "all 0.2s"
-          }}
-          onMouseOver={e => e.currentTarget.style.background = 'var(--gray-100)'}
-          onMouseOut={e => { if (!showOptions) e.currentTarget.style.background = 'transparent'; }}
-          onClick={() => setShowOptions(!showOptions)}
+        <div className="profile-header-actions" style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8 }}>
+          <button
+            className="social-btn"
+            onClick={handleSave}
+            style={{ padding: "8px 16px", borderRadius: "50px", background: "linear-gradient(90deg, var(--g-mid), var(--g-light))", color: "white", border: "none", fontWeight: 600, cursor: "pointer" }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+            ✓ Save Profile
           </button>
-          
-          {showOptions && (
-            <div style={{
-              position: "absolute", top: "65px", right: 0, width: "200px",
-              background: "var(--white)", borderRadius: "12px", padding: "8px",
-              boxShadow: "var(--card-hover)", border: "1px solid var(--gray-200)",
-              zIndex: 100, display: "flex", flexDirection: "column", gap: "4px"
-            }}>
-              <button className="dropdown-item" onClick={() => { setShowOptions(false); setEditMode(true); }}>✏️ Edit Profile</button>
-              <button className="dropdown-item" onClick={() => { setShowOptions(false); addCustomSection(); }}>➕ Add Section</button>
-              <button className="dropdown-item" onClick={() => setShowOptions(false)}>🔗 Edit Custom URL</button>
-              <div style={{ height: "1px", background: "var(--gray-200)", margin: "4px 0" }} />
-              <button className="dropdown-item" onClick={() => { setShowOptions(false); handleShareProfile(); }}>📤 Share Profile</button>
-            </div>
-          )}
+          <button
+            className="social-btn"
+            onClick={addCustomSection}
+            style={{ padding: "8px 16px", borderRadius: "50px", background: "var(--white)", color: "var(--gray-800)", border: "1px solid var(--gray-200)", fontWeight: 600, cursor: "pointer" }}
+          >
+            ➕ Add Section
+          </button>
+          <button
+            className="social-btn"
+            onClick={handleShareProfile}
+            style={{ padding: "8px 16px", borderRadius: "50px", background: "var(--white)", color: "var(--gray-800)", border: "1px solid var(--gray-200)", fontWeight: 600, cursor: "pointer" }}
+          >
+            📤 Share
+          </button>
         </div>
       </section>
 
       {/* ─── Creamish Body Container ─── */}
       <div className="profile-body">
-        
+
         {/* Stats Row (Fully Editable in Place) */}
         <Section direction="up" delay={0}>
           <div className="stats-row">
             {Array.isArray(tempStats) && tempStats.map((s, idx) => (
-              <StatCard 
+              <StatCard
                 key={idx}
-                num={s?.num || ""} 
-                label={s?.label || ""} 
-                icon={s?.icon || ""} 
-                editMode={editMode}
+                num={s?.num || ""}
+                label={s?.label || ""}
+                icon={s?.icon || ""}
+                editMode={editSection === 'hero'}
                 onNumChange={val => updateStatItem(idx, "num", val)}
                 onLabelChange={val => updateStatItem(idx, "label", val)}
               />
@@ -1582,19 +1611,22 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* About Section */}
         <Section direction="up" delay={0}>
-          <div className="section-head">
-            <div className="section-label">About</div>
-            <div className="section-title">Who I Am</div>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div className="section-label">About</div>
+              <div className="section-title">Who I Am</div>
+            </div>
+            <SectionEditMenu section="about" editSection={editSection} setEditSection={setEditSection} />
           </div>
           <div className="about-grid">
             <div className="about-card about-card-bio">
               <p className="bio-text">
-                {editMode ? (
-                  <textarea 
-                    value={tempBio} 
-                    onChange={e => setTempBio(e.target.value)} 
-                    rows={6} 
-                    style={{ width: "100%", background: "transparent", color: "var(--gray-800)", border: "1px solid var(--gray-200)", borderRadius: 8, padding: 10, outline: "none", fontFamily: "'Inter', sans-serif" }} 
+                {editSection === 'about' ? (
+                  <textarea
+                    value={tempBio}
+                    onChange={e => setTempBio(e.target.value)}
+                    rows={6}
+                    style={{ width: "100%", background: "transparent", color: "var(--gray-800)", border: "1px solid var(--gray-200)", borderRadius: 8, padding: 10, outline: "none", fontFamily: "'Inter', sans-serif" }}
                   />
                 ) : (
                   tempBio
@@ -1605,7 +1637,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             {/* User Profile Details Card */}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>User Profile Details</div>
-              {editMode ? (
+              {editSection === 'about' ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div>
                     <label style={{ fontSize: "0.7rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Username</label>
@@ -1641,7 +1673,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             {/* Contact Details (Fully Editable in Edit Mode) */}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>Contact</div>
-              {editMode ? (
+              {editSection === 'about' ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div>
                     <label style={{ fontSize: "0.7rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Email</label>
@@ -1685,7 +1717,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             {/* Social Links (Fully Editable in Edit Mode) */}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>Socials</div>
-              {editMode ? (
+              {editSection === 'about' ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div>
                     <label style={{ fontSize: "0.7rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>GitHub URL</label>
@@ -1722,36 +1754,105 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             <div className="section-label">Engagement</div>
             <div className="section-title">Activity Status</div>
           </div>
-          <div className="about-card" style={{ marginBottom: 56 }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "32px", marginBottom: "24px" }}>
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                <div style={{ fontSize: "0.85rem", color: "var(--gray-600)", fontWeight: 600, marginBottom: "16px" }}>CONTRIBUTION GRAPH (30 DAYS)</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", gap: "4px" }}>
-                  {/* Mock Activity Grid */}
-                  {Array.from({ length: 45 }).map((_, i) => {
-                    const intensity = Math.floor(Math.random() * 4);
-                    const colors = ["var(--gray-100)", "var(--g-pale)", "var(--g-light)", "var(--g-mid)"];
-                    return (
-                      <div key={i} style={{
-                        width: "100%", paddingBottom: "100%", borderRadius: "4px",
-                        background: colors[intensity], transition: "all 0.2s"
-                      }} />
-                    )
-                  })}
+          <div style={{ background: "#ffffff", border: "1px solid #bfdbfe", borderRadius: 16, padding: 32, boxShadow: "0 10px 40px rgba(0,0,0,0.05)", marginBottom: 56 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "32px" }}>
+              <div style={{ flex: 1, minWidth: "100%", overflowX: "auto" }}>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                  <div style={{ fontSize: "1rem", color: "#475569" }}>
+                    <strong style={{ color: "#1e293b", fontSize: "1.2rem" }}>{activityGrid.reduce((sum, d) => sum + (d.intensity > 0 ? d.intensity * 2 + 1 : 0), 0)}</strong> submissions in the past one year
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", gap: "16px" }}>
+                    <span>Total active days: <strong style={{ color: "#1e293b" }}>{activityGrid.filter(d => d.intensity > 0).length}</strong></span>
+                    <span>Max streak: <strong style={{ color: "#1e293b" }}>{activityStats.maxStreak}</strong></span>
+                    <span>Current streak: <strong style={{ color: "#1e293b" }}>{activityStats.currentStreak}</strong></span>
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: "200px" }}>
-                <div style={{ background: "var(--gray-100)", padding: "16px", borderRadius: "12px", border: "1px solid var(--gray-200)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--gray-600)", textTransform: "uppercase", fontWeight: 600 }}>Current Streak</div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--g-light)", fontFamily: "'Space Grotesk', sans-serif" }}>🔥 {activityStats.currentStreak} Days</div>
+
+                <div style={{ display: "flex", gap: "8px", minWidth: "max-content", paddingBottom: "10px" }}>
+                  {/* Y-axis labels */}
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "0px", paddingBottom: "32px", fontSize: "0.75rem", color: "#64748b" }}>
+                    <div style={{ height: "12px", visibility: "hidden" }}>Sun</div>
+                    <div style={{ height: "12px", lineHeight: "12px" }}>Mon</div>
+                    <div style={{ height: "12px", visibility: "hidden" }}>Tue</div>
+                    <div style={{ height: "12px", lineHeight: "12px" }}>Wed</div>
+                    <div style={{ height: "12px", visibility: "hidden" }}>Thu</div>
+                    <div style={{ height: "12px", lineHeight: "12px" }}>Fri</div>
+                    <div style={{ height: "12px", visibility: "hidden" }}>Sat</div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+
+                    {/* 7-row grid (column flow) */}
+                    <div style={{
+                      display: "grid",
+                      gridTemplateRows: "repeat(7, 12px)",
+                      gridAutoFlow: "column",
+                      gap: "4px"
+                    }}>
+                      {activityGrid.map((day, i) => (
+                        <div key={i} title={`${day.status} on ${day.date}`} style={{
+                          width: "12px", height: "12px", borderRadius: "2px",
+                          background: day.color, transition: "transform 0.1s",
+                          gridRow: i === 0 ? day.dayOfWeek + 1 : "auto",
+                          cursor: "pointer", border: "1px solid rgba(27,31,35,0.06)"
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.3)"}
+                          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Month labels and Badges row */}
+                    <div style={{ position: "relative", height: "24px", marginTop: "4px" }}>
+                      {monthLabels.map((m, i) => {
+                        // Let's add badges for Feb, Mar, Apr
+                        let badge = null;
+                        if (m.label.includes("Feb")) badge = { text: "Noob", icon: "🌱", color: "#3b82f6" };
+                        if (m.label.includes("Mar")) badge = { text: "Pro", icon: "⭐", color: "#8b5cf6" };
+                        if (m.label.includes("Apr")) badge = { text: "Elite", icon: "🏆", color: "#f59e0b" };
+
+                        return (
+                          <div key={i} style={{
+                            position: "absolute",
+                            left: `${m.colIndex * 16}px`,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center"
+                          }}>
+                            {badge ? (
+                              <div title={`Badge earned: ${badge.text} - Active whole month!`} style={{
+                                background: badge.color, color: "white", fontSize: "0.6rem",
+                                padding: "2px 6px", borderRadius: "8px", fontWeight: "bold",
+                                whiteSpace: "nowrap", cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                                transform: "translateY(-2px)"
+                              }}>
+                                {badge.icon} {badge.text}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                                {m.label}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ background: "var(--gray-100)", padding: "16px", borderRadius: "12px", border: "1px solid var(--gray-200)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--gray-600)", textTransform: "uppercase", fontWeight: 600 }}>Max Streak</div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--gray-800)", fontFamily: "'Space Grotesk', sans-serif" }}>⚡ {activityStats.maxStreak} Days</div>
-                </div>
-                <div style={{ background: "var(--gray-100)", padding: "16px", borderRadius: "12px", border: "1px solid var(--gray-200)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--gray-600)", textTransform: "uppercase", fontWeight: 600 }}>Contests Participated</div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--gray-800)", fontFamily: "'Space Grotesk', sans-serif" }}>🏆 {activityStats.contestsParticipated}</div>
+
+                {/* Footer legend */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", minWidth: "max-content" }}>
+                  <div style={{ fontSize: "0.75rem", color: "#64748b", cursor: "pointer", textDecoration: "underline" }}>Learn how we measure activity</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "#64748b" }}>
+                    <span>Less</span>
+                    <div title="No activity" style={{ width: "12px", height: "12px", borderRadius: "2px", background: "#f8f6f0", border: "1px solid rgba(27,31,35,0.06)" }}></div>
+                    <div title="< 1 hr" style={{ width: "12px", height: "12px", borderRadius: "2px", background: "#93c5fd", border: "1px solid rgba(27,31,35,0.06)" }}></div>
+                    <div title="1-2 hrs" style={{ width: "12px", height: "12px", borderRadius: "2px", background: "#3b82f6", border: "1px solid rgba(27,31,35,0.06)" }}></div>
+                    <div title="2-4 hrs" style={{ width: "12px", height: "12px", borderRadius: "2px", background: "#1e3a8a", border: "1px solid rgba(27,31,35,0.06)" }}></div>
+                    <div title="> 4 hrs" style={{ width: "12px", height: "12px", borderRadius: "2px", background: "#0f172a", border: "1px solid rgba(27,31,35,0.06)" }}></div>
+                    <span>More</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1760,9 +1861,12 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Roadmap Paths Section (Fully Editable in Edit Mode) */}
         <Section direction="up" delay={0}>
-          <div className="section-head">
-            <div className="section-label">Career Paths</div>
-            <div className="section-title">Learning Roadmap</div>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div className="section-label">Career Paths</div>
+              <div className="section-title">Learning Roadmap</div>
+            </div>
+            <SectionEditMenu section="roadmap" editSection={editSection} setEditSection={setEditSection} />
           </div>
           <div className="roadmap-grid">
             {Array.isArray(tempRoadmaps) && tempRoadmaps.map((r, i) => (
@@ -1770,7 +1874,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 <div className="roadmap-card">
                   <div className="roadmap-icon">{r?.icon || ""}</div>
                   <div className="roadmap-level">{r?.level || ""}</div>
-                  {editMode ? (
+                  {editSection === 'roadmap' ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
                       <input type="text" value={r?.label || ""} onChange={e => updateRoadmapItem(i, "label", e.target.value)} style={{ width: "100%", padding: 6, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.85rem", background: "var(--gray-100)" }} />
                       <textarea value={Array.isArray(r?.items) ? r.items.join("\n") : (typeof r?.items === "string" ? r.items : "")} onChange={e => updateRoadmapItem(i, "items", e.target.value.split("\n"))} rows={3} style={{ width: "100%", padding: 6, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.75rem", background: "var(--gray-100)", resize: "vertical" }} placeholder="One item per line" />
@@ -1791,22 +1895,25 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Experience Section */}
         <Section direction="left" delay={0}>
-          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div className="section-label">Career</div>
               <div className="section-title">Experience</div>
             </div>
-            {editMode && (
-              <button onClick={addExperience} className="crud-btn-add">➕ Add Experience</button>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {editSection === 'experience' && (
+                <button onClick={addExperience} className="crud-btn-add">➕ Add Experience</button>
+              )}
+              <SectionEditMenu section="experience" editSection={editSection} setEditSection={setEditSection} />
+            </div>
           </div>
           <div className="timeline">
             {Array.isArray(tempExperience) && tempExperience.filter(Boolean).map((e, i) => (
-              <TimelineItem 
-                key={i} 
-                {...e} 
-                index={i} 
-                editMode={editMode}
+              <TimelineItem
+                key={i}
+                {...e}
+                index={i}
+                editMode={editSection === 'experience'}
                 onUpdate={updates => updateExperienceItem(i, updates)}
                 onDelete={() => deleteExperienceItem(i)}
               />
@@ -1816,23 +1923,26 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Education Section */}
         <Section direction="left" delay={0}>
-          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div className="section-label">Academic</div>
               <div className="section-title">Education</div>
             </div>
-            {editMode && (
-              <button onClick={addEducation} className="crud-btn-add">➕ Add Education</button>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {editSection === 'education' && (
+                <button onClick={addEducation} className="crud-btn-add">➕ Add Education</button>
+              )}
+              <SectionEditMenu section="education" editSection={editSection} setEditSection={setEditSection} />
+            </div>
           </div>
           <div className="timeline">
-            {editMode ? (
+            {editSection === 'education' ? (
               Array.isArray(tempEducation) && tempEducation.filter(Boolean).map((e, i) => (
-                <TimelineItem 
-                  key={i} 
-                  {...e} 
-                  index={i} 
-                  editMode={editMode}
+                <TimelineItem
+                  key={i}
+                  {...e}
+                  index={i}
+                  editMode={editSection === 'education'}
                   onUpdate={updates => updateEducationItem(i, updates)}
                   onDelete={() => deleteEducationItem(i)}
                 />
@@ -1847,35 +1957,38 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Skills Section (Fully Interactive Range Sliders) */}
         <Section direction="up" delay={0}>
-          <div className="section-head">
-            <div className="section-label">Expertise</div>
-            <div className="section-title">Skills & Capabilities</div>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div className="section-label">Expertise</div>
+              <div className="section-title">Skills & Capabilities</div>
+            </div>
+            <SectionEditMenu section="skills" editSection={editSection} setEditSection={setEditSection} />
           </div>
           <div className="skills-grid">
             {/* Technical Skills Card */}
             <div className="skills-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <span className="section-label" style={{ margin: 0 }}>Technical Skills</span>
-                {editMode && (
+                {editSection === 'skills' && (
                   <button onClick={addTechSkill} className="crud-btn-add" style={{ padding: "4px 10px", borderRadius: 8 }}>➕ Add Skill</button>
                 )}
               </div>
               {Array.isArray(tempSkills) && tempSkills.map((s, idx) => (
                 <div key={idx}>
-                  {editMode && (
-                    <input 
-                      type="text" 
-                      value={s?.label || ""} 
-                      onChange={e => updateTechSkillItem(idx, "label", e.target.value)} 
+                  {editSection === 'skills' && (
+                    <input
+                      type="text"
+                      value={s?.label || ""}
+                      onChange={e => updateTechSkillItem(idx, "label", e.target.value)}
                       style={{ padding: 4, width: "100%", border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", marginBottom: 4, background: "var(--gray-100)", color: "var(--gray-800)" }}
                       placeholder="Skill Name"
                     />
                   )}
-                  <SkillBar 
-                    label={s?.label || ""} 
-                    pct={s?.pct || 0} 
-                    color={s?.color} 
-                    editMode={editMode}
+                  <SkillBar
+                    label={s?.label || ""}
+                    pct={s?.pct || 0}
+                    color={s?.color}
+                    editMode={editSection === 'skills'}
                     onChangePct={val => updateTechSkillItem(idx, "pct", val)}
                     onDelete={() => deleteTechSkillItem(idx)}
                   />
@@ -1887,53 +2000,53 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             <div className="skills-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <span className="section-label" style={{ margin: 0 }}>Soft Skills</span>
-                {editMode && (
+                {editSection === 'skills' && (
                   <button onClick={addSoftSkill} className="crud-btn-add" style={{ padding: "4px 10px", borderRadius: 8 }}>➕ Add Skill</button>
                 )}
               </div>
               {Array.isArray(tempSoftSkills) && tempSoftSkills.map((s, idx) => (
                 <div key={idx}>
-                  {editMode && (
-                    <input 
-                      type="text" 
-                      value={s?.label || ""} 
-                      onChange={e => updateSoftSkillItem(idx, "label", e.target.value)} 
+                  {editSection === 'skills' && (
+                    <input
+                      type="text"
+                      value={s?.label || ""}
+                      onChange={e => updateSoftSkillItem(idx, "label", e.target.value)}
                       style={{ padding: 4, width: "100%", border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", marginBottom: 4, background: "var(--gray-100)", color: "var(--gray-800)" }}
                       placeholder="Soft Skill Name"
                     />
                   )}
-                  <SkillBar 
-                    label={s?.label || ""} 
-                    pct={s?.pct || 0} 
-                    color={s?.color} 
-                    editMode={editMode}
+                  <SkillBar
+                    label={s?.label || ""}
+                    pct={s?.pct || 0}
+                    color={s?.color}
+                    editMode={editSection === 'skills'}
                     onChangePct={val => updateSoftSkillItem(idx, "pct", val)}
                     onDelete={() => deleteSoftSkillItem(idx)}
                   />
                 </div>
               ))}
-              
+
               <div style={{ marginTop: 28 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <span className="section-label" style={{ margin: 0 }}>Languages</span>
-                  {editMode && (
+                  {editSection === 'skills' && (
                     <button onClick={addLanguage} className="crud-btn-add" style={{ padding: "3px 8px", borderRadius: 6, fontSize: "0.7rem" }}>➕ Add</button>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {Array.isArray(tempLanguages) && tempLanguages.map((l, idx) => (
                     <span key={idx} className="tag" style={{ fontSize: "0.78rem", padding: "5px 14px", display: "flex", alignItems: "center", gap: 6 }}>
-                      {editMode ? (
-                        <input 
-                          type="text" 
-                          value={l || ""} 
-                          onChange={e => updateLanguageItem(idx, e.target.value)} 
-                          style={{ border: "none", background: "transparent", width: "100px", color: "var(--g-light)", fontWeight: 500 }} 
+                      {editSection === 'skills' ? (
+                        <input
+                          type="text"
+                          value={l || ""}
+                          onChange={e => updateLanguageItem(idx, e.target.value)}
+                          style={{ border: "none", background: "transparent", width: "100px", color: "var(--g-light)", fontWeight: 500 }}
                         />
                       ) : (
                         l || ""
                       )}
-                      {editMode && (
+                      {editSection === 'skills' && (
                         <button onClick={() => deleteLanguageItem(idx)} style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", fontSize: "0.75rem", padding: 0 }}>✕</button>
                       )}
                     </span>
@@ -1946,21 +2059,24 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Certifications Section */}
         <Section direction="up" delay={0}>
-          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div className="section-label">Credentials</div>
               <div className="section-title">Certifications</div>
             </div>
-            {editMode && (
-              <button onClick={addCertification} className="crud-btn-add">➕ Add Certification</button>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {editSection === 'certifications' && (
+                <button onClick={addCertification} className="crud-btn-add">➕ Add Certification</button>
+              )}
+              <SectionEditMenu section="certifications" editSection={editSection} setEditSection={setEditSection} />
+            </div>
           </div>
           <div className="cert-grid">
             {Array.isArray(tempCertifications) && tempCertifications.map((c, i) => (
               <Section key={i} direction="up" delay={i * 80}>
                 <div className="cert-card" style={{ position: "relative" }}>
-                  {editMode && (
-                    <button 
+                  {editSection === 'certifications' && (
+                    <button
                       onClick={() => deleteCertificationItem(i)}
                       style={{ position: "absolute", top: 8, right: 8, background: "transparent", border: "none", color: "#f87171", cursor: "pointer", fontSize: "0.78rem" }}
                     >
@@ -1971,7 +2087,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <span style={{ fontSize: "1.1rem" }}>🏅</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    {editMode ? (
+                    {editSection === 'certifications' ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "95%" }}>
                         <input type="text" value={c?.name || ""} onChange={e => updateCertificationItem(i, "name", e.target.value)} placeholder="Certification Name" style={{ width: "100%", padding: 4, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", background: "var(--gray-100)" }} />
                         <div style={{ display: "flex", gap: 6 }}>
@@ -1994,26 +2110,29 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Featured Projects Section (Dynamic & Manual Edit) */}
         <Section direction="up" delay={0}>
-          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div className="section-label">Portfolio</div>
               <div className="section-title">Featured Projects</div>
             </div>
-            {editMode && (
-              <div style={{ display: "flex", gap: 10 }}>
-                <button 
-                  onClick={fetchGitHubProjects} 
-                  className="crud-btn-add" 
-                  disabled={githubLoading}
-                  style={{ background: githubLoading ? "var(--gray-200)" : "rgba(59, 130, 246, 0.08)", borderColor: "var(--g-light)", borderStyle: "solid" }}
-                >
-                  {githubLoading ? "🔄 Fetching..." : "🐙 Import from GitHub"}
-                </button>
-                <button onClick={addProject} className="crud-btn-add">➕ Add Project Manually</button>
-              </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {editSection === 'projects' && (
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={fetchGitHubProjects}
+                    className="crud-btn-add"
+                    disabled={githubLoading}
+                    style={{ background: githubLoading ? "var(--gray-200)" : "rgba(59, 130, 246, 0.08)", borderColor: "var(--g-light)", borderStyle: "solid" }}
+                  >
+                    {githubLoading ? "🔄 Fetching..." : "🐙 Import from GitHub"}
+                  </button>
+                  <button onClick={addProject} className="crud-btn-add">➕ Add Project Manually</button>
+                </div>
+              )}
+              <SectionEditMenu section="projects" editSection={editSection} setEditSection={setEditSection} />
+            </div>
           </div>
-          
+
           {githubError && (
             <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: 16, background: "rgba(239,68,68,0.06)", padding: "10px 16px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>
               ⚠️ {githubError} (Verify your Username in User Profile Details card)
@@ -2024,8 +2143,8 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             {Array.isArray(tempProjects) && tempProjects.map((p, i) => (
               <Section key={i} direction="up" delay={i * 100}>
                 <div className="project-card" style={{ position: "relative" }}>
-                  {editMode && (
-                    <button 
+                  {editSection === 'projects' && (
+                    <button
                       onClick={() => deleteProjectItem(i)}
                       className="crud-btn-delete"
                       style={{ position: "absolute", top: 12, right: 12 }}
@@ -2033,7 +2152,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                       Delete
                     </button>
                   )}
-                  {editMode ? (
+                  {editSection === 'projects' ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                       <div>
                         <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase" }}>Project Name</label>
@@ -2080,10 +2199,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         {/* Custom Sections */}
         {tempCustomSections.map((sec, idx) => (
           <Section key={`custom-${idx}`} direction="up" delay={0}>
-            <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div className="section-label">Custom</div>
-                {editMode ? (
+                {editSection === `custom-${idx}` ? (
                   <input
                     type="text"
                     value={sec.title}
@@ -2098,17 +2217,20 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   <div className="section-title">{sec.title}</div>
                 )}
               </div>
-              {editMode && (
-                <button
-                  onClick={() => setTempCustomSections(tempCustomSections.filter((_, i) => i !== idx))}
-                  style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", border: "none", padding: "6px 12px", borderRadius: "50px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
-                >
-                  Delete Section
-                </button>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {editSection === `custom-${idx}` && (
+                  <button
+                    onClick={() => setTempCustomSections(tempCustomSections.filter((_, i) => i !== idx))}
+                    style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", border: "none", padding: "6px 12px", borderRadius: "50px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}
+                  >
+                    Delete Section
+                  </button>
+                )}
+                <SectionEditMenu section={`custom-${idx}`} editSection={editSection} setEditSection={setEditSection} />
+              </div>
             </div>
             <div className="about-card" style={{ marginBottom: 56 }}>
-              {editMode ? (
+              {editSection === `custom-${idx}` ? (
                 <textarea
                   value={sec.content}
                   onChange={(e) => {
@@ -2149,20 +2271,20 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               </h2>
               <span style={{ fontSize: "0.8rem", color: "var(--gray-400)", fontWeight: 600 }}>Step {onboardStep} of 3</span>
             </div>
-            
+
             <div className="onboard-progress-bar">
               <div className="onboard-progress-fill" style={{ width: `${(onboardStep / 3) * 100}%` }} />
             </div>
-            
+
             {onboardStep === 1 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Let's start by learning who you are and defining your public alias.</p>
-                
+
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Full Name</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Arjun Sharma" value={onboardName} onChange={e => setOnboardName(e.target.value)} />
                 </div>
-                
+
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Username</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. arjun_codes" value={onboardUsername} onChange={e => setOnboardUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""))} />
@@ -2173,18 +2295,18 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <div style={{ fontSize: "0.75rem", color: "var(--gray-400)", marginBottom: 8 }}>Suggested usernames (click to choose):</div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {usernameSuggestions.map(sug => (
-                        <span 
-                          key={sug} 
-                          onClick={() => setOnboardUsername(sug)} 
-                          style={{ 
-                            fontSize: "0.75rem", 
-                            background: onboardUsername === sug ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.06)", 
-                            border: `1px solid ${onboardUsername === sug ? "var(--g-light)" : "rgba(255,255,255,0.12)"}`, 
+                        <span
+                          key={sug}
+                          onClick={() => setOnboardUsername(sug)}
+                          style={{
+                            fontSize: "0.75rem",
+                            background: onboardUsername === sug ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.06)",
+                            border: `1px solid ${onboardUsername === sug ? "var(--g-light)" : "rgba(255,255,255,0.12)"}`,
                             color: onboardUsername === sug ? "var(--g-pale)" : "#cbd5e1",
-                            padding: "6px 12px", 
-                            borderRadius: "20px", 
-                            cursor: "pointer", 
-                            transition: "all 0.2s" 
+                            padding: "6px 12px",
+                            borderRadius: "20px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
                           }}
                         >
                           @{sug}
@@ -2193,32 +2315,32 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   </div>
                 )}
-                
+
                 <button className="onboard-btn-primary" disabled={!onboardName || !onboardUsername} onClick={() => setOnboardStep(2)}>
                   Continue to Education →
                 </button>
               </div>
             )}
-            
+
             {onboardStep === 2 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Select your academic context to receive university learning roadmaps.</p>
-                
+
                 <div style={{ marginBottom: 16, position: "relative" }}>
                   <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>School / College</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Chitkara University" value={onboardSchool} onChange={e => handleSchoolChange(e.target.value)} onFocus={() => { if (onboardSchool) handleSchoolChange(onboardSchool); }} />
                   {schoolSuggestions.length > 0 && (
-                    <div style={{ 
-                      position: "absolute", top: "100%", left: 0, right: 0, 
-                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)", 
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0,
+                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)",
                       borderRadius: "8px", zIndex: 10, maxHeight: "150px", overflowY: "auto",
                       boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
                     }}>
                       {schoolSuggestions.map(item => (
-                        <div 
-                          key={item} 
+                        <div
+                          key={item}
                           onClick={() => { setOnboardSchool(item); setSchoolSuggestions([]); }}
-                          style={{ 
+                          style={{
                             padding: "10px 14px", cursor: "pointer", color: "#cbd5e1", fontSize: "0.85rem",
                             borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s"
                           }}
@@ -2231,22 +2353,22 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   )}
                 </div>
-                
+
                 <div style={{ marginBottom: 24, position: "relative" }}>
                   <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Branch / Specialization</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Computer Science & Engineering" value={onboardBranch} onChange={e => handleBranchChange(e.target.value)} onFocus={() => { if (onboardBranch) handleBranchChange(onboardBranch); }} />
                   {branchSuggestions.length > 0 && (
-                    <div style={{ 
-                      position: "absolute", top: "100%", left: 0, right: 0, 
-                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)", 
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0,
+                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)",
                       borderRadius: "8px", zIndex: 10, maxHeight: "150px", overflowY: "auto",
                       boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
                     }}>
                       {branchSuggestions.map(item => (
-                        <div 
-                          key={item} 
+                        <div
+                          key={item}
                           onClick={() => { setOnboardBranch(item); setBranchSuggestions([]); }}
-                          style={{ 
+                          style={{
                             padding: "10px 14px", cursor: "pointer", color: "#cbd5e1", fontSize: "0.85rem",
                             borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s"
                           }}
@@ -2259,7 +2381,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   )}
                 </div>
-                
+
                 <div style={{ display: "flex", gap: 12 }}>
                   <button className="onboard-btn-primary" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#cbd5e1", boxShadow: "none" }} onClick={() => setOnboardStep(1)}>
                     ← Back
@@ -2270,17 +2392,17 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 </div>
               </div>
             )}
-            
+
             {onboardStep === 3 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Select the programming concepts and technologies you want to master.</p>
-                
+
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24, maxHeight: "250px", overflowY: "auto", padding: "4px" }}>
                   {POPULAR_SKILLS.map(s => {
                     const active = onboardSkills.includes(s);
                     return (
-                      <span 
-                        key={s} 
+                      <span
+                        key={s}
                         onClick={() => {
                           if (active) {
                             setOnboardSkills(onboardSkills.filter(x => x !== s));
@@ -2288,16 +2410,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                             setOnboardSkills([...onboardSkills, s]);
                           }
                         }}
-                        style={{ 
-                          fontSize: "0.8rem", 
-                          background: active ? "linear-gradient(135deg, var(--g-light), var(--purple))" : "rgba(255,255,255,0.06)", 
-                          border: active ? "none" : "1px solid rgba(255,255,255,0.12)", 
+                        style={{
+                          fontSize: "0.8rem",
+                          background: active ? "linear-gradient(135deg, var(--g-light), var(--purple))" : "rgba(255,255,255,0.06)",
+                          border: active ? "none" : "1px solid rgba(255,255,255,0.12)",
                           color: active ? "white" : "#cbd5e1",
-                          padding: "8px 14px", 
-                          borderRadius: "20px", 
-                          cursor: "pointer", 
+                          padding: "8px 14px",
+                          borderRadius: "20px",
+                          cursor: "pointer",
                           boxShadow: active ? "0 0 10px rgba(59,130,246,0.25)" : "none",
-                          transition: "all 0.2s" 
+                          transition: "all 0.2s"
                         }}
                       >
                         {s}
@@ -2305,7 +2427,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     );
                   })}
                 </div>
-                
+
                 <div style={{ display: "flex", gap: 12 }}>
                   <button className="onboard-btn-primary" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#cbd5e1", boxShadow: "none" }} onClick={() => setOnboardStep(2)}>
                     ← Back

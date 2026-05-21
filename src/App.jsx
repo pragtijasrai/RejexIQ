@@ -16,7 +16,10 @@ import DSAGame from "./DSAGame.jsx";
 import Sorting from "./Sorting.jsx";
 import Searching from "./Searching.jsx";
 import Backtracking from "./Backtracking.jsx";
+import CodeArena from "./CodeArena.jsx";
 import CuteAIAssistant from "./components/AIAssistant.jsx";
+import Leaderboard from "./Leaderboard.jsx";
+import Community from "./Community.jsx";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -173,11 +176,6 @@ const css = `
     min-height: 100vh;
     overflow-x: hidden;
   }
-  
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: ${G.bg}; }
-  ::-webkit-scrollbar-thumb { background: ${G.border}; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: ${G.accent}; }
 
   .syne { font-family: 'Space Grotesk', sans-serif; }
   .mono { font-family: 'Fira Code', monospace; }
@@ -282,6 +280,7 @@ const css = `
     border-radius: 16px;
     padding: 24px;
     transition: all 0.3s ease;
+    color: ${G.text};
   }
   .card:hover { border-color: rgba(0,229,255,0.3); box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
 
@@ -850,16 +849,17 @@ function AuthPage({ type, onLogin, onNav }) {
 
 function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobileOpen, setMobileOpen, onHoverChange }) {
   const navItems = [
-    { key: "profile", icon: "https://img.icons8.com/fluency/48/user-male-circle.png", label: "Profile" },
     { key: "dashboard", icon: "https://img.icons8.com/fluency/48/dashboard.png", label: "Dashboard" },
-    { key: "assessment", icon: "https://img.icons8.com/fluency/48/bullseye.png", label: "Skill Assessment" },
+    { key: "assessment", icon: "https://img.icons8.com/fluency/48/test.png", label: "Skill Assessment" },
     { key: "dsa", icon: "https://img.icons8.com/fluency/48/opened-folder.png", label: "DSA Tutorial" },
-    { key: "story", icon: "https://img.icons8.com/fluency/48/swords.png", label: "Story Mode" },
+    { key: "story", icon: "https://img.icons8.com/fluency/48/controller.png", label: "Story Mode" },
     { key: "career", icon: "https://img.icons8.com/fluency/48/trophy.png", label: "Career Match" },
     { key: "market", icon: "https://img.icons8.com/fluency/48/line-chart.png", label: "Market Demand" },
     { key: "resume", icon: "https://img.icons8.com/fluency/48/resume.png", label: "Resume Builder" },
     { key: "assistant", icon: "https://img.icons8.com/fluency/48/bot.png", label: "AI Assistant" },
-    { key: "leaderboard", icon: "https://img.icons8.com/fluency/48/gold-medal.png", label: "Leaderboard" }
+    { key: "arena", icon: "https://img.icons8.com/fluency/48/domain.png", label: "Code Arena" },
+    { key: "leaderboard", icon: "https://img.icons8.com/fluency/48/star.png", label: "Leaderboard" },
+    { key: "community", icon: "https://img.icons8.com/fluency/48/people-working-together.png", label: "Community" }
   ];
 
   const [isHovered, setIsHovered] = useState(false);
@@ -867,34 +867,33 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
   const sidebarWidth = visuallyExpanded ? 240 : 72;
 
   return (
-    <div 
+    <div
       className={`sidebar-premium ${mobileOpen ? "mobile-open" : ""}`}
       onMouseEnter={() => { setIsHovered(true); if (onHoverChange) onHoverChange(true); }}
       onMouseLeave={() => { setIsHovered(false); if (onHoverChange) onHoverChange(false); }}
       style={{
-        width: sidebarWidth, 
-        background: "rgba(255, 255, 255, 0.45)", 
+        width: sidebarWidth,
+        background: "rgba(255, 255, 255, 0.45)",
         backdropFilter: "blur(24px)",
         WebkitBackdropFilter: "blur(24px)",
         borderRight: "1px solid rgba(255, 255, 255, 0.8)",
-        boxShadow: "4px 0 30px rgba(0, 0, 0, 0.08)",
-        display: "flex", 
-        flexDirection: "column", 
-        height: "100vh", 
-        position: "fixed", 
-        left: 0, 
-        top: 0, 
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "fixed",
+        left: 0,
+        top: 0,
         zIndex: 100,
         transition: "width 0.3s cubic-bezier(0.22, 1, 0.36, 1), left 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease",
         color: "#1a0a0c",
-        boxShadow: visuallyExpanded ? "8px 0 28px rgba(120, 10, 30, 0.06)" : "none"
+        boxShadow: visuallyExpanded ? "8px 0 28px rgba(120, 10, 30, 0.06)" : "4px 0 30px rgba(0, 0, 0, 0.08)"
       }}
     >
       {/* Desktop Floating Lock Toggle */}
-      <button 
-        onClick={(e) => { 
-          e.stopPropagation(); 
-          setCollapsed(!collapsed); 
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setCollapsed(!collapsed);
         }}
         className="desktop-collapse-btn"
         style={{
@@ -924,8 +923,8 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
       </button>
 
       {/* Logo */}
-      <div style={{ 
-        padding: visuallyExpanded ? "24px 20px" : "24px 0", 
+      <div style={{
+        padding: visuallyExpanded ? "24px 20px" : "24px 0",
         borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
         textAlign: visuallyExpanded ? "left" : "center",
         display: "flex",
@@ -933,9 +932,9 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         alignItems: visuallyExpanded ? "flex-start" : "center",
         transition: "padding 0.3s"
       }}>
-        <div className="syne" style={{ 
-          fontSize: visuallyExpanded ? 22 : 24, 
-          fontWeight: 800, 
+        <div className="syne" style={{
+          fontSize: visuallyExpanded ? 22 : 24,
+          fontWeight: 800,
           color: "#be123c",
           transition: "all 0.3s ease",
           display: "flex",
@@ -943,69 +942,53 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
           gap: 8
         }}>
           {visuallyExpanded ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden", whiteSpace: "nowrap" }}>
-              <span style={{ 
-                background: "linear-gradient(135deg, #ff7a5a, #be123c)", 
-                color: "white", 
-                width: 32, 
-                height: 32, 
-                borderRadius: 8, 
-                display: "inline-flex", 
-                alignItems: "center", 
-                justifyContent: "center", 
-                fontSize: 18, 
-                fontWeight: 900,
-                boxShadow: "0 4px 12px rgba(190, 18, 60, 0.2)"
-              }}>R</span>
-              <span style={{ color: "#be123c" }}>Rejex</span>
-              <span style={{ color: "#1a0a0c" }}>IQ</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden", whiteSpace: "nowrap" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                <rect x="2" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+                <rect x="2" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+                <rect x="2" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+                <rect x="9" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+                <rect x="16" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              </svg>
+              <span style={{ color: "#1a0a0c" }}>RejexIQ</span>
             </div>
           ) : (
-            <span style={{ 
-              background: "linear-gradient(135deg, #ff7a5a, #be123c)", 
-              color: "white", 
-              width: 36, 
-              height: 36, 
-              borderRadius: 10, 
-              display: "inline-flex", 
-              alignItems: "center", 
-              justifyContent: "center", 
-              fontSize: 20, 
-              fontWeight: 900,
-              boxShadow: "0 4px 12px rgba(190, 18, 60, 0.2)"
-            }}>R</span>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+              <rect x="2" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="2" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              <rect x="2" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="9" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+              <rect x="2" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.3" />
+              <rect x="9" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="0.6" />
+              <rect x="16" y="16" width="6" height="6" rx="1.5" fill="#1a0a0c" fillOpacity="1.0" />
+            </svg>
           )}
-        </div>
-        <div style={{ 
-          fontSize: 11, 
-          color: "rgba(120, 10, 30, 0.6)", 
-          marginTop: 2,
-          opacity: visuallyExpanded ? 1 : 0,
-          height: visuallyExpanded ? "auto" : 0,
-          overflow: "hidden",
-          transition: "opacity 0.2s, height 0.2s"
-        }}>
-          Career Intelligence
         </div>
       </div>
 
       {/* User */}
-      <div style={{ 
-        padding: visuallyExpanded ? "16px 20px" : "16px 0", 
+      <div style={{
+        padding: visuallyExpanded ? "16px 20px" : "16px 0",
         borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
         display: "flex",
         justifyContent: "center",
         transition: "padding 0.3s"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, width: visuallyExpanded ? "100%" : "auto" }}>
-          <div style={{ 
-            width: 36, 
-            height: 36, 
-            background: "linear-gradient(135deg, #ff7a5a, #be123c)", 
-            borderRadius: "50%", 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
+          <div style={{
+            width: 36,
+            height: 36,
+            background: "linear-gradient(135deg, #ff7a5a, #be123c)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             fontSize: 16,
             color: "white",
             fontWeight: 600,
@@ -1033,8 +1016,8 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         {navItems.map(item => {
           const isActive = active === item.key;
           return (
-            <button 
-              key={item.key} 
+            <button
+              key={item.key}
               className={`nav-link-premium ${isActive ? "active" : ""}`}
               onClick={() => {
                 onNav(item.key);
@@ -1043,11 +1026,11 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: visuallyExpanded ? 12 : 0,
+                gap: visuallyExpanded ? 10 : 0,
                 justifyContent: visuallyExpanded ? "flex-start" : "center",
-                padding: "10px 14px",
-                borderRadius: "10px",
-                fontSize: "14px",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                fontSize: "13px",
                 fontWeight: isActive ? 600 : 500,
                 color: isActive ? "#be123c" : "rgba(26, 10, 12, 0.75)",
                 background: isActive ? "rgba(190, 18, 60, 0.08)" : "transparent",
@@ -1056,7 +1039,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
                 transition: "all 0.2s ease",
                 width: "100%",
                 textAlign: "left",
-                marginBottom: "4px",
+                marginBottom: "2px",
                 position: "relative"
               }}
               title={!visuallyExpanded ? item.label : ""}
@@ -1074,8 +1057,8 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
                   boxShadow: "0 0 8px #be123c"
                 }} />
               )}
-              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 22, height: 22 }}>
-                <img src={item.icon} alt={item.label} style={{ width: 22, height: 22, objectFit: "contain" }} />
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+                <img src={item.icon} alt={item.label} style={{ width: 20, height: 20, objectFit: "contain" }} />
               </span>
               {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", whiteSpace: "nowrap", overflow: "hidden", zIndex: 1 }}>{item.label}</span>}
             </button>
@@ -1083,19 +1066,93 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         })}
       </nav>
 
-      {/* Logout */}
-      <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(120, 10, 30, 0.08)" }}>
-        <button 
+      {/* Footer Actions: Profile, Settings, Logout */}
+      <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(120, 10, 30, 0.08)", display: "flex", flexDirection: "column", gap: "4px" }}>
+
+        {/* Profile */}
+        <button
+          onClick={() => { onNav("profile"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
+          className={`nav-link-premium ${active === "profile" ? "active" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: visuallyExpanded ? 10 : 0,
+            justifyContent: visuallyExpanded ? "flex-start" : "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: active === "profile" ? 600 : 500,
+            color: active === "profile" ? "#be123c" : "rgba(26, 10, 12, 0.75)",
+            background: active === "profile" ? "rgba(190, 18, 60, 0.08)" : "transparent",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            width: "100%",
+            textAlign: "left",
+            position: "relative"
+          }}
+          title={!visuallyExpanded ? "Profile" : ""}
+        >
+          {active === "profile" && (
+            <div style={{
+              position: "absolute", left: 0, top: "15%", bottom: "15%", width: 3,
+              borderRadius: "0 4px 4px 0", background: "#be123c", boxShadow: "0 0 8px #be123c"
+            }} />
+          )}
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" style={{ width: 20, height: 20, objectFit: "contain" }} />
+          </span>
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Profile</span>}
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={() => { onNav("settings"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
+          className={`nav-link-premium ${active === "settings" ? "active" : ""}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: visuallyExpanded ? 10 : 0,
+            justifyContent: visuallyExpanded ? "flex-start" : "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: active === "settings" ? 600 : 500,
+            color: active === "settings" ? "#be123c" : "rgba(26, 10, 12, 0.75)",
+            background: active === "settings" ? "rgba(190, 18, 60, 0.08)" : "transparent",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            width: "100%",
+            textAlign: "left",
+            position: "relative"
+          }}
+          title={!visuallyExpanded ? "Settings" : ""}
+        >
+          {active === "settings" && (
+            <div style={{
+              position: "absolute", left: 0, top: "15%", bottom: "15%", width: 3,
+              borderRadius: "0 4px 4px 0", background: "#be123c", boxShadow: "0 0 8px #be123c"
+            }} />
+          )}
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/settings.png" alt="Settings" style={{ width: 20, height: 20, objectFit: "contain" }} />
+          </span>
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Settings</span>}
+        </button>
+
+        {/* Log Out */}
+        <button
           onClick={onLogout}
           className="nav-link-premium"
           style={{
             display: "flex",
             alignItems: "center",
-            gap: visuallyExpanded ? 12 : 0,
+            gap: visuallyExpanded ? 10 : 0,
             justifyContent: visuallyExpanded ? "flex-start" : "center",
-            padding: "10px 14px",
-            borderRadius: "10px",
-            fontSize: "14px",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "13px",
             fontWeight: 500,
             color: "#be123c",
             background: "transparent",
@@ -1109,10 +1166,10 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
           }}
           title={!visuallyExpanded ? "Log Out" : ""}
         >
-          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 22, height: 22 }}>
-            <img src="https://img.icons8.com/fluency/48/logout-rounded.png" alt="Log Out" style={{ width: 22, height: 22, objectFit: "contain" }} />
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, width: 20, height: 20 }}>
+            <img src="https://img.icons8.com/fluency/48/logout-rounded.png" alt="Log Out" style={{ width: 20, height: 20, objectFit: "contain" }} />
           </span>
-          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1 }}>Log Out</span>}
+          {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Log Out</span>}
         </button>
       </div>
     </div>
@@ -1178,7 +1235,7 @@ function TrackSelection({ onSelect }) {
           {tracks.map(t => {
             const isSel = selected === t.key;
             return (
-              <div 
+              <div
                 key={t.key}
                 onClick={() => setSelected(t.key)}
                 style={{
@@ -1212,7 +1269,7 @@ function TrackSelection({ onSelect }) {
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 650, color: "#f0f4ff", marginBottom: 8, letterSpacing: "-0.01em" }}>{t.title}</h3>
                 <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, margin: 0, flex: 1 }}>{t.desc}</p>
-                
+
                 {isSel && (
                   <div style={{
                     position: "absolute",
@@ -1238,7 +1295,7 @@ function TrackSelection({ onSelect }) {
           })}
         </div>
 
-        <button 
+        <button
           onClick={() => selected && onSelect(selected)}
           disabled={!selected}
           style={{
@@ -2416,7 +2473,7 @@ function MarketDemand({ onNav, user }) {
               <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
                 AI Career Advisor
               </h3>
-              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
+              <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.6 }}>
                 Personalized recommendations for <strong style={{ color: roleColor }}>{selectedRole}</strong> based on current market demand and your profile gaps.
               </p>
             </div>
@@ -2443,7 +2500,7 @@ function MarketDemand({ onNav, user }) {
                       {typeLabels[rec.type]}
                     </span>
                   </div>
-                  <p style={{ fontSize: 14, color: "#f0f4ff", lineHeight: 1.7 }}>{rec.text}</p>
+                  <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.7 }}>{rec.text}</p>
                 </div>
               );
             })}
@@ -2472,7 +2529,7 @@ function MarketDemand({ onNav, user }) {
                   <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
                   <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>{c.title.toUpperCase()}</div>
                   <div className="syne" style={{ fontSize: 16, fontWeight: 800, color: c.color, marginBottom: 6 }}>{c.val}</div>
-                  <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }}>{c.desc}</div>
+                  <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>{c.desc}</div>
                 </div>
               ))}
             </div>
@@ -2486,7 +2543,7 @@ function MarketDemand({ onNav, user }) {
           }}>
             <div>
               <div className="syne" style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Ready to close the skill gap?</div>
-              <p style={{ fontSize: 13, color: "#94a3b8" }}>Update your resume with the skills you've added and track your progress.</p>
+              <p style={{ fontSize: 13, color: "#475569" }}>Update your resume with the skills you've added and track your progress.</p>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               <button className="btn-primary" style={{ fontSize: 13, padding: "10px 22px" }} onClick={() => onNav("resume")}>
@@ -2995,51 +3052,6 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
   );
 }
 
-// LEADERBOARD
-function Leaderboard() {
-  const entries = [
-    { name: "Rahul Sharma", score: 94, role: "Frontend Dev", badge: "🥇" },
-    { name: "Priya Patel", score: 91, role: "Full Stack", badge: "🥈" },
-    { name: "Arjun Singh", score: 88, role: "Backend Dev", badge: "🥉" },
-    { name: "Sneha Rao", score: 84, role: "Data Analyst", badge: "4️⃣" },
-    { name: "Dev Kumar", score: 81, role: "DevOps", badge: "5️⃣" },
-    { name: "Ananya Iyer", score: 78, role: "Frontend Dev", badge: "6️⃣" },
-    { name: "Karan Mehta", score: 75, role: "Full Stack", badge: "7️⃣" },
-    { name: "Lakshmi N.", score: 72, role: "Backend Dev", badge: "8️⃣" },
-    { name: "You", score: 68, role: "In Progress", badge: "—", isYou: true },
-  ];
-
-  return (
-    <div className="section-enter">
-      <div style={{ marginBottom: 32 }}>
-        <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Skill Leaderboard</h1>
-        <p style={{ color: G.muted }}>See how you rank among other students</p>
-      </div>
-
-      <div className="card">
-        <div style={{ display: "grid", gridTemplateColumns: "50px 1fr 100px 100px", padding: "8px 16px", marginBottom: 8, fontSize: 11, fontWeight: 700, color: G.muted, textTransform: "uppercase", letterSpacing: 1 }}>
-          <span>Rank</span><span>Student</span><span>Best Role</span><span style={{ textAlign: "right" }}>Score</span>
-        </div>
-        {entries.map((e, i) => (
-          <div key={i} className="leaderboard-row" style={{ gridTemplateColumns: "50px 1fr 100px 100px", display: "grid", background: e.isYou ? `${G.accentDim}` : undefined, border: e.isYou ? `1px solid rgba(0,229,255,0.2)` : "1px solid transparent", borderRadius: 10 }}>
-            <span style={{ fontSize: 20, textAlign: "center" }}>{e.badge}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 32, height: 32, background: `linear-gradient(135deg, ${G.accent}30, #7c3aed30)`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
-                {e.name[0]}
-              </div>
-              <span style={{ fontWeight: e.isYou ? 700 : 400, color: e.isYou ? G.accent : G.text }}>{e.name}</span>
-            </div>
-            <span style={{ fontSize: 12, color: G.muted, display: "flex", alignItems: "center" }}>{e.role}</span>
-            <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-              <span className="mono" style={{ fontWeight: 700, color: i === 0 ? G.warning : i < 3 ? G.success : G.text }}>{e.score}%</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // TOUR COMPONENT
 function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
   return (
@@ -3124,10 +3136,10 @@ export default function App() {
 
   function handleSelectTrack(selectedTrack) {
     setUser(prev => {
-      const updated = { 
-        ...prev, 
-        track: selectedTrack, 
-        trackSelected: true 
+      const updated = {
+        ...prev,
+        track: selectedTrack,
+        trackSelected: true
       };
       localStorage.setItem("rejexiq_user", JSON.stringify(updated));
       return updated;
@@ -3231,11 +3243,11 @@ export default function App() {
             {/* Background Orbs to make Glassmorphism visible */}
             <div style={{ position: "fixed", top: -150, left: -150, width: 500, height: 500, background: "radial-gradient(circle, rgba(190,18,60,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
             <div style={{ position: "fixed", bottom: -100, left: -50, width: 450, height: 450, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
-            <Sidebar 
-              active={appPage} 
-              onNav={setAppPage} 
-              user={user} 
-              onLogout={handleLogout} 
+            <Sidebar
+              active={appPage}
+              onNav={setAppPage}
+              user={user}
+              onLogout={handleLogout}
               collapsed={sidebarCollapsed}
               setCollapsed={setSidebarCollapsed}
               mobileOpen={sidebarMobileOpen}
@@ -3244,82 +3256,22 @@ export default function App() {
             />
 
             {/* Main content */}
-            <div style={{ 
-              marginLeft: (!sidebarCollapsed || sidebarHovered) ? 240 : 72, 
-              flex: 1, 
-              padding: "0 32px 32px 32px", 
-              overflowY: "auto", 
+            <div style={{
+              marginLeft: !sidebarCollapsed ? 240 : 72,
+              width: `calc(100vw - ${!sidebarCollapsed ? 240 : 72}px)`,
+              minWidth: 0,
+              flex: 1,
+              padding: 0,
+              overflowY: "auto",
+              overflowX: "hidden",
               minHeight: "100vh",
-              transition: "margin-left 0.3s cubic-bezier(0.22,1,0.36,1)",
+              transition: "margin-left 0.3s cubic-bezier(0.22,1,0.36,1), width 0.3s cubic-bezier(0.22,1,0.36,1)",
               background: "transparent",
+              color: "#1a0a0c",
               position: "relative",
               zIndex: 1
             }} className="main-content-area">
-              
-              {/* STICKY DASHBOARD HEADER WITH RESPONSIVE SIDEBAR TOGGLES */}
-              <div style={{
-                position: "sticky",
-                top: 0,
-                background: "rgba(253, 253, 251, 0.9)",
-                backdropFilter: "blur(12px)",
-                zIndex: 90,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px 0",
-                borderBottom: "1px solid rgba(120, 10, 30, 0.05)",
-                marginBottom: 24
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  {/* Hamburger menu for mobile */}
-                  <button 
-                    onClick={() => setSidebarMobileOpen(!sidebarMobileOpen)}
-                    className="mobile-toggle-btn"
-                    style={{
-                      display: "none",
-                      background: "transparent",
-                      border: "none",
-                      fontSize: 20,
-                      cursor: "pointer",
-                      padding: 4,
-                      color: "#be123c"
-                    }}
-                  >
-                    ☰
-                  </button>
-                  {/* Collapse arrow for desktop */}
-                  <button 
-                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                    className="desktop-collapse-btn"
-                    style={{
-                      background: "rgba(120, 10, 30, 0.05)",
-                      border: "none",
-                      borderRadius: "6px",
-                      width: 28,
-                      height: 28,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      cursor: "pointer",
-                      color: "#be123c",
-                      transition: "transform 0.3s"
-                    }}
-                    title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                  >
-                    {sidebarCollapsed ? "→" : "←"}
-                  </button>
-                  <h1 className="syne" style={{ fontSize: 20, fontWeight: 700, color: "#1a0a0c", margin: 0, textTransform: "capitalize", fontFamily: "'Space Grotesk', sans-serif" }}>
-                    {appPage === "dsa" ? "DSA Tutorial" : appPage}
-                  </h1>
-                </div>
-                
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ fontSize: 13, color: "rgba(26, 10, 12, 0.6)" }}>
-                    Focus Track: <strong style={{ color: "#be123c" }}>{user.track || "Not Selected"}</strong>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Demo badge */}
               {user.email === "demo@rejexiq.com" && (
@@ -3334,7 +3286,7 @@ export default function App() {
               {appPage === "dsa" && <DSAGame />}
               {appPage === "story" && (
                 <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                  <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", overflowX: "hidden" }}>
+                  <div style={{ position: "absolute", inset: 0, zIndex: 20, overflowY: "auto", overflowX: "hidden" }}>
                     <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
                   </div>
                 </Suspense>
@@ -3343,7 +3295,9 @@ export default function App() {
               {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
               {appPage === "resume" && <ResumeBuilder user={user} />}
               {appPage === "assistant" && <CuteAIAssistant user={user} />}
+              {appPage === "arena" && <CodeArena user={user} />}
               {appPage === "leaderboard" && <Leaderboard />}
+              {appPage === "community" && <Community />}
             </div>
 
             {/* Guided Tour */}
