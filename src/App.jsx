@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import NewAuthPage from "./AuthPage.jsx";
 import NewProfilePage from "./ProfilePage.jsx";
+import CodeArena from "./CodeArena.jsx";
+import AIAssistantPage from "./AIAssistantPage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
+import CareerLanding from "./CareerLanding.jsx";
 const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
@@ -2369,8 +2372,18 @@ function AIAssistant({ user }) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState(localStorage.getItem("gemini_api_key") || "");
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!localStorage.getItem("gemini_api_key"));
+  const [apiKey, setApiKey] = useState(() => {
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const stored = localStorage.getItem("gemini_api_key");
+    const key = envKey && envKey !== "your_gemini_api_key" ? envKey : stored || "";
+    if (key) localStorage.setItem("gemini_api_key", key);
+    return key;
+  });
+  const [showApiKeyInput, setShowApiKeyInput] = useState(() => {
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const stored = localStorage.getItem("gemini_api_key");
+    return !(envKey && envKey !== "your_gemini_api_key") && !stored;
+  });
   const msgRef = useRef(null);
 
   const suggestions = [
@@ -2387,7 +2400,7 @@ function AIAssistant({ user }) {
     }
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2758,7 +2771,7 @@ export default function App() {
     <>
       <style>{css}</style>
 
-      {page === "home" && <LandingPage onNav={navigate} onDemo={handleDemo} />}
+      {page === "home" && <CareerLanding onNav={navigate} onDemo={handleDemo} />}
       {page === "login" && <AuthPage type="login" onLogin={handleLogin} onNav={navigate} />}
       {page === "signup" && <AuthPage type="signup" onLogin={handleLogin} onNav={navigate} />}
       {page === "assessment" && !user && (
@@ -2810,7 +2823,7 @@ export default function App() {
             {appPage === "dsa" && <DSAGame />}
             {appPage === "story" && (
               <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", overflowX: "hidden" }}>
                   <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
                 </div>
               </Suspense>
@@ -2818,7 +2831,7 @@ export default function App() {
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
-            {appPage === "assistant" && <AIAssistant user={user} />}
+            {appPage === "assistant" && <AIAssistantPage user={user} />}
             {appPage === "leaderboard" && <Leaderboard />}
           </div>
 

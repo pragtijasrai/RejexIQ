@@ -1,621 +1,489 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
-// ─── Floating Leaf SVG ───────────────────────────────────────────────────────
-const Leaf = ({ style, className }) => (
-  <svg viewBox="0 0 80 120" style={style} className={className}>
-    <path
-      d="M40 5 C10 20, -5 60, 10 90 C20 110, 40 118, 40 118 C40 118, 60 110, 70 90 C85 60, 70 20, 40 5Z"
-      fill="currentColor"
-      opacity="0.85"
-    />
-    <path d="M40 10 Q40 60, 40 115" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" fill="none" />
-    <path d="M40 30 Q25 45, 15 55" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
-    <path d="M40 30 Q55 45, 65 55" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
-    <path d="M40 50 Q22 62, 12 72" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
-    <path d="M40 50 Q58 62, 68 72" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
-  </svg>
-);
+// ── Theme (matches App.jsx G object) ─────────────────────────────────────────
+const G = {
+  bg:"#0a0e27", surface:"#141b3a", card:"#1a2347", border:"#2d3a5f",
+  accent:"#ff6b9d", accentDim:"rgba(255,107,157,0.15)", purple:"#c084fc",
+  cyan:"#22d3ee", text:"#f0f4ff", muted:"#94a3b8",
+  success:"#34d399", warning:"#fbbf24", danger:"#f87171",
+};
 
-// ─── Password Strength ───────────────────────────────────────────────────────
-function getStrength(pw) {
-  if (!pw) return { score: 0, label: "", color: "" };
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const TOKEN_KEY = "rejexiq_token";
+const USER_KEY  = "rejexiq_user";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !/[\s,]/.test(e);
+}
+function pwStrength(p) {
+  if (!p) return { score:0, label:"", color:G.border, pct:0 };
   let s = 0;
-  if (pw.length >= 6) s++;
-  if (pw.length >= 10) s++;
-  if (/[A-Z]/.test(pw)) s++;
-  if (/[0-9]/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
-  if (s <= 1) return { score: s, label: "Easy", color: "#ef4444" };
-  if (s <= 3) return { score: s, label: "Medium", color: "#f59e0b" };
-  return { score: s, label: "Strong", color: "#22c55e" };
+  if (p.length >= 8)           s++;
+  if (/[A-Z]/.test(p))         s++;
+  if (/[0-9]/.test(p))         s++;
+  if (/[^A-Za-z0-9]/.test(p)) s++;
+  const map = [
+    { label:"",       color:G.border,   pct:0   },
+    { label:"Weak",   color:G.danger,   pct:25  },
+    { label:"Fair",   color:G.warning,  pct:50  },
+    { label:"Good",   color:G.cyan,     pct:75  },
+    { label:"Strong", color:G.success,  pct:100 },
+  ];
+  return { score:s, ...map[s] };
 }
 
-// ─── Eye Icon ────────────────────────────────────────────────────────────────
-const EyeIcon = ({ open }) =>
-  open ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
+// ── Eye icon ──────────────────────────────────────────────────────────────────
+function Eye({ open }) {
+  return open ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
     </svg>
   ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
   );
+}
 
-// ─── Main Component ──────────────────────────────────────────────────────────
-export default function AuthPage({ onLogin, onNav, initialMode } = {}) {
-  const [mode, setMode] = useState(initialMode || "signin"); // "signin" | "signup"
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+// ── Google icon ───────────────────────────────────────────────────────────────
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+  );
+}
+
+// ── Animated particles background ────────────────────────────────────────────
+function ParticlesBg() {
+  const ref = useRef();
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+    resize(); window.addEventListener("resize", resize);
+    const pts = Array.from({length:60}, () => ({
+      x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+      vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4,
+      r:Math.random()*1.5+0.3,
+      color:[G.accent,G.purple,G.cyan,"#ffffff"][Math.floor(Math.random()*4)],
+      a:Math.random()*0.4+0.1, pulse:Math.random()*Math.PI*2,
+    }));
+    let raf;
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pts.forEach(p => {
+        p.pulse+=0.015; p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+        if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+        const a=p.a*(0.6+0.4*Math.sin(p.pulse));
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.color+Math.floor(a*255).toString(16).padStart(2,"0");
+        ctx.fill();
+      });
+      for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<80){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(255,107,157,${0.06*(1-d/80)})`;ctx.lineWidth=0.5;ctx.stroke();}
+      }
+      raf=requestAnimationFrame(draw);
+    }
+    draw();
+    return ()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);};
+  },[]);
+  return <canvas ref={ref} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}}/>;
+}
+
+// ── Input field component ─────────────────────────────────────────────────────
+function Field({ label, type="text", value, onChange, onBlur, error, valid, placeholder, right, autoComplete }) {
+  const [focus, setFocus] = useState(false);
+  const borderColor = error ? G.danger : valid ? G.success : focus ? G.accent : G.border;
+  const shadow = error ? `0 0 0 3px rgba(248,113,113,0.12)` : valid ? `0 0 0 3px rgba(52,211,153,0.1)` : focus ? `0 0 0 3px rgba(255,107,157,0.12)` : "none";
+  return (
+    <div style={{marginBottom:14}}>
+      <label style={{display:"block",fontSize:11,fontWeight:700,color:G.muted,marginBottom:6,textTransform:"uppercase",letterSpacing:0.8}}>{label}</label>
+      <div style={{position:"relative"}}>
+        <input
+          type={type} value={value} placeholder={placeholder}
+          autoComplete={autoComplete}
+          onChange={e=>onChange(e.target.value)}
+          onFocus={()=>setFocus(true)}
+          onBlur={()=>{setFocus(false);if(onBlur)onBlur();}}
+          style={{
+            width:"100%", background:"rgba(255,255,255,0.04)",
+            border:`1.5px solid ${borderColor}`, borderRadius:10,
+            padding:right?"11px 44px 11px 14px":"11px 14px",
+            color:G.text, fontSize:14, outline:"none",
+            fontFamily:"'Inter',sans-serif", transition:"all 0.2s",
+            boxShadow:shadow,
+          }}
+        />
+        {right && <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",color:G.muted}}>{right}</div>}
+        {valid && !error && <div style={{position:"absolute",right:right?40:12,top:"50%",transform:"translateY(-50%)",color:G.success,fontSize:12}}>✓</div>}
+      </div>
+      {error && <div style={{fontSize:12,color:G.danger,marginTop:5,display:"flex",alignItems:"center",gap:4}}><span>⚠</span>{error}</div>}
+    </div>
+  );
+}
+
+// ── Local auth fallback (works without backend) ───────────────────────────────
+const LOCAL_USERS_KEY = "rejexiq_local_users";
+
+function makeToken(user) {
+  // Simple base64 JWT-like token for offline mode
+  const payload = btoa(JSON.stringify({ id: user.id, email: user.email, exp: Date.now() + 7*24*60*60*1000 }));
+  return `local.${payload}.sig`;
+}
+
+function localAuth(mode, { name, email, password }) {
+  const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+  if (mode === "signup") {
+    if (users.find(u => u.email === email.toLowerCase())) return null; // already exists
+    const user = { id: "local_" + Date.now(), name, email: email.toLowerCase(), provider: "local", skills: {}, assessmentDone: false };
+    // Store with hashed-ish password (simple, not secure — backend handles real security)
+    users.push({ ...user, _pw: btoa(password) });
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+    return { token: makeToken(user), user };
+  } else {
+    const found = users.find(u => u.email === email.toLowerCase() && u._pw === btoa(password));
+    if (!found) return null;
+    const user = { id: found.id, name: found.name, email: found.email, provider: found.provider, skills: found.skills || {}, assessmentDone: found.assessmentDone || false };
+    return { token: makeToken(user), user };
+  }
+}
+
+// ── Main AuthPage component ───────────────────────────────────────────────────
+export default function AuthPage({ onLogin, onNav, type }) {
+  const [mode, setMode]           = useState(type === "signup" ? "signup" : "signin");
+  const [form, setForm]           = useState({ name:"", email:"", password:"", confirm:"" });
+  const [touched, setTouched]     = useState({});
+  const [errors, setErrors]       = useState({});
+  const [showPw, setShowPw]       = useState(false);
+  const [showCf, setShowCf]       = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [gLoading, setGLoading]   = useState(false);
+  const [toast, setToast]         = useState(null);
   const [animating, setAnimating] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
-  const [loading, setLoading] = useState(false);
+  const strength = pwStrength(form.password);
 
-  const [form, setForm] = useState({
-    name: "", email: "", phone: "", password: "", confirm: "",
-  });
-
-  const strength = getStrength(form.password);
-
-  const switchMode = (next) => {
+  // Switch mode with animation
+  function switchMode(next) {
     if (next === mode) return;
     setAnimating(true);
-    setErrors({});
-    setTouched({});
-    setForm({ name: "", email: "", phone: "", password: "", confirm: "" });
     setTimeout(() => {
       setMode(next);
+      setForm({ name:"", email:"", password:"", confirm:"" });
+      setErrors({}); setTouched({});
       setAnimating(false);
-    }, 350);
+    }, 280);
     if (onNav) onNav(next === "signin" ? "login" : "signup");
-  };
+  }
 
-  const validate = () => {
+  // Live validation
+  const validate = useCallback((f=form, m=mode) => {
     const e = {};
-    if (mode === "signup") {
-      if (!form.name.trim()) e.name = "Full name is required";
-      else if (form.name.trim().length < 2) e.name = "Name must be at least 2 characters";
-      if (!form.phone.trim()) e.phone = "Phone number is required";
-      else if (!/^\+?[\d\s\-()]{7,15}$/.test(form.phone)) e.phone = "Enter a valid phone number";
-      if (form.password !== form.confirm) e.confirm = "Passwords do not match";
-      if (strength.score < 2) e.password = "Password is too easy — use at least Medium strength";
+    if (m === "signup") {
+      if (!f.name.trim())           e.name = "Full name is required";
+      else if (f.name.trim().length < 2) e.name = "Name must be at least 2 characters";
+      if (f.password && f.confirm && f.password !== f.confirm) e.confirm = "Passwords do not match";
+      if (f.password && pwStrength(f.password).score < 2) e.password = "Password too weak — add uppercase, numbers or symbols";
     }
-    if (!form.email.trim()) e.email = "Login, email or phone number is required";
-    else if (form.email.includes("@") && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      e.email = "Invalid email address";
-    if (!form.password) e.password = e.password || "Password is required";
-    else if (form.password.length < 6) e.password = "Password must be at least 6 characters";
+    if (!f.email.trim())            e.email = "Email is required";
+    else if (!validateEmail(f.email)) e.email = "Enter a valid email address";
+    if (!f.password)                e.password = e.password || "Password is required";
+    else if (f.password.length < 8) e.password = e.password || "Password must be at least 8 characters";
     return e;
-  };
+  }, [form, mode]);
 
-  const showToast = (msg, type = "error") => {
+  function handleChange(field, val) {
+    const next = { ...form, [field]: val };
+    setForm(next);
+    if (touched[field]) setErrors(validate(next, mode));
+  }
+  function handleBlur(field) {
+    setTouched(t => ({ ...t, [field]: true }));
+    setErrors(validate(form, mode));
+  }
+
+  function showToast(msg, type="error") {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3200);
-  };
+    setTimeout(() => setToast(null), 3500);
+  }
 
-  const handleSubmit = async () => {
-    setTouched({ name: true, email: true, phone: true, password: true, confirm: true });
-    const e = validate();
-    setErrors(e);
-    if (Object.keys(e).length) return;
+  function _onSuccess(user) {
+    showToast(mode === "signin" ? "Welcome back! Redirecting..." : "Account created! Welcome aboard!", "success");
+    setTimeout(() => { if (onLogin) onLogin({ ...user, assessmentDone: user.assessmentDone || false }); }, 900);
+  }
+
+  // ── Email/password submit — works 100% without backend ───────────────────
+  async function handleSubmit(e) {
+    e && e.preventDefault();
+    setTouched({ name:true, email:true, password:true, confirm:true });
+    const errs = validate(form, mode);
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setLoading(false);
-    if (mode === "signin") {
-      showToast("Welcome back! Signed in successfully.", "success");
-      if (onLogin) {
-        setTimeout(() => onLogin({ name: form.email.split("@")[0], email: form.email, assessmentDone: false }), 800);
+    // Simulate network delay for UX
+    await new Promise(r => setTimeout(r, 600));
+
+    try {
+      const body = mode === "signup"
+        ? { name: form.name.trim(), email: form.email.trim(), password: form.password }
+        : { email: form.email.trim(), password: form.password };
+
+      const data = localAuth(mode, body);
+      if (!data) {
+        throw new Error(
+          mode === "signin"
+            ? "Invalid email or password. Please check and try again."
+            : "This email is already registered. Please sign in instead."
+        );
       }
-    } else {
-      showToast("Account created! Welcome aboard 🌿", "success");
-      if (onLogin) {
-        setTimeout(() => onLogin({ name: form.name, email: form.email, phone: form.phone, assessmentDone: false }), 800);
+
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      _onSuccess(data.user);
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Google auth ────────────────────────────────────────────────────────────
+  async function handleGoogle() {
+    setGLoading(true);
+    try {
+      const { signInWithGoogle } = await import("./firebase.js");
+      const { name, email, avatar } = await signInWithGoogle();
+
+      // Save/find user locally
+      const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      let found = users.find(u => u.email === email.toLowerCase());
+      if (!found) {
+        found = { id:"g_"+Date.now(), name, email:email.toLowerCase(), avatar, provider:"google", skills:{}, assessmentDone:false };
+        users.push(found);
+        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
       }
+      const user = { id:found.id, name:found.name, email:found.email, avatar:found.avatar||avatar, provider:"google", skills:found.skills||{}, assessmentDone:found.assessmentDone||false };
+      const data = { token:makeToken(user), user };
+
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      _onSuccess(data.user);
+    } catch (err) {
+      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
+        // silent — user closed popup
+      } else if (err.code === "auth/unauthorized-domain") {
+        showToast("Go to Firebase Console → Authentication → Authorized domains → add 'localhost'", "info");
+      } else {
+        showToast(err.message || "Google sign-in failed", "error");
+      }
+    } finally {
+      setGLoading(false);
     }
-  };
+  }
 
-  const handleBlur = (field) => {
-    setTouched((t) => ({ ...t, [field]: true }));
-    const e = validate();
-    setErrors(e);
-  };
-
-  const handleChange = (field, val) => {
-    setForm((f) => ({ ...f, [field]: val }));
-    if (touched[field]) {
-      const e = validate();
-      setErrors(e);
-    }
-  };
-
+  // ── JSX ────────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-          --green-dark: #1a3028;
-          --green-mid: #2d5a45;
-          --green-light: #4a8c6a;
-          --green-pale: #8dbfa0;
-          --cream: #f4f1ec;
-          --white: #ffffff;
-          --gray-100: #f8f7f5;
-          --gray-200: #e8e4de;
-          --gray-400: #9a9590;
-          --gray-600: #6b6560;
-          --gray-800: #2c2a27;
-          --error: #c0392b;
-          --success: #22c55e;
-          --info: #3b82f6;
-          --shadow-card: 0 32px 80px rgba(26,48,40,0.18), 0 8px 24px rgba(26,48,40,0.10);
-          --shadow-input: 0 2px 8px rgba(26,48,40,0.07);
-        }
-
-        body { font-family: 'DM Sans', sans-serif; background: var(--cream); }
-
-        .auth-root {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          overflow: hidden;
-          background: linear-gradient(135deg, #e8f0eb 0%, #f4f1ec 40%, #dce8e0 100%);
-        }
-
-        /* ── Animated background leaves ── */
-        .bg-leaves { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .bg-leaf {
-          position: absolute;
-          color: var(--green-mid);
-          animation: floatLeaf linear infinite;
-          opacity: 0.12;
-        }
-        .bg-leaf:nth-child(1) { width: 120px; left: -3%; top: 5%; animation-duration: 18s; animation-delay: 0s; }
-        .bg-leaf:nth-child(2) { width: 80px; left: 8%; top: 60%; animation-duration: 22s; animation-delay: -6s; transform: rotate(40deg); }
-        .bg-leaf:nth-child(3) { width: 160px; left: 88%; top: 10%; animation-duration: 26s; animation-delay: -3s; transform: rotate(-30deg); }
-        .bg-leaf:nth-child(4) { width: 100px; left: 75%; top: 65%; animation-duration: 20s; animation-delay: -10s; transform: rotate(70deg); }
-        .bg-leaf:nth-child(5) { width: 70px; left: 45%; top: -5%; animation-duration: 30s; animation-delay: -15s; transform: rotate(-15deg); }
-        .bg-leaf:nth-child(6) { width: 90px; left: 60%; top: 80%; animation-duration: 24s; animation-delay: -8s; transform: rotate(110deg); }
-
-        @keyframes floatLeaf {
-          0%   { transform: translateY(0px) rotate(0deg); }
-          33%  { transform: translateY(-18px) rotate(5deg); }
-          66%  { transform: translateY(8px) rotate(-4deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
-
-        /* ── Card ── */
-        .auth-card {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          width: min(900px, 96vw);
-          min-height: 540px;
-          border-radius: 28px;
-          overflow: hidden;
-          box-shadow: var(--shadow-card);
-          animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
-        }
-
-        @keyframes cardIn {
-          from { opacity: 0; transform: translateY(32px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* ── Decorative Panel ── */
-        .auth-deco {
-          flex: 0 0 42%;
-          background: linear-gradient(160deg, var(--green-dark) 0%, var(--green-mid) 55%, var(--green-light) 100%);
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 32px;
-        }
-
-        .deco-wave {
-          position: absolute;
-          right: -40px;
-          top: -20px;
-          width: 160px;
-          height: 110%;
-          background: rgba(255,255,255,0.06);
-          border-radius: 60% 0 0 60%;
-        }
-        .deco-wave2 {
-          position: absolute;
-          right: -20px;
-          bottom: -30px;
-          width: 120px;
-          height: 80%;
-          background: rgba(255,255,255,0.04);
-          border-radius: 60% 0 0 40%;
-        }
-
-        .deco-leaves-wrap {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-        }
-        .deco-leaf {
-          position: absolute;
-          color: rgba(255,255,255,0.18);
-          animation: decoFloat linear infinite;
-        }
-        .deco-leaf:nth-child(1) { width: 90px; left: 10%; top: 8%; animation-duration: 14s; }
-        .deco-leaf:nth-child(2) { width: 60px; left: 55%; top: 15%; animation-duration: 18s; animation-delay: -4s; transform: rotate(50deg); }
-        .deco-leaf:nth-child(3) { width: 110px; left: 20%; top: 55%; animation-duration: 20s; animation-delay: -8s; transform: rotate(-25deg); }
-        .deco-leaf:nth-child(4) { width: 50px; left: 65%; top: 70%; animation-duration: 16s; animation-delay: -6s; transform: rotate(80deg); }
-
-        @keyframes decoFloat {
-          0%,100% { transform: translateY(0) rotate(0deg); }
-          50%      { transform: translateY(-14px) rotate(6deg); }
-        }
-
-        .deco-content { position: relative; z-index: 1; text-align: center; color: white; }
-        .deco-logo {
-          width: 54px; height: 54px;
-          background: rgba(255,255,255,0.15);
-          border-radius: 16px;
-          display: flex; align-items: center; justify-content: center;
-          margin: 0 auto 20px;
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(255,255,255,0.2);
-        }
-        .deco-logo svg { width: 28px; height: 28px; }
-        .deco-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 2rem; font-weight: 500;
-          line-height: 1.2; margin-bottom: 12px;
-          letter-spacing: -0.02em;
-        }
-        .deco-subtitle {
-          font-size: 0.82rem; opacity: 0.7; line-height: 1.6;
-          font-weight: 300; max-width: 200px; margin: 0 auto;
-        }
-
-        .deco-switch { margin-top: 40px; }
-        .deco-switch p { font-size: 0.78rem; opacity: 0.6; margin-bottom: 10px; }
-        .deco-switch-btn {
-          background: rgba(255,255,255,0.15);
-          border: 1px solid rgba(255,255,255,0.3);
-          color: white; font-family: 'DM Sans', sans-serif;
-          font-size: 0.8rem; font-weight: 500;
-          padding: 9px 24px; border-radius: 50px;
-          cursor: pointer; backdrop-filter: blur(8px);
-          transition: all 0.25s ease;
-          letter-spacing: 0.03em;
-        }
-        .deco-switch-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-
-        /* ── Form Panel ── */
-        .auth-form-wrap {
-          flex: 1;
-          background: var(--white);
-          padding: 28px 36px 24px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          transition: opacity 0.35s ease, transform 0.35s ease;
-        }
-        .auth-form-wrap.animating { opacity: 0; transform: translateX(16px); }
-
-        .form-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 2rem; font-weight: 500;
-          color: var(--gray-800); margin-bottom: 4px;
-          letter-spacing: -0.03em;
-        }
-        .form-subtitle { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 16px; }
-        .form-subtitle a { color: var(--green-mid); text-decoration: none; font-weight: 500; cursor: pointer; }
-        .form-subtitle a:hover { text-decoration: underline; }
-
-        /* ── Fields ── */
-        .field-wrap { margin-bottom: 10px; position: relative; }
-        .field-label {
-          display: block; font-size: 0.72rem; font-weight: 500;
-          color: var(--gray-600); margin-bottom: 4px; letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-        .field-input {
-          width: 100%; padding: 9px 12px;
-          border: 1.5px solid var(--gray-200);
-          border-radius: 10px; font-family: 'DM Sans', sans-serif;
-          font-size: 0.87rem; color: var(--gray-800);
-          background: var(--gray-100);
-          box-shadow: var(--shadow-input);
-          transition: all 0.2s ease; outline: none;
-        }
-        .field-input:focus { border-color: var(--green-light); background: white; box-shadow: 0 0 0 3px rgba(74,140,106,0.12); }
-        .field-input.has-error { border-color: var(--error); background: #fff8f8; }
-        .field-input.is-valid { border-color: var(--success); }
-        .field-input-wrap { position: relative; }
-        .field-eye {
-          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-          background: none; border: none; cursor: pointer; color: var(--gray-400);
-          display: flex; align-items: center; padding: 0;
-          transition: color 0.2s;
-        }
-        .field-eye:hover { color: var(--green-mid); }
-        .field-error { font-size: 0.73rem; color: var(--error); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-        .field-error::before { content: "⚠"; font-size: 0.68rem; }
-
-        /* ── Password Strength Bar ── */
-        .strength-bar-wrap { margin-top: 4px; }
-        .strength-bar-track {
-          height: 3px; border-radius: 2px; background: var(--gray-200); overflow: hidden;
-        }
-        .strength-bar-fill {
-          height: 100%; border-radius: 2px;
-          transition: width 0.4s ease, background 0.4s ease;
-        }
-        .strength-label { font-size: 0.7rem; margin-top: 2px; font-weight: 500; }
-
-        /* ── Name row ── */
-        .field-row { display: flex; gap: 12px; }
-        .field-row .field-wrap { flex: 1; }
-
-        /* ── Submit ── */
-        .btn-submit {
-          width: 100%; padding: 11px;
-          background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
-          color: white; font-family: 'DM Sans', sans-serif;
-          font-size: 0.88rem; font-weight: 500; letter-spacing: 0.04em;
-          border: none; border-radius: 12px; cursor: pointer;
-          transition: all 0.25s ease; margin-top: 4px;
-          position: relative; overflow: hidden;
-        }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,48,40,0.28); }
-        .btn-submit:active { transform: translateY(0); }
-        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-
-        .btn-loader {
-          display: inline-flex; align-items: center; gap: 8px;
-        }
-        .spinner {
-          width: 16px; height: 16px;
-          border: 2px solid rgba(255,255,255,0.35);
-          border-top-color: white; border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── Forgot ── */
-        .forgot-link {
-          display: block; text-align: center; margin-top: 8px;
-          font-size: 0.78rem; color: var(--green-mid); text-decoration: none;
-          cursor: pointer; font-weight: 500;
-        }
-        .forgot-link:hover { text-decoration: underline; }
-
-        /* ── Terms ── */
-        .terms-text {
-          font-size: 0.7rem; color: var(--gray-400); text-align: center;
-          margin-top: 8px; line-height: 1.5;
-        }
-        .terms-text a { color: var(--green-mid); text-decoration: none; }
-
-        /* ── Toast ── */
-        .toast {
-          position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-          z-index: 9999; padding: 12px 24px; border-radius: 50px;
-          font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-          animation: toastIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
-          white-space: nowrap; max-width: 90vw;
-        }
-        .toast.error   { background: #fee2e2; color: #991b1b; }
-        .toast.success { background: #dcfce7; color: #166534; }
-        .toast.info    { background: #dbeafe; color: #1e40af; }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(16px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 680px) {
-          .auth-deco { display: none; }
-          .auth-form-wrap { padding: 36px 28px 28px; }
-          .auth-card { width: 96vw; min-height: auto; border-radius: 20px; }
-          .field-row { flex-direction: column; gap: 0; }
-        }
-        @media (max-width: 400px) {
-          .auth-form-wrap { padding: 28px 18px 20px; }
-          .form-title { font-size: 1.8rem; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body,#root { background:${G.bg}; color:${G.text}; font-family:'Inter',sans-serif; min-height:100vh; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin   { to{transform:rotate(360deg)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes glow   { 0%,100%{box-shadow:0 0 20px rgba(255,107,157,0.3)} 50%{box-shadow:0 0 40px rgba(255,107,157,0.6)} }
+        @keyframes slideIn{ from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+        .auth-card { animation: fadeUp 0.5s ease both; }
+        .auth-form  { transition: opacity 0.28s ease, transform 0.28s ease; }
+        .auth-form.out { opacity:0; transform:translateX(16px); }
+        input::placeholder { color:${G.muted}; }
+        input { caret-color:${G.accent}; }
+        .btn-google:hover { background:rgba(255,255,255,0.1) !important; transform:translateY(-1px); }
+        .btn-google:active { transform:translateY(0); }
+        .btn-primary-auth:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(255,107,157,0.5) !important; }
+        .btn-primary-auth:active { transform:translateY(0); }
+        .mode-btn:hover { background:rgba(255,107,157,0.1) !important; }
+        @media(max-width:600px){
+          .auth-split { flex-direction:column !important; }
+          .auth-deco   { display:none !important; }
+          .auth-form-wrap { padding:28px 20px !important; }
         }
       `}</style>
 
-      <div className="auth-root">
-        {/* Background leaves */}
-        <div className="bg-leaves">
-          {[1, 2, 3, 4, 5, 6].map(i => <Leaf key={i} className="bg-leaf" />)}
-        </div>
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${G.bg} 0%,#1a1f3a 100%)`,position:"relative",overflow:"hidden",padding:"20px"}}>
+        <ParticlesBg/>
+
+        {/* Glow blobs */}
+        <div style={{position:"absolute",top:"15%",left:"8%",width:400,height:400,background:`radial-gradient(circle,${G.accent}18 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(60px)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:"15%",right:"8%",width:500,height:500,background:`radial-gradient(circle,${G.purple}15 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(60px)",pointerEvents:"none"}}/>
 
         {/* Card */}
-        <div className="auth-card">
-          {/* Decorative panel */}
-          <div className="auth-deco">
-            <div className="deco-wave" />
-            <div className="deco-wave2" />
-            <div className="deco-leaves-wrap">
-              {[1, 2, 3, 4].map(i => <Leaf key={i} className="deco-leaf" />)}
+        <div className="auth-card auth-split" style={{display:"flex",width:"min(900px,100%)",minHeight:560,borderRadius:24,overflow:"hidden",border:`1px solid ${G.border}`,boxShadow:`0 32px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,107,157,0.08)`,backdropFilter:"blur(20px)",position:"relative",zIndex:1}}>
+
+          {/* ── Left decorative panel ── */}
+          <div className="auth-deco" style={{flex:"0 0 42%",background:`linear-gradient(160deg,${G.surface} 0%,#0f1535 100%)`,padding:"48px 36px",display:"flex",flexDirection:"column",justifyContent:"space-between",position:"relative",overflow:"hidden",borderRight:`1px solid ${G.border}`}}>
+            {/* Grid pattern */}
+            <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(rgba(255,107,157,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,157,0.03) 1px,transparent 1px)`,backgroundSize:"32px 32px",pointerEvents:"none"}}/>
+            {/* Glow */}
+            <div style={{position:"absolute",top:-60,right:-60,width:240,height:240,background:`radial-gradient(circle,${G.accent}20 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(40px)"}}/>
+            <div style={{position:"absolute",bottom:-40,left:-40,width:200,height:200,background:`radial-gradient(circle,${G.purple}20 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(40px)"}}/>
+
+            <div style={{position:"relative",zIndex:1}}>
+              {/* Logo */}
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:48}}>
+                <div style={{width:40,height:40,background:`linear-gradient(135deg,${G.accent},${G.purple})`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:`0 0 20px rgba(255,107,157,0.4)`}}>R</div>
+                <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:G.text}}>Rejex<span style={{color:G.accent}}>IQ</span></span>
+              </div>
+
+              <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:28,fontWeight:800,color:G.text,lineHeight:1.2,marginBottom:16}}>
+                {mode==="signin" ? "Welcome\nback 👋" : "Start your\njourney 🚀"}
+              </h2>
+              <p style={{fontSize:14,color:G.muted,lineHeight:1.7,marginBottom:32}}>
+                {mode==="signin"
+                  ? "Sign in to access your career intelligence dashboard, skill assessments, and personalized roadmap."
+                  : "Join thousands of developers who've discovered their career readiness score and best-fit roles."}
+              </p>
+
+              {/* Feature bullets */}
+              {["AI-powered skill assessment","Real-time market demand data","Personalized career roadmap","Professional resume builder"].map((f,i) => (
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                  <div style={{width:20,height:20,borderRadius:"50%",background:`${G.accent}20`,border:`1px solid ${G.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:G.accent,flexShrink:0}}>✓</div>
+                  <span style={{fontSize:13,color:G.mutedBright||G.muted}}>{f}</span>
+                </div>
+              ))}
             </div>
-            <div className="deco-content">
-              <div className="deco-logo">
-                <svg viewBox="0 0 28 28" fill="none">
-                  <path d="M14 2C8 2,4 8,4 14s4 12,10 12c3 0,5.5-1.2,7.2-3.1" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
-                  <path d="M14 2c3 4,5 8,5 12s-2 8-5 12" stroke="white" strokeWidth="1.5" fill="none" />
-                  <path d="M6 10h16M6 18h12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-                </svg>
-              </div>
-              <div className="deco-title">
-                {mode === "signin" ? "Welcome\nBack" : "Start Your\nJourney"}
-              </div>
-              <div className="deco-subtitle">
-                {mode === "signin"
-                  ? "Explore paths that lead you toward your goals and success"
-                  : "Join thousands discovering their best career roadmap"}
-              </div>
-              <div className="deco-switch">
-                <p>{mode === "signin" ? "Don't have an account?" : "Already have an account?"}</p>
-                <button className="deco-switch-btn" onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}>
-                  {mode === "signin" ? "Create account →" : "Sign in →"}
-                </button>
-              </div>
+
+            {/* Switch mode */}
+            <div style={{position:"relative",zIndex:1,marginTop:32}}>
+              <p style={{fontSize:13,color:G.muted,marginBottom:12}}>{mode==="signin"?"Don't have an account?":"Already have an account?"}</p>
+              <button className="mode-btn" onClick={()=>switchMode(mode==="signin"?"signup":"signin")}
+                style={{background:"rgba(255,107,157,0.08)",border:`1px solid ${G.accent}40`,borderRadius:10,padding:"10px 20px",color:G.accent,fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.2s",fontFamily:"'Space Grotesk',sans-serif"}}>
+                {mode==="signin"?"Create account →":"Sign in →"}
+              </button>
             </div>
           </div>
 
-          {/* Form panel */}
-          <div className={`auth-form-wrap ${animating ? "animating" : ""}`}>
-            <div className="form-title">{mode === "signin" ? "Log in" : "Create account"}</div>
-            <div className="form-subtitle">
-              {mode === "signin" ? (
-                <>New here? <a onClick={() => switchMode("signup")}>Create an account</a></>
-              ) : (
-                <>Already have an account? <a onClick={() => switchMode("signin")}>Sign in</a></>
+          {/* ── Right form panel ── */}
+          <div className="auth-form-wrap" style={{flex:1,background:G.card,padding:"40px 36px",display:"flex",flexDirection:"column",justifyContent:"center",overflowY:"auto"}}>
+            <div className={`auth-form${animating?" out":""}`}>
+              <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:G.text,marginBottom:4}}>
+                {mode==="signin"?"Sign in to RejexIQ":"Create your account"}
+              </h1>
+              <p style={{fontSize:13,color:G.muted,marginBottom:24}}>
+                {mode==="signin"?"New here? ":"Already have an account? "}
+                <span onClick={()=>switchMode(mode==="signin"?"signup":"signin")} style={{color:G.accent,cursor:"pointer",fontWeight:600}}>
+                  {mode==="signin"?"Create account":"Sign in"}
+                </span>
+              </p>
+
+              {/* Google button */}
+              <button className="btn-google" onClick={handleGoogle} disabled={gLoading}
+                style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,background:"rgba(255,255,255,0.06)",border:`1px solid ${G.border}`,borderRadius:10,padding:"11px 16px",color:G.text,fontSize:14,fontWeight:500,cursor:gLoading?"not-allowed":"pointer",transition:"all 0.2s",marginBottom:20,fontFamily:"'Inter',sans-serif"}}>
+                {gLoading
+                  ? <><div style={{width:16,height:16,border:`2px solid ${G.border}`,borderTop:`2px solid ${G.accent}`,borderRadius:"50%",animation:"spin 0.7s linear infinite"}}/> Connecting...</>
+                  : <><GoogleIcon/> Continue with Google</>}
+              </button>
+
+              {/* Divider */}
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+                <div style={{flex:1,height:1,background:G.border}}/>
+                <span style={{fontSize:12,color:G.muted}}>or continue with email</span>
+                <div style={{flex:1,height:1,background:G.border}}/>
+              </div>
+
+              {/* Name (signup only) */}
+              {mode==="signup" && (
+                <Field label="Full Name" value={form.name} placeholder="Jane Doe"
+                  onChange={v=>handleChange("name",v)} onBlur={()=>handleBlur("name")}
+                  error={touched.name&&errors.name} valid={touched.name&&!errors.name&&form.name.length>=2}
+                  autoComplete="name"/>
               )}
-            </div>
 
-            {/* Name fields (signup only) */}
-            {mode === "signup" && (
-              <div className="field-row">
-                <div className="field-wrap">
-                  <label className="field-label">Full Name *</label>
-                  <input
-                    className={`field-input ${touched.name && errors.name ? "has-error" : touched.name && !errors.name && form.name ? "is-valid" : ""}`}
-                    placeholder="Jane Doe"
-                    value={form.name}
-                    onChange={e => handleChange("name", e.target.value)}
-                    onBlur={() => handleBlur("name")}
-                  />
-                  {touched.name && errors.name && <div className="field-error">{errors.name}</div>}
-                </div>
-              </div>
-            )}
+              {/* Email */}
+              <Field label="Email Address" type="email" value={form.email} placeholder="you@example.com"
+                onChange={v=>handleChange("email",v)} onBlur={()=>handleBlur("email")}
+                error={touched.email&&errors.email} valid={touched.email&&!errors.email&&form.email}
+                autoComplete="email"/>
 
-            {/* Email / Login */}
-            <div className="field-wrap">
-              <label className="field-label">{mode === "signup" ? "Email Address *" : "Login, email or phone number"}</label>
-              <input
-                className={`field-input ${touched.email && errors.email ? "has-error" : touched.email && !errors.email && form.email ? "is-valid" : ""}`}
-                placeholder={mode === "signup" ? "you@example.com" : "Email or phone number"}
-                value={form.email}
-                onChange={e => handleChange("email", e.target.value)}
-                onBlur={() => handleBlur("email")}
-                type="email"
-              />
-              {touched.email && errors.email && <div className="field-error">{errors.email}</div>}
-            </div>
+              {/* Password */}
+              <Field label="Password" type={showPw?"text":"password"} value={form.password}
+                placeholder={mode==="signup"?"Min. 8 chars, uppercase, number, symbol":"Your password"}
+                onChange={v=>handleChange("password",v)} onBlur={()=>handleBlur("password")}
+                error={touched.password&&errors.password} valid={touched.password&&!errors.password&&form.password}
+                autoComplete={mode==="signup"?"new-password":"current-password"}
+                right={<button type="button" onClick={()=>setShowPw(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",color:G.muted,display:"flex",padding:0}}><Eye open={showPw}/></button>}/>
 
-            {/* Phone (signup only) */}
-            {mode === "signup" && (
-              <div className="field-wrap">
-                <label className="field-label">Phone Number *</label>
-                <input
-                  className={`field-input ${touched.phone && errors.phone ? "has-error" : touched.phone && !errors.phone && form.phone ? "is-valid" : ""}`}
-                  placeholder="+91 98765 43210"
-                  value={form.phone}
-                  onChange={e => handleChange("phone", e.target.value)}
-                  onBlur={() => handleBlur("phone")}
-                  type="tel"
-                />
-                {touched.phone && errors.phone && <div className="field-error">{errors.phone}</div>}
-              </div>
-            )}
-
-            {/* Password */}
-            <div className="field-wrap">
-              <label className="field-label">Password *</label>
-              <div className="field-input-wrap">
-                <input
-                  className={`field-input ${touched.password && errors.password ? "has-error" : touched.password && !errors.password && form.password ? "is-valid" : ""}`}
-                  placeholder="Min. 6 characters"
-                  value={form.password}
-                  onChange={e => handleChange("password", e.target.value)}
-                  onBlur={() => handleBlur("password")}
-                  type={showPass ? "text" : "password"}
-                  style={{ paddingRight: "42px" }}
-                />
-                <button className="field-eye" type="button" onClick={() => setShowPass(v => !v)}>
-                  <EyeIcon open={showPass} />
-                </button>
-              </div>
-              {mode === "signup" && form.password && (
-                <div className="strength-bar-wrap">
-                  <div className="strength-bar-track">
-                    <div
-                      className="strength-bar-fill"
-                      style={{
-                        width: `${(strength.score / 5) * 100}%`,
-                        background: strength.color,
-                      }}
-                    />
+              {/* Password strength meter (signup) */}
+              {mode==="signup" && form.password && (
+                <div style={{marginTop:-8,marginBottom:14}}>
+                  <div style={{height:3,background:G.border,borderRadius:2,overflow:"hidden",marginBottom:4}}>
+                    <div style={{height:"100%",width:`${strength.pct}%`,background:strength.color,borderRadius:2,transition:"all 0.4s ease",boxShadow:`0 0 8px ${strength.color}80`}}/>
                   </div>
-                  <div className="strength-label" style={{ color: strength.color }}>
-                    {strength.label} — {strength.score < 2 ? "Add uppercase, numbers or symbols" : strength.score < 4 ? "Getting better!" : "Great password!"}
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:11}}>
+                    <span style={{color:strength.color,fontWeight:600}}>{strength.label}</span>
+                    <span style={{color:G.muted}}>
+                      {strength.score<2?"Add uppercase, numbers & symbols":strength.score<4?"Getting stronger!":"Great password!"}
+                    </span>
                   </div>
                 </div>
               )}
-              {touched.password && errors.password && <div className="field-error">{errors.password}</div>}
-            </div>
 
-            {/* Confirm password (signup only) */}
-            {mode === "signup" && (
-              <div className="field-wrap">
-                <label className="field-label">Confirm Password *</label>
-                <div className="field-input-wrap">
-                  <input
-                    className={`field-input ${touched.confirm && errors.confirm ? "has-error" : touched.confirm && !errors.confirm && form.confirm ? "is-valid" : ""}`}
-                    placeholder="Re-enter password"
-                    value={form.confirm}
-                    onChange={e => handleChange("confirm", e.target.value)}
-                    onBlur={() => handleBlur("confirm")}
-                    type={showConfirm ? "text" : "password"}
-                    style={{ paddingRight: "42px" }}
-                  />
-                  <button className="field-eye" type="button" onClick={() => setShowConfirm(v => !v)}>
-                    <EyeIcon open={showConfirm} />
-                  </button>
+              {/* Confirm password (signup) */}
+              {mode==="signup" && (
+                <Field label="Confirm Password" type={showCf?"text":"password"} value={form.confirm}
+                  placeholder="Re-enter your password"
+                  onChange={v=>handleChange("confirm",v)} onBlur={()=>handleBlur("confirm")}
+                  error={touched.confirm&&errors.confirm}
+                  valid={touched.confirm&&!errors.confirm&&form.confirm&&form.confirm===form.password}
+                  autoComplete="new-password"
+                  right={<button type="button" onClick={()=>setShowCf(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",color:G.muted,display:"flex",padding:0}}><Eye open={showCf}/></button>}/>
+              )}
+
+              {/* Forgot password (signin) */}
+              {mode==="signin" && (
+                <div style={{textAlign:"right",marginTop:-6,marginBottom:16}}>
+                  <span onClick={()=>showToast("Password reset email sent! Check your inbox.","success")} style={{fontSize:12,color:G.accent,cursor:"pointer",fontWeight:500}}>Forgot password?</span>
                 </div>
-                {touched.confirm && errors.confirm && <div className="field-error">{errors.confirm}</div>}
-              </div>
-            )}
+              )}
 
-            {/* Submit */}
-            <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
-              {loading ? (
-                <span className="btn-loader"><span className="spinner" />{mode === "signin" ? "Signing in…" : "Creating account…"}</span>
-              ) : mode === "signin" ? "Log in" : "Create account"}
-            </button>
+              {/* Submit */}
+              <button className="btn-primary-auth" onClick={handleSubmit} disabled={loading}
+                style={{width:"100%",background:loading?"rgba(255,107,157,0.3)":`linear-gradient(135deg,${G.accent},${G.purple})`,border:"none",borderRadius:10,padding:"12px",color:"#fff",fontSize:14,fontWeight:700,cursor:loading?"not-allowed":"pointer",transition:"all 0.25s",boxShadow:`0 4px 20px rgba(255,107,157,0.3)`,fontFamily:"'Space Grotesk',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
+                {loading
+                  ? <><div style={{width:16,height:16,border:"2px solid rgba(255,255,255,0.3)",borderTop:"2px solid #fff",borderRadius:"50%",animation:"spin 0.7s linear infinite"}}/>{mode==="signin"?"Signing in...":"Creating account..."}</>
+                  : mode==="signin"?"Sign In":"Create Account"}
+              </button>
 
-            {mode === "signin" && (
-              <a className="forgot-link" onClick={() => showToast("Password reset email sent!", "success")}>
-                Forgot login or password?
-              </a>
-            )}
-
-            {mode === "signup" && (
-              <div className="terms-text">
-                By creating an account you agree to our{" "}
-                <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-              </div>
-            )}
+              {/* Terms (signup) */}
+              {mode==="signup" && (
+                <p style={{fontSize:11,color:G.muted,textAlign:"center",lineHeight:1.6}}>
+                  By creating an account you agree to our{" "}
+                  <span style={{color:G.accent,cursor:"pointer"}}>Terms of Service</span> and{" "}
+                  <span style={{color:G.accent,cursor:"pointer"}}>Privacy Policy</span>
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Toast */}
-        {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+        {toast && (
+          <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",zIndex:9999,padding:"12px 24px",borderRadius:50,fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",boxShadow:"0 8px 32px rgba(0,0,0,0.3)",animation:"fadeUp 0.3s ease",whiteSpace:"nowrap",maxWidth:"90vw",
+            background:toast.type==="success"?"rgba(52,211,153,0.15)":toast.type==="info"?"rgba(34,211,238,0.15)":"rgba(248,113,113,0.15)",
+            border:`1px solid ${toast.type==="success"?G.success:toast.type==="info"?G.cyan:G.danger}40`,
+            color:toast.type==="success"?G.success:toast.type==="info"?G.cyan:G.danger}}>
+            {toast.msg}
+          </div>
+        )}
       </div>
     </>
   );

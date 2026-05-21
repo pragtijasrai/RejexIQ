@@ -23,10 +23,24 @@ const PORT = process.env.PORT || 5000;
 const storyRoutes = require("./storyRoutes");
 // Career Match routes
 const careerRoutes = require("./careerRoutes");
+// New auth routes (JWT + MongoDB)
+const { router: authRouter, authMiddleware: newAuthMiddleware } = require("./authRoutes");
+
 const JWT_SECRET = process.env.JWT_SECRET || "rejexiq_dev_secret_2025";
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const MONGO_URI  = process.env.MONGO_URI  || "";
 
-// ── IN-MEMORY DATABASE (for demo — replace with MongoDB in production) ──────
+// ── MongoDB connection (optional — falls back to in-memory) ──────────────────
+if (MONGO_URI) {
+  const mongoose = require("mongoose");
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.warn("⚠️  MongoDB connection failed — using in-memory store:", err.message));
+} else {
+  console.log("ℹ️  No MONGO_URI set — using in-memory user store (data resets on restart)");
+}
+
+// ── IN-MEMORY DATABASE (legacy — kept for non-auth routes) ──────────────────
 const users = [];          // Simulates user collection
 const assessments = [];    // Simulates assessments collection
 
@@ -104,6 +118,9 @@ function generateReport(userSkills) {
 }
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
+
+// NEW: Auth routes (signup, signin, google, me)
+app.use("/api/auth", authRouter);
 
 // Story Mode routes
 app.use("/api", storyRoutes);
@@ -371,7 +388,143 @@ app.post("/api/parse-resume", async (req, res, next) => {
   }
 });
 
-// ── SERVE REACT APP ───────────────────────────────────────────────────────────
+// ── CODE ARENA — AI HINT ──────────────────────────────────────────────────────
+app.post("/api/ai/hint", async (req, res) => {
+  try {
+    const { problemTitle, problemDescription, userCode, language } = req.body;
+    if (!problemTitle) return res.status(400).json({ error: "Problem title required" });
+
+    const GROQ_KEY = process.env.GROQ_API_KEY || "";
+    if (!GROQ_KEY) return res.status(503).json({ error: "AI not configured" });
+
+    const prompt = `You are a coding mentor helping a student solve: "${problemTitle}"
+
+Problem: ${problemDescription || ""}
+
+Student's current code (${language || "JavaScript"}):
+\`\`\`
+${userCode || "(empty)"}
+\`\`\`
+
+Give a helpful hint WITHOUT giving away the full solution. Point them in the right direction. Keep it under 3 sentences. Be encouraging.`;
+
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 200,
+        temperature: 0.5
+      })
+    });
+    const data = await groqRes.json();
+    if (!groqRes.ok) return res.status(502).json({ error: data.error?.message || "AI error" });
+    res.json({ hint: data.choices?.[0]?.message?.content || "Think about the time complexity. Can you use a hash map?" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── CODE ARENA — AI SOLUTION EXPLANATION ─────────────────────────────────────
+app.post("/api/ai/explain", async (req, res) => {
+  try {
+    const { problemTitle, solution, language } = req.body;
+    const GROQ_KEY = process.env.GROQ_API_KEY || "";
+    if (!GROQ_KEY) return res.status(503).json({ error: "AI not configured" });
+
+    const prompt = `Explain this ${language || "JavaScript"} solution for "${problemTitle}" in simple terms. Cover: 1) The approach/algorithm, 2) Time complexity, 3) Space complexity. Keep it concise (under 5 sentences).
+
+\`\`\`
+${solution}
+\`\`\``;
+
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.3
+      })
+    });
+    const data = await groqRes.json();
+    if (!groqRes.ok) return res.status(502).json({ error: data.error?.message || "AI error" });
+    res.json({ explanation: data.choices?.[0]?.message?.content || "No explanation available." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/ai/chat", async (req, res) => {
+  try {
+    const { message, userName, skills } = req.body;
+    if (!message) return res.status(400).json({ error: "Message is required" });
+
+    const skillsText = skills
+      ? Object.entries(skills).map(([k,v]) => `${k}: ${v}%`).join(", ")
+      : "Not assessed";
+
+    const prompt = `You are an expert AI Career Assistant for RejexIQ platform helping ${userName || "a user"} with career guidance.\n\nUser Skills: ${skillsText}\n\nQuestion: ${message}\n\nGive helpful, actionable career advice. Use bullet points for lists. Be concise but thorough.`;
+
+    const GROQ_KEY   = process.env.GROQ_API_KEY  || "";
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
+
+    // ── Try Groq first (free, fast) ──────────────────────────────────────────
+    if (GROQ_KEY) {
+      try {
+        const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_KEY}`
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 1000,
+            temperature: 0.7
+          })
+        });
+        const groqData = await groqRes.json();
+        if (groqRes.ok && groqData.choices?.[0]?.message?.content) {
+          return res.json({ text: groqData.choices[0].message.content });
+        }
+        console.warn("Groq error:", groqData.error?.message || JSON.stringify(groqData));
+      } catch (groqErr) {
+        console.warn("Groq fetch failed:", groqErr.message);
+      }
+    }
+
+    // ── Fallback to Gemini ────────────────────────────────────────────────────
+    if (GEMINI_KEY) {
+      try {
+        const gemRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 1000 }
+            })
+          }
+        );
+        const gemData = await gemRes.json();
+        if (gemRes.ok && gemData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          return res.json({ text: gemData.candidates[0].content.parts[0].text });
+        }
+        console.warn("Gemini error:", gemData.error?.message || JSON.stringify(gemData));
+      } catch (gemErr) {
+        console.warn("Gemini fetch failed:", gemErr.message);
+      }
+    }
+
+    return res.status(503).json({ error: "AI service unavailable. Please try again in a moment." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../dist", "index.html"));
 });
@@ -389,17 +542,15 @@ app.use((err, req, res, next) => {
 // ── SERVER CREATION (HTTP module) ────────────────────────────────────────────
 const server = http.createServer(app);  // Using Node.js HTTP module
 
+// ── SOCKET.IO ─────────────────────────────────────────────────────────────────
+const { initSocket } = require("./socket/index");
+const io = initSocket(server, CLIENT_URL);
+app.set("io", io); // make io accessible in routes if needed
+
 server.listen(PORT, () => {
   console.log(`\n🚀 RejexIQ Server running at http://localhost:${PORT}`);
-  console.log(`📋 API available at http://localhost:${PORT}/api`);
-  console.log(`\nDemonstrating NodeJS concepts:`);
-  console.log(`  ✅ Client-Server Architecture`);
-  console.log(`  ✅ Express Framework & Routing`);
-  console.log(`  ✅ JWT Authentication`);
-  console.log(`  ✅ Middleware (auth, logging, error handling)`);
-  console.log(`  ✅ File Handling & Streaming`);
-  console.log(`  ✅ Route Parameters`);
-  console.log(`  ✅ Exception Handling\n`);
+  console.log(`⚡ Socket.IO realtime server active`);
+  console.log(`📋 API available at http://localhost:${PORT}/api\n`);
 });
 
 module.exports = app;
