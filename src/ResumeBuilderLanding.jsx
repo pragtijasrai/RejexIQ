@@ -1656,7 +1656,7 @@ function TemplatesSection({ onSelect }) {
       <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
 
       {/* ── HEADER BAR ── */}
-      <div className="relative z-10 border-b border-white/10 px-8 py-5" style={{background:"rgba(5,7,26,0.8)",backdropFilter:"blur(12px)"}}>
+      <div className="relative z-10 border-b border-white/10 px-8 py-5" style={{background:"rgba(5,7,26,0.8)",backdropFilter:"blur(12px)",marginBottom:"16px"}}>
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold" style={{padding:"5px 16px"}}>🎯 ATS Score Checker</div>
@@ -1700,7 +1700,7 @@ function TemplatesSection({ onSelect }) {
 
             <motion.button whileHover={{scale:1.02,boxShadow:"0 12px 30px rgba(6,182,212,0.3)"}} whileTap={{scale:0.97}} onClick={check} disabled={!file||checking}
               className="w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40"
-              style={{background:"linear-gradient(135deg,#06b6d4,#6366f1)"}}>
+              style={{background:"linear-gradient(135deg,#06b6d4,#6366f1)",marginBottom:"16px"}}>
               {checking?<span className="flex items-center justify-center gap-3"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>Analyzing resume...</span>:"Check ATS Score →"}
             </motion.button>
 
