@@ -1412,77 +1412,130 @@ function TemplatesSection({ onSelect }) {
 ﻿  async function downloadPDF(){
     setDownloadingPDF(true);
     try{
-      const html=buildResumeHTML(resumeData);
-
-      // Create a full-page overlay div that IS visible to html2canvas
-      const overlay=document.createElement("div");
-      overlay.style.cssText="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999998;display:flex;align-items:flex-start;justify-content:center;overflow:auto;";
-
-      const page=document.createElement("div");
-      page.style.cssText="width:794px;min-height:1123px;background:white;margin:20px auto;flex-shrink:0;";
-      page.innerHTML=html;
-      overlay.appendChild(page);
-      document.body.appendChild(overlay);
-
-      // Wait for browser to fully paint
-      await new Promise(r=>setTimeout(r,500));
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-      await new Promise(r=>setTimeout(r,300));
-
-      // Capture with html2canvas
-      const html2canvas=(await import("html2canvas")).default;
-      const canvas=await html2canvas(page,{
-        scale:2,
-        useCORS:true,
-        logging:false,
-        backgroundColor:"#ffffff",
-        width:794,
-        height:page.scrollHeight,
-        scrollX:0,
-        scrollY:0,
-        allowTaint:true,
-        foreignObjectRendering:false,
-        ignoreElements:(el)=>el===overlay,
-      });
-
-      // Remove overlay
-      document.body.removeChild(overlay);
-
-      // Convert to PDF with jsPDF
       const{jsPDF}=await import("jspdf");
-      const pdf=new jsPDF({unit:"px",format:"a4",orientation:"portrait"});
-      const pdfW=pdf.internal.pageSize.getWidth();
-      const pdfH=pdf.internal.pageSize.getHeight();
-      const imgData=canvas.toDataURL("image/jpeg",0.98);
-      const canvasW=canvas.width;
-      const canvasH=canvas.height;
-      const ratio=pdfW/canvasW;
-      const scaledH=canvasH*ratio;
+      const rd=resumeData;
+      const pdf=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const pageW=210, pageH=297, ml=18, mr=18, mt=18;
+      const usableW=pageW-ml-mr;
+      let y=mt;
+      const accent=[99,102,241]; // indigo
 
-      if(scaledH<=pdfH){
-        pdf.addImage(imgData,"JPEG",0,0,pdfW,scaledH);
-      }else{
-        // Multi-page
-        const pageHpx=pdfH/ratio;
-        let yOffset=0;
-        let pageNum=0;
-        while(yOffset<canvasH){
-          if(pageNum>0)pdf.addPage();
-          const sliceH=Math.min(pageHpx,canvasH-yOffset);
-          const tmpCanvas=document.createElement("canvas");
-          tmpCanvas.width=canvasW;
-          tmpCanvas.height=sliceH;
-          const ctx=tmpCanvas.getContext("2d");
-          ctx.fillStyle="#ffffff";
-          ctx.fillRect(0,0,canvasW,sliceH);
-          ctx.drawImage(canvas,0,yOffset,canvasW,sliceH,0,0,canvasW,sliceH);
-          pdf.addImage(tmpCanvas.toDataURL("image/jpeg",0.98),"JPEG",0,0,pdfW,sliceH*ratio);
-          yOffset+=sliceH;
-          pageNum++;
-        }
+      // ── helpers ──────────────────────────────────────────────────────────
+      function checkPage(needed=8){
+        if(y+needed>pageH-12){pdf.addPage();y=mt;}
+      }
+      function setColor(r,g,b){pdf.setTextColor(r,g,b);}
+      function setFont(style,size){pdf.setFont("helvetica",style);pdf.setFontSize(size);}
+      function sectionHeader(title){
+        checkPage(12);
+        pdf.setFillColor(...accent);
+        pdf.rect(ml,y,usableW,0.5,"F");
+        y+=3;
+        setFont("bold",9);
+        setColor(...accent);
+        pdf.text(title.toUpperCase(),ml,y);
+        y+=5;
+        setColor(30,30,30);
+      }
+      function wrapText(text,x,maxW,lineH){
+        const lines=pdf.splitTextToSize(text,maxW);
+        lines.forEach(line=>{
+          checkPage(lineH+1);
+          pdf.text(line,x,y);
+          y+=lineH;
+        });
       }
 
-      const filename=(resumeData.name||"resume").replace(/\s+/g,"_")+"_improved.pdf";
+      // ── HEADER ───────────────────────────────────────────────────────────
+      pdf.setFillColor(...accent);
+      pdf.rect(0,0,pageW,38,"F");
+      setFont("bold",20);
+      setColor(255,255,255);
+      pdf.text(rd.name||"Your Name",ml,14);
+      setFont("normal",10);
+      setColor(220,220,255);
+      if(rd.title) pdf.text(rd.title,ml,21);
+      setFont("normal",8);
+      setColor(200,200,240);
+      const contactParts=[rd.email,rd.phone,rd.location].filter(Boolean);
+      pdf.text(contactParts.join("   "),ml,28);
+      y=44;
+
+      // ── SUMMARY ──────────────────────────────────────────────────────────
+      if(rd.summary){
+        sectionHeader("Summary");
+        setFont("italic",9);
+        setColor(55,65,81);
+        wrapText(rd.summary,ml,usableW,5);
+        y+=3;
+      }
+
+      // ── SKILLS ───────────────────────────────────────────────────────────
+      if(rd.skills&&rd.skills.length>0){
+        sectionHeader("Skills");
+        setFont("normal",9);
+        setColor(55,65,81);
+        // Lay skills out in rows
+        const skillText=rd.skills.join("  •  ");
+        wrapText(skillText,ml,usableW,5);
+        y+=3;
+      }
+
+      // ── EXPERIENCE ───────────────────────────────────────────────────────
+      if(rd.experience&&rd.experience.length>0){
+        sectionHeader("Experience");
+        rd.experience.forEach(line=>{
+          if(!line||line.trim().length<2) return;
+          checkPage(6);
+          setFont("normal",9);
+          setColor(55,65,81);
+          const clean=line.replace(/^[•\-\*]\s*/,"");
+          wrapText("• "+clean,ml+2,usableW-2,5);
+        });
+        y+=3;
+      }
+
+      // ── PROJECTS ─────────────────────────────────────────────────────────
+      if(rd.projects&&rd.projects.length>0){
+        sectionHeader("Projects");
+        rd.projects.forEach(line=>{
+          if(!line||line.trim().length<2) return;
+          checkPage(6);
+          setFont("normal",9);
+          setColor(55,65,81);
+          const clean=line.replace(/^[•\-\*]\s*/,"");
+          wrapText("• "+clean,ml+2,usableW-2,5);
+        });
+        y+=3;
+      }
+
+      // ── EDUCATION ────────────────────────────────────────────────────────
+      if(rd.education&&rd.education.length>0){
+        sectionHeader("Education");
+        rd.education.forEach(line=>{
+          if(!line||line.trim().length<2) return;
+          checkPage(6);
+          setFont("normal",9);
+          setColor(55,65,81);
+          wrapText(line,ml,usableW,5);
+        });
+        y+=3;
+      }
+
+      // ── CERTIFICATIONS ───────────────────────────────────────────────────
+      if(rd.certifications&&rd.certifications.length>0){
+        sectionHeader("Certifications");
+        rd.certifications.forEach(line=>{
+          if(!line||line.trim().length<2) return;
+          checkPage(6);
+          setFont("normal",9);
+          setColor(55,65,81);
+          wrapText(line,ml,usableW,5);
+        });
+      }
+
+      // ── SAVE ─────────────────────────────────────────────────────────────
+      const filename=(rd.name||"resume").replace(/[^a-zA-Z0-9]/g,"_")+"_improved.pdf";
       pdf.save(filename);
 
     }catch(err){
