@@ -221,16 +221,152 @@ const POPULAR_SKILLS = [
   "UI/UX Design", "Git & GitHub", "Docker & Kubernetes", "Agile Methodologies"
 ];
 
-const SectionEditMenu = ({ section, editSection, setEditSection }) => {
-  const isEditing = editSection === section;
+const ProfileHeaderMenu = ({ editSection, setEditSection, onSave, onShare, onAddSection }) => {
+  const isEditing = editSection === 'hero';
+  const [open, setOpen] = React.useState(false);
+  const menuRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const menuItems = isEditing
+    ? [
+      { label: "✓ Save Changes", color: "var(--g-mid)", fontWeight: 700, action: () => { onSave(); setOpen(false); } },
+      { label: "📤 Share", color: "var(--gray-700)", action: () => { onShare(); setOpen(false); } },
+      { label: "➕ Add Section", color: "var(--gray-700)", action: () => { onAddSection(); setOpen(false); } },
+    ]
+    : [
+      { label: "✏️ Edit Profile", color: "var(--gray-700)", action: () => { setEditSection('hero'); setOpen(false); } },
+      { label: "📤 Share", color: "var(--gray-700)", action: () => { onShare(); setOpen(false); } },
+      { label: "➕ Add Section", color: "var(--gray-700)", action: () => { onAddSection(); setOpen(false); } },
+    ];
+
   return (
-    <div style={{ zIndex: 10 }}>
-      {isEditing ? (
-        <button onClick={() => setEditSection(null)} style={{ padding: "4px 12px", fontSize: "0.75rem", borderRadius: "50px", background: "linear-gradient(90deg, var(--g-mid), var(--g-light))", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Done</button>
-      ) : (
-        <button onClick={() => setEditSection(section)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "4px", display: "flex", alignItems: "center" }} title="Edit Section">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-        </button>
+    <div ref={menuRef} style={{ position: "relative", zIndex: 30 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: open ? "var(--gray-100)" : "transparent",
+          border: "1px solid var(--gray-200)",
+          borderRadius: 8, cursor: "pointer",
+          color: "var(--gray-500)", padding: "6px 10px",
+          display: "flex", alignItems: "center", gap: 2,
+          transition: "background 0.15s, border-color 0.15s",
+          boxShadow: open ? "0 2px 8px rgba(0,0,0,0.08)" : "none"
+        }}
+        title="Profile options"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", right: 0,
+          background: "var(--white)", border: "1px solid var(--gray-200)",
+          borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+          minWidth: 170, overflow: "hidden", zIndex: 100
+        }}>
+          {menuItems.map((item, i) => (
+            <button
+              key={i}
+              onClick={item.action}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "10px 16px", background: "transparent",
+                border: "none", borderBottom: i < menuItems.length - 1 ? "1px solid var(--gray-100)" : "none",
+                cursor: "pointer", fontSize: "0.83rem",
+                color: item.color || "var(--gray-700)",
+                fontWeight: item.fontWeight || 500, textAlign: "left"
+              }}
+              onMouseOver={e => e.currentTarget.style.background = "var(--gray-50)"}
+              onMouseOut={e => e.currentTarget.style.background = "transparent"}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SectionEditMenu = ({ section, editSection, setEditSection, onSave }) => {
+  const isEditing = editSection === section;
+  const [open, setOpen] = React.useState(false);
+  const menuRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} style={{ position: "relative", zIndex: 20 }}>
+      {/* Three-dot trigger */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: open ? "var(--gray-100)" : "transparent",
+          border: "none", cursor: "pointer",
+          color: "var(--gray-400)", padding: "4px 6px",
+          borderRadius: 6, display: "flex", alignItems: "center",
+          transition: "background 0.15s"
+        }}
+        title="Section options"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+        </svg>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0,
+          background: "var(--white)", border: "1px solid var(--gray-200)",
+          borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+          minWidth: 140, overflow: "hidden", zIndex: 100
+        }}>
+          {!isEditing ? (
+            <button
+              onClick={() => { setEditSection(section); setOpen(false); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "9px 14px", background: "transparent",
+                border: "none", cursor: "pointer", fontSize: "0.82rem",
+                color: "var(--gray-700)", fontWeight: 500, textAlign: "left"
+              }}
+              onMouseOver={e => e.currentTarget.style.background = "var(--gray-50)"}
+              onMouseOut={e => e.currentTarget.style.background = "transparent"}
+            >
+              ✏️ Edit
+            </button>
+          ) : (
+            <button
+              onClick={() => { if (onSave) onSave(); else setEditSection(null); setOpen(false); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "9px 14px", background: "transparent",
+                border: "none", cursor: "pointer", fontSize: "0.82rem",
+                color: "var(--g-mid)", fontWeight: 600, textAlign: "left"
+              }}
+              onMouseOver={e => e.currentTarget.style.background = "var(--gray-50)"}
+              onMouseOut={e => e.currentTarget.style.background = "transparent"}
+            >
+              ✓ Save
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -1400,7 +1536,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* Text and input details in Column 2 */}
         <div className="profile-header-info" style={{ position: "relative" }}>
-          <SectionEditMenu section="hero" editSection={editSection} setEditSection={setEditSection} />
+          <SectionEditMenu section="hero" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
           {editSection === 'hero' ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", marginTop: 8 }} className="profile-header-inputs">
               <div>
@@ -1565,27 +1701,13 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           )}
         </div>
         <div className="profile-header-actions" style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8 }}>
-          <button
-            className="social-btn"
-            onClick={handleSave}
-            style={{ padding: "8px 16px", borderRadius: "50px", background: "linear-gradient(90deg, var(--g-mid), var(--g-light))", color: "white", border: "none", fontWeight: 600, cursor: "pointer" }}
-          >
-            ✓ Save Profile
-          </button>
-          <button
-            className="social-btn"
-            onClick={addCustomSection}
-            style={{ padding: "8px 16px", borderRadius: "50px", background: "var(--white)", color: "var(--gray-800)", border: "1px solid var(--gray-200)", fontWeight: 600, cursor: "pointer" }}
-          >
-            ➕ Add Section
-          </button>
-          <button
-            className="social-btn"
-            onClick={handleShareProfile}
-            style={{ padding: "8px 16px", borderRadius: "50px", background: "var(--white)", color: "var(--gray-800)", border: "1px solid var(--gray-200)", fontWeight: 600, cursor: "pointer" }}
-          >
-            📤 Share
-          </button>
+          <ProfileHeaderMenu
+            editSection={editSection}
+            setEditSection={setEditSection}
+            onSave={handleSave}
+            onShare={handleShareProfile}
+            onAddSection={addCustomSection}
+          />
         </div>
       </section>
 
@@ -1616,7 +1738,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <div className="section-label">About</div>
               <div className="section-title">Who I Am</div>
             </div>
-            <SectionEditMenu section="about" editSection={editSection} setEditSection={setEditSection} />
+            <SectionEditMenu section="about" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
           </div>
           <div className="about-grid">
             <div className="about-card about-card-bio">
@@ -1866,7 +1988,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <div className="section-label">Career Paths</div>
               <div className="section-title">Learning Roadmap</div>
             </div>
-            <SectionEditMenu section="roadmap" editSection={editSection} setEditSection={setEditSection} />
+            <SectionEditMenu section="roadmap" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
           </div>
           <div className="roadmap-grid">
             {Array.isArray(tempRoadmaps) && tempRoadmaps.map((r, i) => (
@@ -1904,7 +2026,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               {editSection === 'experience' && (
                 <button onClick={addExperience} className="crud-btn-add">➕ Add Experience</button>
               )}
-              <SectionEditMenu section="experience" editSection={editSection} setEditSection={setEditSection} />
+              <SectionEditMenu section="experience" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
             </div>
           </div>
           <div className="timeline">
@@ -1932,7 +2054,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               {editSection === 'education' && (
                 <button onClick={addEducation} className="crud-btn-add">➕ Add Education</button>
               )}
-              <SectionEditMenu section="education" editSection={editSection} setEditSection={setEditSection} />
+              <SectionEditMenu section="education" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
             </div>
           </div>
           <div className="timeline">
@@ -1962,7 +2084,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <div className="section-label">Expertise</div>
               <div className="section-title">Skills & Capabilities</div>
             </div>
-            <SectionEditMenu section="skills" editSection={editSection} setEditSection={setEditSection} />
+            <SectionEditMenu section="skills" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
           </div>
           <div className="skills-grid">
             {/* Technical Skills Card */}
@@ -2068,7 +2190,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               {editSection === 'certifications' && (
                 <button onClick={addCertification} className="crud-btn-add">➕ Add Certification</button>
               )}
-              <SectionEditMenu section="certifications" editSection={editSection} setEditSection={setEditSection} />
+              <SectionEditMenu section="certifications" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
             </div>
           </div>
           <div className="cert-grid">
@@ -2129,7 +2251,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   <button onClick={addProject} className="crud-btn-add">➕ Add Project Manually</button>
                 </div>
               )}
-              <SectionEditMenu section="projects" editSection={editSection} setEditSection={setEditSection} />
+              <SectionEditMenu section="projects" editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
             </div>
           </div>
 
@@ -2226,7 +2348,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     Delete Section
                   </button>
                 )}
-                <SectionEditMenu section={`custom-${idx}`} editSection={editSection} setEditSection={setEditSection} />
+                <SectionEditMenu section={`custom-${idx}`} editSection={editSection} setEditSection={setEditSection} onSave={handleSave} />
               </div>
             </div>
             <div className="about-card" style={{ marginBottom: 56 }}>
