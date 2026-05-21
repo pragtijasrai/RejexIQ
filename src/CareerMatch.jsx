@@ -197,8 +197,8 @@ export default function CareerMatch({ user, onNav }) {
   if (!hasSkills) return (
     <div style={{ textAlign: "center", paddingTop: 80, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ fontSize: 56, marginBottom: 16 }}>🏆</div>
-      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 10 }}>Complete Assessment First</h2>
-      <p style={{ color: C.muted, marginBottom: 24, maxWidth: 400, margin: "0 auto 24px" }}>Take the skill assessment to unlock your personalized career match, rejection predictor, and time estimator.</p>
+      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 26, fontWeight: 800, color: "#1a0a0c", marginBottom: 10 }}>Complete Assessment First</h2>
+      <p style={{ color: "#475569", marginBottom: 24, maxWidth: 400, margin: "0 auto 24px" }}>Take the skill assessment to unlock your personalized career match, rejection predictor, and time estimator.</p>
       <button onClick={() => onNav("assessment")} style={{ padding: "12px 32px", borderRadius: 20, border: "none", background: `linear-gradient(135deg,${C.accent},${C.purple})`, color: "#080c1e", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "'Space Grotesk',sans-serif" }}>
         Go to Assessment →
       </button>
@@ -227,10 +227,10 @@ export default function CareerMatch({ user, onNav }) {
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 26, fontWeight: 900, color: C.text, marginBottom: 4 }}>
+            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 26, fontWeight: 900, color: "#1a0a0c", marginBottom: 4 }}>
               Career Match System
             </h1>
-            <p style={{ color: C.muted, fontSize: 14 }}>Simulate real jobs · Predict rejection · Plan your path</p>
+            <p style={{ color: "#475569", fontSize: 14 }}>Simulate real jobs · Predict rejection · Plan your path</p>
           </div>
           {/* Role quick-switch */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
