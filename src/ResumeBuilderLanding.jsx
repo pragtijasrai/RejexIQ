@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════
 // 🎨  ULTRA-PREMIUM AI RESUME BUILDER — SaaS Landing + Full Builder
 // ═══════════════════════════════════════════════════════════════════════════
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import OriginalBuilder from "./ResumeBuilder.jsx";
+import OriginalBuilder, { parseResumeFile } from "./ResumeBuilder.jsx";
 
 // ── DATA ─────────────────────────────────────────────────────────────────
 const COMPANIES = ["Google","Amazon","Microsoft","Meta","Apple","Netflix","Spotify","Airbnb","Figma"];
@@ -927,6 +927,7 @@ function TemplatesSection({ onSelect }) {
   const ref=useRef(null);
   const iv=useInView(ref,{once:true,margin:"-80px"});
   const fr=useRef(null);
+  const previewRef=useRef(null);
 
   // ── SINGLE SOURCE OF TRUTH ──────────────────────────────────────────────
   const[resumeData,setResumeData]=useState({
@@ -947,8 +948,9 @@ function TemplatesSection({ onSelect }) {
   const[lineStates,setLineStates]=useState({});   // {lineId: "idle"|"loading"|"done"|"undone"}
   const[history,setHistory]=useState({});          // {lineId: originalText}
   const[downloadingPDF,setDownloadingPDF]=useState(false);
-  const[showPreview,setShowPreview]=useState(false);
   const[fixingAll,setFixingAll]=useState(false);
+  const[advisorCards,setAdvisorCards]=useState([]);
+  const[showPreview,setShowPreview]=useState(false);
 
   // ── ATS SCORE CALCULATION ────────────────────────────────────────────────
   function calcScore(rd){
@@ -1006,10 +1008,10 @@ function TemplatesSection({ onSelect }) {
     return rd;
   }
 
-  // ── GENERATE IMPROVEMENTS FOR EACH LINE ─────────────────────────────────
+  // ── GENERATE IMPROVEMENTS FOR EACH LINE — only from REAL resume content ──
   function generateImprovements(rd){
     const issues=[];
-    const WEAK=["responsible for","worked on","helped with","was involved in","assisted with","participated in","did","made","did work on"];
+    const WEAK=["responsible for","worked on","helped with","was involved in","assisted with","participated in"];
     const IMPROVE_MAP={
       "responsible for managing":"Led and managed",
       "responsible for":"Delivered and owned",
@@ -1022,10 +1024,11 @@ function TemplatesSection({ onSelect }) {
       "assisted with":"Supported and accelerated",
       "participated in":"Actively contributed to",
     };
+    const METRICS_SUFFIXES=["improving efficiency by 35%","reducing time by 40%","increasing output by 30%","saving 10+ hours/week","serving 10,000+ users","boosting performance by 45%"];
     const addMetrics=(text)=>{
-      if(!text.match(/\d+%|\d+x|\$\d+|\d+ (team|users|projects|engineers)/i)){
-        const suffixes=["improving efficiency by 35%","reducing time by 40%","increasing output by 30%","saving 10+ hours/week","serving 10,000+ users"];
-        return text.replace(/\.$|$/,", "+suffixes[Math.floor(Math.random()*suffixes.length)]+".");
+      if(!text.match(/\d+%|\d+x|\$\d+|\d+\s*(team|users|projects|engineers|people)/i)){
+        const s=METRICS_SUFFIXES[Math.floor(Math.random()*METRICS_SUFFIXES.length)];
+        return text.replace(/\.?\s*$/,", "+s+".");
       }
       return text;
     };
@@ -1037,16 +1040,18 @@ function TemplatesSection({ onSelect }) {
           break;
         }
       }
-      improved=improved.replace(/^(\w)/,c=>c.toUpperCase());
-      if(!improved.startsWith("•"))improved="• "+improved.replace(/^[•\-]\s*/,"");
+      improved=improved.replace(/^[•\-\*]\s*/,"").replace(/^(\w)/,c=>c.toUpperCase());
+      improved="• "+improved;
       improved=addMetrics(improved);
       return improved;
     };
+
+    // Analyze experience lines (flat strings from parseResumeText)
     rd.experience.forEach((line,i)=>{
+      if(!line||line.length<10) return;
       const hasWeak=WEAK.some(w=>line.toLowerCase().includes(w));
       const hasNoMetrics=!line.match(/\d+%|\d+x|\$\d+/);
-      const hasNoBullet=!line.startsWith("•");
-      if(hasWeak||hasNoMetrics||hasNoBullet){
+      if(hasWeak||hasNoMetrics){
         issues.push({
           id:"exp_"+i,
           section:"Experience",
@@ -1054,22 +1059,139 @@ function TemplatesSection({ onSelect }) {
           field:"experience",
           original:line,
           improved:improveText(line),
-          type:hasWeak?"Weak phrasing":hasNoMetrics?"No metrics":"Missing bullet",
+          type:hasWeak?"Weak phrasing":"No metrics",
         });
       }
     });
+
+    // Analyze project lines
+    rd.projects.forEach((line,i)=>{
+      if(!line||line.length<10) return;
+      const hasWeak=WEAK.some(w=>line.toLowerCase().includes(w));
+      const hasNoMetrics=!line.match(/\d+%|\d+x|\$\d+/);
+      if(hasWeak||hasNoMetrics){
+        issues.push({
+          id:"proj_"+i,
+          section:"Projects",
+          lineIndex:i,
+          field:"projects",
+          original:line,
+          improved:improveText(line),
+          type:hasWeak?"Weak phrasing":"No metrics",
+        });
+      }
+    });
+
+    // Analyze summary
     if(rd.summary&&rd.summary.length>0){
       const hasWeak=WEAK.some(w=>rd.summary.toLowerCase().includes(w));
-      if(hasWeak||rd.summary.length<80){
+      const hasNoMetrics=!rd.summary.match(/\d+%|\d+x|\$\d+/);
+      if(hasWeak||hasNoMetrics||rd.summary.length<80){
+        const improved=rd.summary
+          .replace(/responsible for/gi,"leads and delivers")
+          .replace(/worked on/gi,"built and delivered")
+          .replace(/helped with/gi,"contributed to")
+          .replace(/\.$|$/,hasNoMetrics?" Delivered measurable results with 30%+ improvement in key performance indicators.":"");
         issues.push({
           id:"summary_0",section:"Summary",lineIndex:0,field:"summary",
           original:rd.summary,
-          improved:"Results-driven "+( rd.title||"professional")+" with proven expertise in delivering high-impact solutions. Demonstrated ability to optimize performance by 40%+, collaborate cross-functionally, and consistently exceed business objectives.",
-          type:hasWeak?"Weak phrasing":"Too short",
+          improved:improved.trim(),
+          type:hasWeak?"Weak phrasing":hasNoMetrics?"No metrics":"Too short",
         });
       }
     }
     return issues;
+  }
+
+  // ── BUILD DYNAMIC AI ADVISOR CARDS from real resume data ─────────────────
+  function buildAdvisorCards(rd){
+    const txt=[rd.summary,...rd.experience,...rd.projects,...rd.skills].join(" ").toLowerCase();
+    const cards=[];
+
+    // 1. Metrics check — find real bullets missing numbers
+    const bulletsWithoutMetrics=[...rd.experience,...rd.projects]
+      .filter(l=>l&&l.length>15&&!l.match(/\d+%|\d+x|\$\d+/))
+      .slice(0,3);
+    if(bulletsWithoutMetrics.length>0){
+      cards.push({
+        icon:"📊",title:"Add Quantified Achievements",priority:"High Impact",color:"#f43f5e",
+        advice:"These lines from your resume lack numbers. Recruiters want to see measurable impact.",
+        examples:bulletsWithoutMetrics.map(l=>{
+          const clean=l.replace(/^[•\-\*]\s*/,"").replace(/\.?\s*$/,"");
+          return `❌ '${clean.slice(0,50)}${clean.length>50?"...":""}' → ✅ Add a number: how many users, % improvement, time saved`;
+        }),
+      });
+    }
+
+    // 2. Weak verbs check — find real lines with weak phrasing
+    const WEAK_PHRASES=["responsible for","worked on","helped with","assisted with","participated in","was involved"];
+    const weakLines=[...rd.experience,...rd.projects]
+      .filter(l=>l&&WEAK_PHRASES.some(w=>l.toLowerCase().includes(w)))
+      .slice(0,3);
+    if(weakLines.length>0){
+      cards.push({
+        icon:"🎯",title:"Replace Weak Action Verbs",priority:"High Impact",color:"#f59e0b",
+        advice:"These lines from your resume use weak phrasing. Replace with strong action verbs.",
+        examples:weakLines.map(l=>{
+          const clean=l.replace(/^[•\-\*]\s*/,"").replace(/\.?\s*$/,"");
+          const weak=WEAK_PHRASES.find(w=>clean.toLowerCase().includes(w))||"";
+          const strong={"responsible for":"Led","worked on":"Built","helped with":"Optimized","assisted with":"Accelerated","participated in":"Contributed to","was involved":"Delivered"}[weak]||"Led";
+          return `❌ '${clean.slice(0,45)}${clean.length>45?"...":""}' → ✅ Start with '${strong}...'`;
+        }),
+      });
+    }
+
+    // 3. Missing ATS keywords — check against real content
+    const ATS_KW=["agile","scrum","ci/cd","microservices","rest api","docker","kubernetes","aws","cloud","git","linux","sql","api","backend","frontend","full stack","node","react","python","java"];
+    const missing=ATS_KW.filter(k=>!txt.includes(k)).slice(0,6);
+    if(missing.length>3){
+      cards.push({
+        icon:"🔑",title:"Add Missing ATS Keywords",priority:"Critical",color:"#6366f1",
+        advice:`Your resume is missing ${missing.length} keywords that ATS systems scan for. Add these where relevant.`,
+        examples:[
+          `Missing technical: ${missing.slice(0,3).map(k=>`'${k}'`).join(", ")}`,
+          `Missing tools: ${missing.slice(3,6).map(k=>`'${k}'`).join(", ")}`,
+          "Add these naturally in your skills section or project descriptions.",
+        ],
+      });
+    }
+
+    // 4. Missing sections check
+    const missingSections=[];
+    if(!rd.summary||rd.summary.length<30) missingSections.push("✦ Professional Summary (2-3 lines at the top)");
+    if(rd.skills.length<3) missingSections.push("✦ Technical Skills section with categorized skills");
+    if(rd.certifications.length===0) missingSections.push("✦ Certifications (boost ATS score by 15%)");
+    if(missingSections.length>0){
+      cards.push({
+        icon:"📋",title:"Add These Missing Sections",priority:"Medium Impact",color:"#10b981",
+        advice:"Your resume is missing sections that recruiters and ATS systems look for.",
+        examples:missingSections,
+      });
+    }
+
+    // 5. Bullet format check — find lines not starting with bullet
+    const noBullet=[...rd.experience,...rd.projects].filter(l=>l&&l.length>15&&!/^[•\-\*]/.test(l)).slice(0,3);
+    if(noBullet.length>0){
+      cards.push({
+        icon:"✍️",title:"Format as Bullet Points",priority:"Medium Impact",color:"#8b5cf6",
+        advice:"These lines should start with a bullet and a strong action verb.",
+        examples:noBullet.map(l=>`'${l.slice(0,50)}${l.length>50?"...":""}' → Add '• ' prefix`),
+      });
+    }
+
+    // Always show at least 2 cards
+    if(cards.length===0){
+      cards.push({
+        icon:"✅",title:"Resume Structure Looks Good",priority:"Maintain",color:"#10b981",
+        advice:"Your resume has good structure. Focus on adding more quantified achievements.",
+        examples:[
+          "Add specific numbers: users served, % improvements, time saved",
+          "Include GitHub/LinkedIn links if not already present",
+          "Consider adding a Professional Summary if missing",
+        ],
+      });
+    }
+    return cards;
   }
 
   // ── CHECK RESUME ─────────────────────────────────────────────────────────
@@ -1081,95 +1203,121 @@ function TemplatesSection({ onSelect }) {
     setLineStates({});
     setHistory({});
     setShowPreview(false);
-    await new Promise(r=>setTimeout(r,1200));
-    // Detect if PDF (binary) - PDFs cannot be read as plain text
-    const isPDF=file.name.toLowerCase().endsWith(".pdf")||file.type==="application/pdf";
-    const isDOC=file.name.toLowerCase().endsWith(".doc")||file.name.toLowerCase().endsWith(".docx");
+    await new Promise(r=>setTimeout(r,800));
+
     let rd=null;
-    if(!isPDF&&!isDOC){
-      // TXT file - read as text
-      const text=await new Promise((res,rej)=>{
-        const reader=new FileReader();
-        reader.onload=e=>res(e.target.result);
-        reader.onerror=rej;
-        reader.readAsText(file);
-      });
-      rd=parseResumeText(text);
+
+    try{
+      // Use the full parser (handles PDF, DOCX, TXT) imported from ResumeBuilder
+      const parsed=await parseResumeFile(file);
+      if(parsed){
+        // Convert the rich parsed structure into the flat format ATSChecker uses
+        // Extract all bullet lines from projects and experience descriptions
+        const expLines=[];
+        (parsed.experience||[]).forEach(exp=>{
+          if(exp.role) expLines.push(exp.role+(exp.company?" at "+exp.company:""));
+          if(exp.description){
+            exp.description.split("\n").forEach(l=>{const t=l.trim();if(t.length>10)expLines.push(t);});
+          }
+        });
+        const projLines=[];
+        (parsed.projects||[]).forEach(proj=>{
+          if(proj.name) projLines.push((proj.name)+(proj.tech?" | "+proj.tech:""));
+          if(proj.description){
+            proj.description.split("\n").forEach(l=>{const t=l.trim();if(t.length>10)projLines.push(t);});
+          }
+        });
+        const certLines=(parsed.certifications||[]).map(c=>
+          [c.name,c.issuer,c.year].filter(Boolean).join(" | ")
+        );
+        const eduLines=(parsed.education||[]).map(e=>
+          [e.degree,e.institution,e.year,e.gpa?"GPA: "+e.gpa:""].filter(Boolean).join(" | ")
+        );
+        rd={
+          name:parsed.name||"",
+          title:parsed.title||"",
+          email:parsed.email||"",
+          phone:parsed.phone||"",
+          location:parsed.location||"",
+          summary:parsed.summary||"",
+          experience:expLines,
+          projects:projLines,
+          skills:parsed.skills||[],
+          education:eduLines,
+          certifications:certLines,
+        };
+      }
+    }catch(err){
+      console.error("Parser error:",err);
     }
-    // For PDF/DOC or if parsing failed, use realistic demo data based on filename
-    const isDemoNeeded=!rd||rd.experience.length===0;
-    // Extract name from filename (e.g. RESUME_RUCHIKA_AGGARWAL_2410991623.pdf -> Ruchika Aggarwal)
-    const rawName=file.name.replace(/\.(pdf|doc|docx|txt)$/i,"").replace(/RESUME_?/i,"").replace(/_\d+$/,"").replace(/_/g," ").trim();
-    const extractedName=rawName.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ")||"Your Name";
-    const finalRd=isDemoNeeded?{
-      name:extractedName,
-      title:"Full Stack Developer",
-      email:(extractedName.split(" ")[0]||"user").toLowerCase()+"@gmail.com",
-      phone:"+91 98765 43210",
-      location:"Bangalore, India",
-      summary:"Responsible for building web applications and helping the team with various tasks. Worked on multiple projects and assisted with improving system performance.",
-      experience:[
-        "Responsible for managing the team and doing tasks assigned by the manager",
-        "Worked on developing new features for the web application using React",
-        "Helped with improving the performance of the backend system",
-        "Was responsible for writing code and fixing bugs in the codebase",
-        "Participated in daily standups and team meetings",
-      ],
-      projects:[
-        "Built a portfolio website using React and CSS with responsive design",
-        "Worked on an e-commerce application with payment integration",
-      ],
-      skills:["JavaScript","React","Python","CSS","HTML","Node.js"],
-      education:["B.Tech Computer Science | XYZ University | 2022–2026 | CGPA: 8.2"],
-      certifications:["AWS Cloud Practitioner | Amazon | 2023"],
-    }:rd;
-    setResumeData(finalRd);
-    const score=calcScore(finalRd);
+
+    // Only fall back to demo if parsing completely failed AND it's a TXT file
+    // For PDF/DOCX with no parseable content, show empty state rather than fake data
+    if(!rd||(rd.experience.length===0&&rd.projects.length===0&&rd.summary==="")){
+      const isTxt=file.name.toLowerCase().endsWith(".txt");
+      if(isTxt){
+        // Try plain text parse as last resort
+        try{
+          const text=await new Promise((res,rej)=>{
+            const reader=new FileReader();
+            reader.onload=e=>res(e.target.result);
+            reader.onerror=rej;
+            reader.readAsText(file);
+          });
+          rd=parseResumeText(text);
+        }catch(_){}
+      }
+    }
+
+    // If still nothing, show a helpful empty state (no fake data)
+    if(!rd||(rd.experience.length===0&&rd.projects.length===0&&rd.summary==="")){
+      rd={
+        name:file.name.replace(/\.(pdf|doc|docx|txt)$/i,"").replace(/RESUME_?/i,"").replace(/[_\-]+/g," ").trim(),
+        title:"",email:"",phone:"",location:"",
+        summary:"",experience:[],projects:[],skills:[],education:[],certifications:[],
+      };
+    }
+
+    setResumeData(rd);
+    const score=calcScore(rd);
     setAtsScore(score);
-    const issues=generateImprovements(finalRd);
+    const issues=generateImprovements(rd);
     setImprovements(issues);
+    const cards=buildAdvisorCards(rd);
+    setAdvisorCards(cards);
     setChecking(false);
   }
 
   // ── IMPROVE ONE LINE (updates single source of truth) ────────────────────
   async function improveLine(issue){
     setLineStates(p=>({...p,[issue.id]:"loading"}));
-    await new Promise(r=>setTimeout(r,900));
-    // Save original for undo
+    await new Promise(r=>setTimeout(r,600));
     setHistory(p=>({...p,[issue.id]:issue.original}));
-    // Update the single source of truth
     setResumeData(prev=>{
       const updated={...prev};
       if(issue.field==="experience"){
-        const arr=[...prev.experience];
-        arr[issue.lineIndex]=issue.improved;
-        updated.experience=arr;
+        const arr=[...prev.experience]; arr[issue.lineIndex]=issue.improved; updated.experience=arr;
+      }else if(issue.field==="projects"){
+        const arr=[...prev.projects]; arr[issue.lineIndex]=issue.improved; updated.projects=arr;
       }else if(issue.field==="summary"){
         updated.summary=issue.improved;
       }
       return updated;
     });
-    // Update the improvement to show new original
     setImprovements(prev=>prev.map(imp=>imp.id===issue.id?{...imp,original:issue.improved}:imp));
     setLineStates(p=>({...p,[issue.id]:"done"}));
-    // Recalculate ATS score
-    setResumeData(prev=>{
-      const newScore=calcScore(prev);
-      setAtsScore(newScore);
-      return prev;
-    });
+    setResumeData(prev=>{ setAtsScore(calcScore(prev)); return prev; });
   }
 
-  // ── UNDO A FIX ───────────────────────────────────────────────────────────
   function undoFix(issue){
     const orig=history[issue.id];
     if(!orig)return;
     setResumeData(prev=>{
       const updated={...prev};
       if(issue.field==="experience"){
-        const arr=[...prev.experience];
-        arr[issue.lineIndex]=orig;
-        updated.experience=arr;
+        const arr=[...prev.experience]; arr[issue.lineIndex]=orig; updated.experience=arr;
+      }else if(issue.field==="projects"){
+        const arr=[...prev.projects]; arr[issue.lineIndex]=orig; updated.projects=arr;
       }else if(issue.field==="summary"){
         updated.summary=orig;
       }
@@ -1339,14 +1487,19 @@ function TemplatesSection({ onSelect }) {
 
     }catch(err){
       console.error("PDF error:",err);
-      // Fallback: open in new window for print
-      const html=buildResumeHTML(resumeData);
-      const w=window.open("","_blank");
-      if(w){
-        w.document.write(html);
-        w.document.close();
-        setTimeout(()=>w.print(),800);
-      }
+      // Fallback: generate HTML blob and trigger direct download
+      try{
+        const html=buildResumeHTML(resumeData);
+        const blob=new Blob([html],{type:"text/html"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;
+        a.download=(resumeData.name||"resume").replace(/\s+/g,"_")+"_improved.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }catch(e2){console.error("Fallback download error:",e2);}
     }finally{
       setDownloadingPDF(false);
     }
@@ -1356,288 +1509,269 @@ function TemplatesSection({ onSelect }) {
   const r2=48,circ2=2*Math.PI*r2;
   const appliedCount=Object.values(lineStates).filter(v=>v==="done").length;
 
-  return(
-    <section ref={ref} className="relative py-16 overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)"}}>
-      <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(6,182,212,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.05) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
-      <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
-        <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-12">
-          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🎯 ATS Score Checker</div>
+  // ── LIVE RESUME PREVIEW (right panel) ────────────────────────────────────
+  function ResumePreview({rd,lineStates,improvements}){
+    const accent="#6366f1";
+    const sH={fontSize:"8pt",fontWeight:800,color:accent,textTransform:"uppercase",letterSpacing:"1.5px",borderBottom:"2px solid "+accent,paddingBottom:3,marginBottom:8,marginTop:14};
+    const bul={fontSize:"9.5pt",color:"#374151",margin:"3px 0",lineHeight:1.6};
+    const isFixed=(field,idx)=>{
+      const imp=improvements.find(x=>x.field===field&&x.lineIndex===idx);
+      return imp&&lineStates[imp.id]==="done";
+    };
+    return(
+      <div style={{fontFamily:"Arial,sans-serif",fontSize:"10pt",lineHeight:1.6,color:"#1a1a1a",background:"#fff",minHeight:"100%"}}>
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",padding:"24px 28px",color:"white"}}>
+          <div style={{fontSize:"18pt",fontWeight:800,marginBottom:3}}>{rd.name||"Your Name"}</div>
+          {rd.title&&<div style={{fontSize:"11pt",color:"rgba(255,255,255,0.85)",marginBottom:4}}>{rd.title}</div>}
+          <div style={{fontSize:"9pt",color:"rgba(255,255,255,0.7)",display:"flex",flexWrap:"wrap",gap:"10px"}}>
+            {rd.email&&<span>✉ {rd.email}</span>}
+            {rd.phone&&<span>📞 {rd.phone}</span>}
+            {rd.location&&<span>📍 {rd.location}</span>}
           </div>
-          <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight">
-            Check your<br/><span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span>
-          </h2>
-          <br/>
-          <p className="text-xl text-slate-400 max-w-3xl mx-auto whitespace-nowrap" style={{lineHeight:"1.85"}}>Upload your resume — get ATS score, line-by-line AI improvements, and download the fixed version.</p>
-          <br/>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* LEFT: Upload + Score */}
-          <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="space-y-6">
-            {/* Upload */}
-            <div onClick={()=>fr.current?.click()} className="border-2 border-dashed rounded-2xl card-surface cursor-pointer transition-all duration-300 group" style={{borderColor:file?"#06b6d4":"rgba(255,255,255,0.15)",background:file?"rgba(6,182,212,0.08)":"rgba(255,255,255,0.03)"}}>
-              <input ref={fr} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e=>setFile(e.target.files[0])}/>
-              <div className="text-5xl mb-5 group-hover:scale-110 transition-transform">{file?"📄":"📤"}</div>
-              <div className="text-lg font-bold text-white mb-3">{file?file.name:"Upload your resume"}</div>
-              <div className="text-sm text-slate-400 leading-relaxed">{file?"Click to change file":"PDF, DOC, DOCX, TXT supported"}</div>
+        </div>
+        <div style={{padding:"16px 28px 28px"}}>
+          {/* Summary */}
+          {rd.summary&&(
+            <div style={{marginBottom:12}}>
+              <div style={sH}>Summary{isFixed("summary",0)&&<span style={{background:"#10b98115",color:"#10b981",padding:"1px 6px",borderRadius:4,fontSize:"7pt",marginLeft:6,fontWeight:700}}>✓ Fixed</span>}</div>
+              <p style={{...bul,fontStyle:"italic",margin:0,background:isFixed("summary",0)?"rgba(16,185,129,0.05)":"transparent",borderLeft:isFixed("summary",0)?"3px solid #10b981":"none",paddingLeft:isFixed("summary",0)?8:0,borderRadius:isFixed("summary",0)?"0 4px 4px 0":"0"}}>{rd.summary}</p>
             </div>
-            <motion.button whileHover={{scale:1.03,boxShadow:"0 20px 40px rgba(6,182,212,0.3)"}} whileTap={{scale:0.97}} onClick={check} disabled={!file||checking}
-              className="w-full py-4 rounded-2xl text-white font-bold text-lg transition-all disabled:opacity-40"
+          )}
+          {/* Skills */}
+          {rd.skills.length>0&&(
+            <div style={{marginBottom:12}}>
+              <div style={sH}>Skills</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                {rd.skills.map((s,i)=><span key={i} style={{background:"#6366f115",border:"1px solid #6366f133",color:accent,padding:"2px 8px",borderRadius:10,fontSize:"8.5pt",fontWeight:600}}>{s}</span>)}
+              </div>
+            </div>
+          )}
+          {/* Experience */}
+          {rd.experience.length>0&&(
+            <div style={{marginBottom:12}}>
+              <div style={sH}>Experience</div>
+              {rd.experience.map((line,i)=>{
+                const fixed=isFixed("experience",i);
+                return(
+                  <div key={i} style={{marginBottom:5,background:fixed?"rgba(16,185,129,0.05)":"transparent",borderLeft:fixed?"3px solid #10b981":"none",paddingLeft:fixed?8:0,borderRadius:fixed?"0 4px 4px 0":"0",padding:fixed?"4px 8px":"0 0 0 0"}}>
+                    {fixed&&<div style={{fontSize:"7pt",color:"#10b981",fontWeight:700,marginBottom:1}}>✓ AI IMPROVED</div>}
+                    <p style={{...bul,margin:0}}>{line}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Projects */}
+          {rd.projects.length>0&&(
+            <div style={{marginBottom:12}}>
+              <div style={sH}>Projects</div>
+              {rd.projects.map((line,i)=>{
+                const fixed=isFixed("projects",i);
+                return(
+                  <div key={i} style={{marginBottom:5,background:fixed?"rgba(16,185,129,0.05)":"transparent",borderLeft:fixed?"3px solid #10b981":"none",paddingLeft:fixed?8:0,borderRadius:fixed?"0 4px 4px 0":"0",padding:fixed?"4px 8px":"0 0 0 0"}}>
+                    {fixed&&<div style={{fontSize:"7pt",color:"#10b981",fontWeight:700,marginBottom:1}}>✓ AI IMPROVED</div>}
+                    <p style={{...bul,margin:0}}>{line}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Education */}
+          {rd.education.length>0&&(
+            <div style={{marginBottom:12}}>
+              <div style={sH}>Education</div>
+              {rd.education.map((line,i)=><p key={i} style={{...bul,margin:"3px 0"}}>{line}</p>)}
+            </div>
+          )}
+          {/* Certifications */}
+          {rd.certifications.length>0&&(
+            <div>
+              <div style={sH}>Certifications</div>
+              {rd.certifications.map((line,i)=><p key={i} style={{...bul,margin:"3px 0"}}>{line}</p>)}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <section ref={ref} className="relative overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)"}}>
+      {/* BG decorations */}
+      <div className="absolute inset-0 pointer-events-none" style={{backgroundImage:"linear-gradient(rgba(6,182,212,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.04) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
+      <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
+
+      {/* ── HEADER BAR ── */}
+      <div className="relative z-10 border-b border-white/10 px-8 py-5" style={{background:"rgba(5,7,26,0.8)",backdropFilter:"blur(12px)"}}>
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold" style={{padding:"5px 16px"}}>🎯 ATS Score Checker</div>
+            <h2 className="text-xl font-black text-white hidden sm:block">Check your <span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span></h2>
+          </div>
+          <div className="flex items-center gap-3">
+            {atsScore!=null&&(
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10" style={{background:"rgba(255,255,255,0.05)"}}>
+                <span className="text-xs font-bold text-white/40 uppercase tracking-wider">ATS</span>
+                <span className="text-lg font-black" style={{color:sc}}>{atsScore}</span>
+                {appliedCount>0&&<span className="text-xs text-emerald-400 font-semibold">+{appliedCount} fixed</span>}
+              </div>
+            )}
+            {atsScore!=null&&(
+              <motion.button whileHover={{scale:1.03,boxShadow:"0 8px 24px rgba(16,185,129,0.4)"}} whileTap={{scale:0.97}}
+                onClick={downloadPDF} disabled={downloadingPDF}
+                className="flex items-center gap-2 rounded-xl font-bold text-white text-sm transition-all"
+                style={{padding:"9px 20px",background:"linear-gradient(135deg,#10b981,#059669)",boxShadow:"0 4px 12px rgba(16,185,129,0.3)"}}>
+                {downloadingPDF?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"📥"}
+                {downloadingPDF?"Generating...":"Download Improved Resume"+(appliedCount>0?" ("+appliedCount+" fix"+(appliedCount>1?"es":"")+")" :"")}
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── SPLIT-SCREEN LAYOUT ── */}
+      <div className="relative z-10 flex" style={{height:"calc(100vh - 65px)"}}>
+
+        {/* ══ LEFT PANEL (40%) — ATS score + suggestions + fix cards ══ */}
+        <div className="flex-shrink-0 border-r border-white/10" style={{width:"40%",height:"100%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
+          <div className="p-6 space-y-5">
+
+            {/* Upload zone */}
+            <div onClick={()=>fr.current?.click()} className="border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 group text-center" style={{padding:"28px 20px",borderColor:file?"#06b6d4":"rgba(255,255,255,0.15)",background:file?"rgba(6,182,212,0.08)":"rgba(255,255,255,0.03)"}}>
+              <input ref={fr} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e=>setFile(e.target.files[0])}/>
+              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{file?"📄":"📤"}</div>
+              <div className="text-base font-bold text-white mb-1">{file?file.name:"Upload your resume"}</div>
+              <div className="text-xs text-slate-400">{file?"Click to change file":"PDF, DOC, DOCX, TXT supported"}</div>
+            </div>
+
+            <motion.button whileHover={{scale:1.02,boxShadow:"0 12px 30px rgba(6,182,212,0.3)"}} whileTap={{scale:0.97}} onClick={check} disabled={!file||checking}
+              className="w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40"
               style={{background:"linear-gradient(135deg,#06b6d4,#6366f1)"}}>
               {checking?<span className="flex items-center justify-center gap-3"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>Analyzing resume...</span>:"Check ATS Score →"}
             </motion.button>
 
             {/* ATS Score Card */}
             {atsScore!=null&&(
-              <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="card-surface">
-                <div className="flex items-center gap-7 mb-6">
+              <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="rounded-2xl border border-white/10 p-5" style={{background:"rgba(255,255,255,0.04)"}}>
+                <div className="flex items-center gap-5 mb-4">
                   <div className="relative inline-flex items-center justify-center flex-shrink-0">
-                    <svg width={100} height={100} style={{transform:"rotate(-90deg)"}}>
-                      <circle cx={50} cy={50} r={r2} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10}/>
-                      <motion.circle cx={50} cy={50} r={r2} fill="none" stroke={sc} strokeWidth={10} strokeLinecap="round"
+                    <svg width={88} height={88} style={{transform:"rotate(-90deg)"}}>
+                      <circle cx={44} cy={44} r={r2} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={9}/>
+                      <motion.circle cx={44} cy={44} r={r2} fill="none" stroke={sc} strokeWidth={9} strokeLinecap="round"
                         initial={{strokeDasharray:"0 "+circ2}} animate={{strokeDasharray:(atsScore/100)*circ2+" "+circ2}}
-                        transition={{duration:1.5,ease:"easeOut"}} style={{filter:"drop-shadow(0 0 10px "+sc+")"}}/>
+                        transition={{duration:1.5,ease:"easeOut"}} style={{filter:"drop-shadow(0 0 8px "+sc+")"}}/>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <motion.span key={atsScore} initial={{scale:0.5}} animate={{scale:1}} className="text-2xl font-black" style={{color:sc}}>{atsScore}</motion.span>
-                      <span className="text-xs text-white/30 font-bold">ATS</span>
+                      <motion.span key={atsScore} initial={{scale:0.5}} animate={{scale:1}} className="text-xl font-black" style={{color:sc}}>{atsScore}</motion.span>
+                      <span className="text-[9px] text-white/30 font-bold">ATS</span>
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-black text-white mb-1">{atsScore>=80?"🟢 Excellent!":atsScore>=60?"🟡 Good — needs work":"🔴 Needs major improvements"}</h3>
-                    <p className="text-slate-400 text-sm mb-4 leading-relaxed">{appliedCount>0?"✨ "+appliedCount+" improvement"+(appliedCount>1?"s":"")+" applied — score updated!":"Apply AI improvements to boost your score."}</p>
-        ﻿            {/* AI Decision Panel - What to add to make resume more professional */}
-            {atsScore!=null&&(
-              <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.3}}
-                className="improvement-card overflow-hidden"
-                style={{background:"rgba(99,102,241,0.06)"}}>
-                <div className="px-5 py-4 border-b border-indigo-500/20 flex items-center gap-3">
-                  <span className="text-xl">🧠</span>
+                    <h3 className="text-base font-black text-white mb-1">{atsScore>=80?"🟢 Excellent!":atsScore>=60?"🟡 Good — needs work":"🔴 Needs major improvements"}</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">{appliedCount>0?"✨ "+appliedCount+" improvement"+(appliedCount>1?"s":"")+" applied — score updated!":"Apply AI improvements to boost your score."}</p>
+                    {improvements.length>0&&(
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-white/40 font-semibold">Fixes applied</span>
+                          <span className="font-bold text-emerald-400">{appliedCount}/{improvements.length}</span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div className="h-full rounded-full bg-emerald-500" animate={{width:(improvements.length>0?(appliedCount/improvements.length*100):0)+"%"}} transition={{duration:0.5}}/>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {improvements.length>0&&(
+                  <motion.button whileHover={{scale:1.02}} whileTap={{scale:0.97}} onClick={fixAll} disabled={fixingAll||appliedCount===improvements.length}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
+                    style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
+                    {fixingAll?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">✨</motion.span>:"🔧"}
+                    {fixingAll?"Fixing all...":appliedCount===improvements.length?"All Fixed ✓":"Fix All "+improvements.length+" Issues"}
+                  </motion.button>
+                )}
+              </motion.div>
+            )}
+
+            {/* AI Advisor Cards — generated from REAL resume content only */}
+            {advisorCards.length>0&&(
+              <div className="rounded-2xl border border-indigo-500/20 overflow-hidden" style={{background:"rgba(99,102,241,0.05)"}}>
+                <div className="px-5 py-3 border-b border-indigo-500/20 flex items-center gap-3">
+                  <span className="text-lg">🧠</span>
                   <div>
                     <h4 className="font-bold text-white text-sm">AI Career Advisor</h4>
-                    <p className="text-xs text-slate-400">What to add to make your resume more professional</p>
+                    <p className="text-xs text-slate-400">Based on your actual resume content</p>
                   </div>
-                  <span className="ml-auto text-xs px-2.5 py-1 rounded-full font-semibold" style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc"}}>AI Powered</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc"}}>AI Powered</span>
                 </div>
-                <div className="p-6 space-y-5">
-                  {[
-                    {
-                      icon:"📊",
-                      title:"Add Quantified Achievements",
-                      priority:"High Impact",
-                      color:"#f43f5e",
-                      advice:"Your resume lacks numbers. Recruiters want to see impact. Add metrics to every bullet point.",
-                      examples:[
-                        "❌ 'Managed the team' → ✅ 'Led team of 8 engineers, delivering 3 projects 20% ahead of schedule'",
-                        "❌ 'Improved performance' → ✅ 'Optimized system performance, reducing load time by 60%'",
-                        "❌ 'Worked on features' → ✅ 'Built 12 features used by 50,000+ daily active users'",
-                      ]
-                    },
-                    {
-                      icon:"🎯",
-                      title:"Use Strong Action Verbs",
-                      priority:"High Impact",
-                      color:"#f59e0b",
-                      advice:"Replace weak phrases with powerful action verbs that show ownership and leadership.",
-                      examples:[
-                        "Replace: 'Responsible for' → Use: 'Led', 'Owned', 'Delivered'",
-                        "Replace: 'Worked on' → Use: 'Built', 'Developed', 'Architected'",
-                        "Replace: 'Helped with' → Use: 'Optimized', 'Improved', 'Accelerated'",
-                      ]
-                    },
-                    {
-                      icon:"🔑",
-                      title:"Add Missing ATS Keywords",
-                      priority:"Critical",
-                      color:"#6366f1",
-                      advice:"Your resume is missing keywords that ATS systems scan for. Add these to pass automated screening.",
-                      examples:[
-                        "Technical: 'Agile', 'Scrum', 'CI/CD', 'Microservices', 'REST APIs'",
-                        "Leadership: 'Cross-functional', 'Stakeholder management', 'Roadmap'",
-                        "Results: 'Delivered', 'Launched', 'Scaled', 'Optimized', 'Automated'",
-                      ]
-                    },
-                    {
-                      icon:"📋",
-                      title:"Add These Missing Sections",
-                      priority:"Medium Impact",
-                      color:"#10b981",
-                      advice:"Professional resumes include these sections that yours is currently missing.",
-                      examples:[
-                        "✦ Professional Summary (2-3 lines at the top — most important!)",
-                        "✦ Technical Skills section with categorized skills",
-                        "✦ GitHub/LinkedIn/Portfolio links in contact info",
-                        "✦ Certifications (AWS, Google, Microsoft certs boost ATS by 15%)",
-                      ]
-                    },
-                    {
-                      icon:"✍️",
-                      title:"Improve Bullet Point Format",
-                      priority:"Medium Impact",
-                      color:"#8b5cf6",
-                      advice:"Each bullet should follow: Action Verb → What you did → Result/Impact",
-                      examples:[
-                        "Format: [Strong Verb] + [What] + [Result with number]",
-                        "✅ 'Architected microservices platform, reducing latency by 45%'",
-                        "✅ 'Led migration to AWS, cutting infrastructure costs by $50K/year'",
-                        "✅ 'Mentored 4 junior devs, improving team velocity by 30%'",
-                      ]
-                    },
-                  ].map((item,i)=>(
-                    <motion.div key={i} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:0.4+i*0.1}}
-                      className="rounded-xl border border-white/8 overflow-hidden"
-                      style={{background:"rgba(255,255,255,0.03)"}}>
-                      <div className="p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-xl">{item.icon}</span>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-white">{item.title}</span>
-                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:item.color+"22",color:item.color}}>{item.priority}</span>
-                            </div>
-                          </div>
+                <div className="p-4 space-y-3">
+                  {advisorCards.map((item,i)=>(
+                    <motion.div key={i} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:0.1+i*0.08}}
+                      className="rounded-xl border border-white/8 overflow-hidden" style={{background:"rgba(255,255,255,0.03)"}}>
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-base">{item.icon}</span>
+                          <span className="text-sm font-bold text-white">{item.title}</span>
+                          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:item.color+"22",color:item.color}}>{item.priority}</span>
                         </div>
-                        <p className="text-xs text-slate-400 mb-4" style={{lineHeight:"1.85"}}>{item.advice}</p>
-                        <div className="space-y-2">
+                        <p className="text-xs text-slate-400 mb-3" style={{lineHeight:"1.7"}}>{item.advice}</p>
+                        <div className="space-y-1.5">
                           {item.examples.map((ex,j)=>(
                             <div key={j} className="flex items-start gap-2">
                               <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{background:item.color}}/>
-                              <p className="text-xs text-slate-300" style={{lineHeight:"1.8"}}>{ex}</p>
+                              <p className="text-xs text-slate-300" style={{lineHeight:"1.7"}}>{ex}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     </motion.div>
                   ))}
-                  <div className="p-4 rounded-xl border border-emerald-500/20" style={{background:"rgba(16,185,129,0.06)"}}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-base">🏆</span>
-                      <span className="text-sm font-bold text-emerald-400">Pro Tip: The 6-Second Rule</span>
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">Recruiters spend only 6 seconds scanning a resume. Make sure your name, current role, top 3 skills, and biggest achievement are visible in the top half of page 1. Apply all AI fixes above to maximize your chances.</p>
-                  </div>
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {improvements.length>0&&(
-                      <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={fixAll} disabled={fixingAll||appliedCount===improvements.length}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
-                        style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
-                        {fixingAll?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">✨</motion.span>:"🔧"}
-                        {fixingAll?"Fixing all...":appliedCount===improvements.length?"All Fixed ✓":"Fix All Issues"}
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
-                {/* Progress */}
-                {improvements.length>0&&(
-                  <div>
-                    <div className="flex justify-between text-xs mb-2">
-                      <span className="text-white/40 font-semibold">Improvements applied</span>
-                      <span className="font-bold text-emerald-400">{appliedCount}/{improvements.length}</span>
-                    </div>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                      <motion.div className="h-full rounded-full bg-emerald-500" animate={{width:(appliedCount/improvements.length*100)+"%"}} transition={{duration:0.5}}/>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* Download button - appears after at least 1 fix */}
-            {appliedCount>0&&(
-              <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-4">
-                <motion.button whileHover={{scale:1.03,boxShadow:"0 20px 40px rgba(16,185,129,0.5)"}} whileTap={{scale:0.97}}
-                  onClick={()=>setShowPreview(p=>!p)}
-                  className="w-full py-3 rounded-2xl font-bold text-white text-sm transition-all border border-emerald-500/30"
-                  style={{background:"rgba(16,185,129,0.12)"}}>
-                  {showPreview?"🔼 Hide Preview":"👁️ Preview Updated Resume ("+appliedCount+" fix"+(appliedCount>1?"es":"")+" applied)"}
-                </motion.button>
-                <motion.button whileHover={{scale:1.03,boxShadow:"0 20px 40px rgba(16,185,129,0.5)"}} whileTap={{scale:0.97}}
-                  onClick={downloadPDF} disabled={downloadingPDF}
-                  className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all disabled:opacity-60"
-                  style={{background:"linear-gradient(135deg,#10b981,#059669)",boxShadow:"0 8px 24px rgba(16,185,129,0.3)"}}>
-                  {downloadingPDF
-                    ?<span className="flex items-center justify-center gap-3"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>Generating PDF...</span>
-                    :<span className="flex items-center justify-center gap-3"><span className="text-xl">📥</span>Download Improved Resume ({appliedCount} fix{appliedCount>1?"es":""})</span>
-                  }
-                </motion.button>
-                <p className="text-xs text-slate-500 text-center">Downloads only your manually applied fixes · {improvements.length-appliedCount} issue{improvements.length-appliedCount!==1?"s":""} remaining</p>
-              </motion.div>
-            )}
-          </motion.div>
-
-          {/* RIGHT: Issues + Preview */}
-          <motion.div initial={{opacity:0,x:40}} animate={iv?{opacity:1,x:0}:{}} transition={{duration:0.7,delay:0.2}} className="space-y-6">
-            {/* Live Preview */}
-            <AnimatePresence>
-              {showPreview&&resumeData.name&&(
-                <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}
-                  className="rounded-2xl border border-emerald-500/30 overflow-hidden" style={{background:"rgba(16,185,129,0.05)"}}>
-                  <div className="px-4 py-3 border-b border-emerald-500/20 flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">📄 Live Preview — Updated Resume</span>
-                    <span className="text-xs text-emerald-400/70">{appliedCount} fix{appliedCount>1?"es":""} applied</span>
-                  </div>
-                  <div className="overflow-auto max-h-80 card-surface--soft" style={{background:"white"}}>
-                    <div style={{padding:"16px 20px",fontFamily:"Arial,sans-serif",fontSize:"10pt",lineHeight:1.5,color:"#1a1a1a"}}>
-                      <div style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",padding:"16px 20px",margin:"-16px -20px 14px",color:"white"}}>
-                        <div style={{fontSize:"16pt",fontWeight:800}}>{resumeData.name||"Your Name"}</div>
-                        <div style={{fontSize:"11pt",color:"rgba(255,255,255,0.85)",marginTop:2}}>{resumeData.title||"Job Title"}</div>
-                        <div style={{fontSize:"9pt",color:"rgba(255,255,255,0.7)",marginTop:4}}>{resumeData.email}{resumeData.phone?" · "+resumeData.phone:""}</div>
-                      </div>
-                      {resumeData.summary&&<div style={{marginBottom:10}}><div style={{fontSize:"8pt",fontWeight:800,color:"#6366f1",textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid #6366f1",paddingBottom:3,marginBottom:6}}>Summary{lineStates["summary_0"]==="done"&&<span style={{background:"#10b98115",color:"#10b981",padding:"1px 5px",borderRadius:4,fontSize:"7pt",marginLeft:6}}>✓ Fixed</span>}</div><p style={{fontSize:"9pt",color:"#374151",lineHeight:1.5,margin:0,fontStyle:"italic"}}>{resumeData.summary}</p></div>}
-                      {resumeData.skills.length>0&&<div style={{marginBottom:10}}><div style={{fontSize:"8pt",fontWeight:800,color:"#6366f1",textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid #6366f1",paddingBottom:3,marginBottom:6}}>Skills</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{resumeData.skills.map((s,i)=><span key={i} style={{background:"#6366f115",border:"1px solid #6366f133",color:"#6366f1",padding:"2px 7px",borderRadius:10,fontSize:"8pt",fontWeight:600}}>{s}</span>)}</div></div>}
-                      {resumeData.experience.length>0&&<div><div style={{fontSize:"8pt",fontWeight:800,color:"#6366f1",textTransform:"uppercase",letterSpacing:1.5,borderBottom:"2px solid #6366f1",paddingBottom:3,marginBottom:6}}>Experience</div>{resumeData.experience.map((line,i)=>{const imp=improvements.find(x=>x.field==="experience"&&x.lineIndex===i);const fixed=imp&&lineStates[imp.id]==="done";return(<div key={i} style={{marginBottom:6,paddingLeft:fixed?8:0,borderLeft:fixed?"3px solid #10b981":"none",background:fixed?"rgba(16,185,129,0.05)":"transparent",borderRadius:fixed?"0 4px 4px 0":"0",padding:fixed?"4px 8px":"0"}}>{fixed&&<div style={{fontSize:"7pt",color:"#10b981",fontWeight:700,marginBottom:1}}>✓ AI IMPROVED</div>}<p style={{fontSize:"9pt",color:"#374151",margin:0,lineHeight:1.5}}>{line}</p></div>);})}</div>}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Grammar Issues */}
+            {/* Line-by-Line Fix Cards */}
             {improvements.length>0&&(
               <div>
-                <h4 className="font-bold text-white mb-6 flex items-center gap-2 text-lg">
-                  <span>📝</span> Line-by-Line Improvements
+                <h4 className="font-bold text-white mb-3 flex items-center gap-2 text-sm">
+                  <span>📝</span> Line-by-Line Fixes
                   <span className="ml-auto text-xs text-slate-500 font-normal">{improvements.length} found · {appliedCount} fixed</span>
                 </h4>
-                <div className="space-y-6">
+                <div className="space-y-3">
                   {improvements.map((issue,i)=>(
-                    <motion.div key={issue.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:i*0.08}}
-                      className="improvement-card transition-all duration-300"
+                    <motion.div key={issue.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.06}}
+                      className="rounded-xl border overflow-hidden transition-all duration-300"
                       style={{background:lineStates[issue.id]==="done"?"rgba(16,185,129,0.06)":"rgba(255,255,255,0.04)",border:lineStates[issue.id]==="done"?"1px solid rgba(16,185,129,0.3)":"1px solid rgba(255,255,255,0.1)"}}>
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{background:"rgba(245,158,11,0.15)",color:"#fbbf24"}}>{issue.type}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:"rgba(245,158,11,0.15)",color:"#fbbf24"}}>{issue.type}</span>
                             <span className="text-xs text-slate-500">{issue.section}</span>
                           </div>
                           {lineStates[issue.id]==="done"&&<span className="text-xs text-emerald-400 font-bold">✓ Fixed</span>}
                         </div>
-                        <div className="mb-5">
-                          <div className="text-xs text-red-400/70 font-semibold mb-2.5 uppercase tracking-wider">❌ Before</div>
-                          <p className="text-sm text-slate-400 p-4 rounded-xl" style={{lineHeight:"1.8",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>{issue.original}</p>
+                        <div className="mb-3">
+                          <div className="text-xs text-red-400/70 font-semibold mb-1.5 uppercase tracking-wider">❌ Before</div>
+                          <p className="text-xs text-slate-400 p-3 rounded-lg" style={{lineHeight:"1.7",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>{issue.original}</p>
                         </div>
-                        <div className="mb-5">
-                          <div className="text-xs text-emerald-400/70 font-semibold mb-2.5 uppercase tracking-wider">✅ Improved</div>
-                          <p className="text-sm text-slate-200 p-4 rounded-xl" style={{lineHeight:"1.8",background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)"}}>{issue.improved}</p>
+                        <div className="mb-3">
+                          <div className="text-xs text-emerald-400/70 font-semibold mb-1.5 uppercase tracking-wider">✅ Improved</div>
+                          <p className="text-xs text-slate-200 p-3 rounded-lg" style={{lineHeight:"1.7",background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)"}}>{issue.improved}</p>
                         </div>
-                        <div className="flex gap-3 mt-1">
+                        <div className="flex gap-2">
                           {lineStates[issue.id]!=="done"?(
                             <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>improveLine(issue)} disabled={lineStates[issue.id]==="loading"}
-                              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-semibold transition-all mt-2"
+                              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-semibold transition-all"
                               style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc",border:"1px solid rgba(99,102,241,0.3)"}}>
                               {lineStates[issue.id]==="loading"?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"}
                               {lineStates[issue.id]==="loading"?"Applying...":"Apply This Fix"}
                             </motion.button>
                           ):(
                             <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>undoFix(issue)}
-                              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-semibold transition-all mt-2"
+                              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-semibold transition-all"
                               style={{background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)"}}>
-                              ↩ Undo Fix
+                              ↩ Undo
                             </motion.button>
                           )}
                         </div>
@@ -1648,34 +1782,63 @@ function TemplatesSection({ onSelect }) {
               </div>
             )}
 
+            {/* Empty state */}
             {!atsScore&&!checking&&(
-              <motion.div initial={{opacity:0}} animate={{opacity:1}} className="rounded-3xl p-12 text-center border border-white/10" style={{background:"rgba(255,255,255,0.04)"}}>
-                <div className="text-8xl mb-6">🎯</div>
-                <h3 className="text-2xl font-bold text-white mb-3">Upload Your Resume</h3>
-                <p className="text-slate-400 leading-[1.85]">Upload your resume to get your ATS score, line-by-line grammar analysis, and AI-powered improvements that you control.</p>
-              </motion.div>
+              <div className="rounded-2xl p-10 text-center border border-white/10" style={{background:"rgba(255,255,255,0.03)"}}>
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-lg font-bold text-white mb-2">Upload Your Resume</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">Get ATS score, line-by-line AI improvements, and download the fixed version.</p>
+              </div>
             )}
             {checking&&(
-              <motion.div initial={{opacity:0}} animate={{opacity:1}} className="rounded-3xl p-12 text-center border border-white/10" style={{background:"rgba(255,255,255,0.04)"}}>
-                <motion.div animate={{rotate:360}} transition={{duration:2,repeat:Infinity,ease:"linear"}} className="text-7xl mb-6 inline-block">⚙️</motion.div>
-                <h3 className="text-2xl font-bold text-white mb-6">Analyzing your resume...</h3>
-                <div className="space-y-3 text-left max-w-xs mx-auto">
-                  {["Parsing resume content...","Checking "+improvements.length+" lines for weak phrases...","Analyzing keyword density and ATS compatibility...","Generating AI-powered improvements..."].map((s,i)=>(
-                    <motion.div key={s} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:i*0.4}} className="flex items-center gap-3 text-sm text-slate-300 py-0.5">
+              <div className="rounded-2xl p-10 text-center border border-white/10" style={{background:"rgba(255,255,255,0.03)"}}>
+                <motion.div animate={{rotate:360}} transition={{duration:2,repeat:Infinity,ease:"linear"}} className="text-5xl mb-4 inline-block">⚙️</motion.div>
+                <h3 className="text-lg font-bold text-white mb-4">Analyzing your resume...</h3>
+                <div className="space-y-2 text-left max-w-xs mx-auto">
+                  {["Parsing resume content...","Checking for weak phrases...","Analyzing ATS compatibility...","Generating improvements..."].map((s,i)=>(
+                    <motion.div key={s} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:i*0.4}} className="flex items-center gap-3 text-sm text-slate-300">
                       <motion.span animate={{scale:[1,1.3,1]}} transition={{duration:1,repeat:Infinity,delay:i*0.3}} className="w-2 h-2 rounded-full bg-cyan-400 inline-block flex-shrink-0" style={{boxShadow:"0 0 6px #06b6d4"}}/>
                       {s}
                     </motion.div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </motion.div>
-        </div>
-      </div>
+
+          </div>{/* end left panel inner */}
+        </div>{/* end left panel */}
+
+        {/* ══ RIGHT PANEL (60%) — Live resume preview, always visible ══ */}
+        <div className="flex-1" style={{height:"100%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent",background:"#111827"}}>
+          {resumeData.name?(
+            <div style={{padding:"24px"}}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-white/40 uppercase tracking-widest">📄 Live Resume Preview</span>
+                {appliedCount>0&&<span className="text-xs text-emerald-400 font-semibold">{appliedCount} fix{appliedCount>1?"es":""} applied</span>}
+              </div>
+              <div className="rounded-2xl overflow-hidden shadow-2xl" style={{background:"white",minHeight:"100%"}}>
+                <ResumePreview rd={resumeData} lineStates={lineStates} improvements={improvements}/>
+              </div>
+            </div>
+          ):(
+            <div className="flex flex-col items-center justify-center h-full text-center" style={{padding:"48px 32px"}}>
+              <motion.div animate={{y:[0,-12,0]}} transition={{duration:3,repeat:Infinity,ease:"easeInOut"}} className="text-8xl mb-6">📄</motion.div>
+              <h3 className="text-2xl font-bold text-white mb-3">Resume Preview</h3>
+              <p className="text-slate-400 text-base leading-relaxed max-w-sm">Upload your resume on the left and click "Check ATS Score" — your live resume will appear here and update instantly as you apply fixes.</p>
+              {checking&&(
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} className="mt-8 flex items-center gap-3 text-cyan-400">
+                  <motion.span animate={{rotate:360}} transition={{duration:1.5,repeat:Infinity,ease:"linear"}} className="inline-block text-2xl">⟳</motion.span>
+                  <span className="text-sm font-semibold">Analyzing resume...</span>
+                </motion.div>
+              )}
+            </div>
+          )}
+        </div>{/* end right panel */}
+
+      </div>{/* end split-screen */}
     </section>
   );
 }
-
 function AITools({ onBuild }) {
   const ref=useRef(null); const iv=useInView(ref,{once:true,margin:"-80px"});
   const [role,setRole]=useState("Software Engineer");
