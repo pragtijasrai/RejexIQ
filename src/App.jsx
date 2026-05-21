@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import NewAuthPage from "./AuthPage.jsx";
 import NewProfilePage from "./ProfilePage.jsx";
+import CodeArena from "./CodeArena.jsx";
+import AIAssistantPage from "./AIAssistantPage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
 import CareerLanding from "./CareerLanding.jsx";
@@ -2833,8 +2835,18 @@ function AIAssistant({ user }) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState(localStorage.getItem("gemini_api_key") || "");
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!localStorage.getItem("gemini_api_key"));
+  const [apiKey, setApiKey] = useState(() => {
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const stored = localStorage.getItem("gemini_api_key");
+    const key = envKey && envKey !== "your_gemini_api_key" ? envKey : stored || "";
+    if (key) localStorage.setItem("gemini_api_key", key);
+    return key;
+  });
+  const [showApiKeyInput, setShowApiKeyInput] = useState(() => {
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const stored = localStorage.getItem("gemini_api_key");
+    return !(envKey && envKey !== "your_gemini_api_key") && !stored;
+  });
   const msgRef = useRef(null);
 
   const suggestions = [
@@ -2851,7 +2863,7 @@ function AIAssistant({ user }) {
     }
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
