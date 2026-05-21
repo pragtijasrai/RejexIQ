@@ -1650,7 +1650,7 @@ function TemplatesSection({ onSelect }) {
   }
 
   return(
-    <section ref={ref} className="relative overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)"}}>
+    <section ref={ref} className="relative overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)",paddingTop:"48px"}}>
       {/* BG decorations */}
       <div className="absolute inset-0 pointer-events-none" style={{backgroundImage:"linear-gradient(rgba(6,182,212,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.04) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
       <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
