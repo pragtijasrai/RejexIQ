@@ -1709,15 +1709,15 @@ function TemplatesSection({ onSelect }) {
               <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="rounded-2xl border border-white/10 p-5" style={{background:"rgba(255,255,255,0.04)"}}>
                 <div className="flex items-center gap-5 mb-4">
                   <div className="relative inline-flex items-center justify-center flex-shrink-0">
-                    <svg width={88} height={88} style={{transform:"rotate(-90deg)"}}>
-                      <circle cx={44} cy={44} r={r2} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={9}/>
-                      <motion.circle cx={44} cy={44} r={r2} fill="none" stroke={sc} strokeWidth={9} strokeLinecap="round"
+                    <svg width={116} height={116} style={{transform:"rotate(-90deg)"}}>
+                      <circle cx={58} cy={58} r={r2} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={9}/>
+                      <motion.circle cx={58} cy={58} r={r2} fill="none" stroke={sc} strokeWidth={9} strokeLinecap="round"
                         initial={{strokeDasharray:"0 "+circ2}} animate={{strokeDasharray:(atsScore/100)*circ2+" "+circ2}}
                         transition={{duration:1.5,ease:"easeOut"}} style={{filter:"drop-shadow(0 0 8px "+sc+")"}}/>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <motion.span key={atsScore} initial={{scale:0.5}} animate={{scale:1}} className="text-xl font-black" style={{color:sc}}>{atsScore}</motion.span>
-                      <span className="text-[9px] text-white/30 font-bold">ATS</span>
+                      <motion.span key={atsScore} initial={{scale:0.5}} animate={{scale:1}} className="text-2xl font-black" style={{color:sc}}>{atsScore}</motion.span>
+                      <span className="text-[10px] text-white/30 font-bold">ATS</span>
                     </div>
                   </div>
                   <div className="flex-1">
@@ -1739,7 +1739,7 @@ function TemplatesSection({ onSelect }) {
                 {improvements.length>0&&(
                   <motion.button whileHover={{scale:1.02}} whileTap={{scale:0.97}} onClick={fixAll} disabled={fixingAll||appliedCount===improvements.length}
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
-                    style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
+                    style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",marginTop:"16px"}}>
                     {fixingAll?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">✨</motion.span>:"🔧"}
                     {fixingAll?"Fixing all...":appliedCount===improvements.length?"All Fixed ✓":"Fix All "+improvements.length+" Issues"}
                   </motion.button>
