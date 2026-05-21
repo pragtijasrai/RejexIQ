@@ -1,151 +1,43 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import log from "./signin.svg";
+import register from "./signup.svg";
+// redesigned
 
-// ── Theme (matches App.jsx G object) ─────────────────────────────────────────
-const G = {
-  bg:"#0a0e27", surface:"#141b3a", card:"#1a2347", border:"#2d3a5f",
-  accent:"#ff6b9d", accentDim:"rgba(255,107,157,0.15)", purple:"#c084fc",
-  cyan:"#22d3ee", text:"#f0f4ff", muted:"#94a3b8",
-  success:"#34d399", warning:"#fbbf24", danger:"#f87171",
-};
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const TOKEN_KEY = "rejexiq_token";
-const USER_KEY  = "rejexiq_user";
+const USER_KEY = "rejexiq_user";
+const LOCAL_USERS_KEY = "rejexiq_local_users";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !/[\s,]/.test(e);
 }
+
 function pwStrength(p) {
-  if (!p) return { score:0, label:"", color:G.border, pct:0 };
+  if (!p) return { score: 0, label: "", color: "rgba(255,255,255,0.1)", pct: 0 };
   let s = 0;
-  if (p.length >= 8)           s++;
-  if (/[A-Z]/.test(p))         s++;
-  if (/[0-9]/.test(p))         s++;
+  if (p.length >= 8) s++;
+  if (/[A-Z]/.test(p)) s++;
+  if (/[0-9]/.test(p)) s++;
   if (/[^A-Za-z0-9]/.test(p)) s++;
   const map = [
-    { label:"",       color:G.border,   pct:0   },
-    { label:"Weak",   color:G.danger,   pct:25  },
-    { label:"Fair",   color:G.warning,  pct:50  },
-    { label:"Good",   color:G.cyan,     pct:75  },
-    { label:"Strong", color:G.success,  pct:100 },
+    { label: "", color: "#e5e7eb", pct: 0 },
+    { label: "Weak", color: "#ef4444", pct: 25 },
+    { label: "Fair", color: "#f59e0b", pct: 50 },
+    { label: "Good", color: "#06b6d4", pct: 75 },
+    { label: "Strong", color: "#10b981", pct: 100 },
   ];
-  return { score:s, ...map[s] };
+  return { score: s, ...map[s] };
 }
-
-// ── Eye icon ──────────────────────────────────────────────────────────────────
-function Eye({ open }) {
-  return open ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-    </svg>
-  ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-  );
-}
-
-// ── Google icon ───────────────────────────────────────────────────────────────
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-    </svg>
-  );
-}
-
-// ── Animated particles background ────────────────────────────────────────────
-function ParticlesBg() {
-  const ref = useRef();
-  useEffect(() => {
-    const canvas = ref.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize(); window.addEventListener("resize", resize);
-    const pts = Array.from({length:60}, () => ({
-      x:Math.random()*canvas.width, y:Math.random()*canvas.height,
-      vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4,
-      r:Math.random()*1.5+0.3,
-      color:[G.accent,G.purple,G.cyan,"#ffffff"][Math.floor(Math.random()*4)],
-      a:Math.random()*0.4+0.1, pulse:Math.random()*Math.PI*2,
-    }));
-    let raf;
-    function draw() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      pts.forEach(p => {
-        p.pulse+=0.015; p.x+=p.vx; p.y+=p.vy;
-        if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
-        if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
-        const a=p.a*(0.6+0.4*Math.sin(p.pulse));
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle=p.color+Math.floor(a*255).toString(16).padStart(2,"0");
-        ctx.fill();
-      });
-      for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
-        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
-        if(d<80){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(255,107,157,${0.06*(1-d/80)})`;ctx.lineWidth=0.5;ctx.stroke();}
-      }
-      raf=requestAnimationFrame(draw);
-    }
-    draw();
-    return ()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);};
-  },[]);
-  return <canvas ref={ref} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}}/>;
-}
-
-// ── Input field component ─────────────────────────────────────────────────────
-function Field({ label, type="text", value, onChange, onBlur, error, valid, placeholder, right, autoComplete }) {
-  const [focus, setFocus] = useState(false);
-  const borderColor = error ? G.danger : valid ? G.success : focus ? G.accent : G.border;
-  const shadow = error ? `0 0 0 3px rgba(248,113,113,0.12)` : valid ? `0 0 0 3px rgba(52,211,153,0.1)` : focus ? `0 0 0 3px rgba(255,107,157,0.12)` : "none";
-  return (
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:G.muted,marginBottom:6,textTransform:"uppercase",letterSpacing:0.8}}>{label}</label>
-      <div style={{position:"relative"}}>
-        <input
-          type={type} value={value} placeholder={placeholder}
-          autoComplete={autoComplete}
-          onChange={e=>onChange(e.target.value)}
-          onFocus={()=>setFocus(true)}
-          onBlur={()=>{setFocus(false);if(onBlur)onBlur();}}
-          style={{
-            width:"100%", background:"rgba(255,255,255,0.04)",
-            border:`1.5px solid ${borderColor}`, borderRadius:10,
-            padding:right?"11px 44px 11px 14px":"11px 14px",
-            color:G.text, fontSize:14, outline:"none",
-            fontFamily:"'Inter',sans-serif", transition:"all 0.2s",
-            boxShadow:shadow,
-          }}
-        />
-        {right && <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",color:G.muted}}>{right}</div>}
-        {valid && !error && <div style={{position:"absolute",right:right?40:12,top:"50%",transform:"translateY(-50%)",color:G.success,fontSize:12}}>✓</div>}
-      </div>
-      {error && <div style={{fontSize:12,color:G.danger,marginTop:5,display:"flex",alignItems:"center",gap:4}}><span>⚠</span>{error}</div>}
-    </div>
-  );
-}
-
-// ── Local auth fallback (works without backend) ───────────────────────────────
-const LOCAL_USERS_KEY = "rejexiq_local_users";
 
 function makeToken(user) {
-  // Simple base64 JWT-like token for offline mode
-  const payload = btoa(JSON.stringify({ id: user.id, email: user.email, exp: Date.now() + 7*24*60*60*1000 }));
+  const payload = btoa(JSON.stringify({ id: user.id, email: user.email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }));
   return `local.${payload}.sig`;
 }
 
 function localAuth(mode, { name, email, password }) {
   const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
   if (mode === "signup") {
-    if (users.find(u => u.email === email.toLowerCase())) return null; // already exists
+    if (users.find(u => u.email === email.toLowerCase())) return null;
     const user = { id: "local_" + Date.now(), name, email: email.toLowerCase(), provider: "local", skills: {}, assessmentDone: false };
-    // Store with hashed-ish password (simple, not secure — backend handles real security)
     users.push({ ...user, _pw: btoa(password) });
     localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
     return { token: makeToken(user), user };
@@ -157,60 +49,58 @@ function localAuth(mode, { name, email, password }) {
   }
 }
 
-// ── Main AuthPage component ───────────────────────────────────────────────────
-export default function AuthPage({ onLogin, onNav, type }) {
-  const [mode, setMode]           = useState(type === "signup" ? "signup" : "signin");
-  const [form, setForm]           = useState({ name:"", email:"", password:"", confirm:"" });
-  const [touched, setTouched]     = useState({});
-  const [errors, setErrors]       = useState({});
-  const [showPw, setShowPw]       = useState(false);
-  const [showCf, setShowCf]       = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [gLoading, setGLoading]   = useState(false);
-  const [toast, setToast]         = useState(null);
-  const [animating, setAnimating] = useState(false);
+export default function AuthPage({ onLogin, onNav, type, initialMode }) {
+  const [isSignUpMode, setIsSignUpMode] = useState(() => (initialMode || type) === "signup");
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "", terms: false });
+  const [touched, setTouched] = useState({});
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
+  const [toast, setToast] = useState(null);
   const strength = pwStrength(form.password);
 
-  // Switch mode with animation
-  function switchMode(next) {
-    if (next === mode) return;
-    setAnimating(true);
-    setTimeout(() => {
-      setMode(next);
-      setForm({ name:"", email:"", password:"", confirm:"" });
-      setErrors({}); setTouched({});
-      setAnimating(false);
-    }, 280);
-    if (onNav) onNav(next === "signin" ? "login" : "signup");
-  }
+  const mode = isSignUpMode ? "signup" : "signin";
 
-  // Live validation
-  const validate = useCallback((f=form, m=mode) => {
+  useEffect(() => {
+    setIsSignUpMode((initialMode || type) === "signup");
+  }, [type, initialMode]);
+
+  const toggleSignUpMode = () => {
+    const next = !isSignUpMode;
+    setIsSignUpMode(next);
+    setForm({ name: "", email: "", password: "", confirm: "", terms: false });
+    setErrors({}); setTouched({});
+    if (onNav) onNav(next ? "signup" : "login");
+  };
+
+  const validate = useCallback((f = form, m = isSignUpMode ? "signup" : "signin") => {
     const e = {};
     if (m === "signup") {
-      if (!f.name.trim())           e.name = "Full name is required";
+      if (!f.name.trim()) e.name = "Full name is required";
       else if (f.name.trim().length < 2) e.name = "Name must be at least 2 characters";
       if (f.password && f.confirm && f.password !== f.confirm) e.confirm = "Passwords do not match";
-      if (f.password && pwStrength(f.password).score < 2) e.password = "Password too weak — add uppercase, numbers or symbols";
+      if (f.password && pwStrength(f.password).score < 2) e.password = "Password is too weak";
+      if (!f.terms) e.terms = "You must agree to the Terms of Service & Privacy Policy";
     }
-    if (!f.email.trim())            e.email = "Email is required";
+    if (!f.email.trim()) e.email = "Email is required";
     else if (!validateEmail(f.email)) e.email = "Enter a valid email address";
-    if (!f.password)                e.password = e.password || "Password is required";
+    if (!f.password) e.password = e.password || "Password is required";
     else if (f.password.length < 8) e.password = e.password || "Password must be at least 8 characters";
     return e;
-  }, [form, mode]);
+  }, [form, isSignUpMode]);
 
   function handleChange(field, val) {
     const next = { ...form, [field]: val };
     setForm(next);
     if (touched[field]) setErrors(validate(next, mode));
   }
+
   function handleBlur(field) {
     setTouched(t => ({ ...t, [field]: true }));
     setErrors(validate(form, mode));
   }
 
-  function showToast(msg, type="error") {
+  function showToast(msg, type = "error") {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   }
@@ -220,267 +110,433 @@ export default function AuthPage({ onLogin, onNav, type }) {
     setTimeout(() => { if (onLogin) onLogin({ ...user, assessmentDone: user.assessmentDone || false }); }, 900);
   }
 
-  // ── Email/password submit — works 100% without backend ───────────────────
   async function handleSubmit(e) {
     e && e.preventDefault();
-    setTouched({ name:true, email:true, password:true, confirm:true });
+    setTouched({ name: true, email: true, password: true, confirm: true, terms: true });
     const errs = validate(form, mode);
     setErrors(errs);
     if (Object.keys(errs).length) return;
-
     setLoading(true);
-    // Simulate network delay for UX
     await new Promise(r => setTimeout(r, 600));
-
     try {
       const body = mode === "signup"
         ? { name: form.name.trim(), email: form.email.trim(), password: form.password }
         : { email: form.email.trim(), password: form.password };
-
       const data = localAuth(mode, body);
-      if (!data) {
-        throw new Error(
-          mode === "signin"
-            ? "Invalid email or password. Please check and try again."
-            : "This email is already registered. Please sign in instead."
-        );
-      }
-
+      if (!data) throw new Error(mode === "signin" ? "Invalid email or password." : "Email already registered. Sign in instead.");
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       _onSuccess(data.user);
-    } catch (err) {
-      showToast(err.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { showToast(err.message, "error"); }
+    finally { setLoading(false); }
   }
 
-  // ── Google auth ────────────────────────────────────────────────────────────
   async function handleGoogle() {
     setGLoading(true);
     try {
       const { signInWithGoogle } = await import("./firebase.js");
       const { name, email, avatar } = await signInWithGoogle();
-
-      // Save/find user locally
       const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
       let found = users.find(u => u.email === email.toLowerCase());
       if (!found) {
-        found = { id:"g_"+Date.now(), name, email:email.toLowerCase(), avatar, provider:"google", skills:{}, assessmentDone:false };
+        found = { id: "g_" + Date.now(), name, email: email.toLowerCase(), avatar, provider: "google", skills: {}, assessmentDone: false };
         users.push(found);
         localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
       }
-      const user = { id:found.id, name:found.name, email:found.email, avatar:found.avatar||avatar, provider:"google", skills:found.skills||{}, assessmentDone:found.assessmentDone||false };
-      const data = { token:makeToken(user), user };
-
+      const user = { id: found.id, name: found.name, email: found.email, avatar: found.avatar || avatar, provider: "google", skills: found.skills || {}, assessmentDone: found.assessmentDone || false };
+      const data = { token: makeToken(user), user };
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       _onSuccess(data.user);
     } catch (err) {
-      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
-        // silent — user closed popup
-      } else if (err.code === "auth/unauthorized-domain") {
-        showToast("Go to Firebase Console → Authentication → Authorized domains → add 'localhost'", "info");
-      } else {
-        showToast(err.message || "Google sign-in failed", "error");
-      }
-    } finally {
-      setGLoading(false);
-    }
+      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") { }
+      else if (err.code === "auth/unauthorized-domain") showToast("Add localhost to Firebase authorized domains", "info");
+      else showToast(err.message || "Google sign-in failed", "error");
+    } finally { setGLoading(false); }
   }
 
-  // ── JSX ────────────────────────────────────────────────────────────────────
+  const buttonClasses =
+    `w-full text-white bg-gradient-to-r from-brightColor to-backgroundColor hover:opacity-90 focus:ring-4 focus:outline-none 
+    focus:ring-brightColor/30 font-bold rounded-lg text-sm px-5 py-3 text-center transition-all 
+    duration-200 transform hover:scale-[1.02] shadow-[0_4px_20px_rgba(255,77,109,0.4)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer border border-white/20`;
+  const buttonForGFT =
+    `inline-flex w-full justify-center items-center rounded-lg border border-gray-200 bg-white/60 
+    py-2.5 px-4 text-sm font-medium text-gray-600 hover:bg-white/80 shadow-sm transition-all 
+    duration-200 hover:shadow disabled:opacity-70 cursor-pointer backdrop-blur-sm`;
+
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
-        * { box-sizing:border-box; margin:0; padding:0; }
-        body,#root { background:${G.bg}; color:${G.text}; font-family:'Inter',sans-serif; min-height:100vh; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin   { to{transform:rotate(360deg)} }
-        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes glow   { 0%,100%{box-shadow:0 0 20px rgba(255,107,157,0.3)} 50%{box-shadow:0 0 40px rgba(255,107,157,0.6)} }
-        @keyframes slideIn{ from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-        .auth-card { animation: fadeUp 0.5s ease both; }
-        .auth-form  { transition: opacity 0.28s ease, transform 0.28s ease; }
-        .auth-form.out { opacity:0; transform:translateX(16px); }
-        input::placeholder { color:${G.muted}; }
-        input { caret-color:${G.accent}; }
-        .btn-google:hover { background:rgba(255,255,255,0.1) !important; transform:translateY(-1px); }
-        .btn-google:active { transform:translateY(0); }
-        .btn-primary-auth:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(255,107,157,0.5) !important; }
-        .btn-primary-auth:active { transform:translateY(0); }
-        .mode-btn:hover { background:rgba(255,107,157,0.1) !important; }
-        @media(max-width:600px){
-          .auth-split { flex-direction:column !important; }
-          .auth-deco   { display:none !important; }
-          .auth-form-wrap { padding:28px 20px !important; }
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateX(-50%) translateY(16px); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0); }
         }
       `}</style>
+      <div
+        className={`relative w-full bg-white min-h-screen overflow-hidden font-sans
+             before:content-[''] before:absolute before:w-[1500px] before:h-[1500px] lg:before:h-[2000px] 
+             lg:before:w-[2000px] lg:before:top-[-10%]  before:top-[initial] lg:before:right-[48%] 
+             before:right-[initial]  max-lg:before:left-[30%] max-sm:bottom-[72%]   max-md:before:left-1/2 
+              max-lg:before:bottom-[75%]  before:z-[6] before:rounded-[50%]    max-md:p-6     
+              lg:before:-translate-y-1/2  max-lg:before:-translate-x-1/2  before:bg-backgroundColor 
+              before:transition-all before:duration-[2000ms] lg:before:duration-[1800ms] ease-in-out  ${isSignUpMode
+            ? `lg:before:translate-x-full before:-translate-x-1/2 
+            before:translate-y-full lg:before:right-[52%] before:right-[initial]  sm:max-lg:before:bottom-[22%]
+             max-sm:before:bottom-[20%]  max-md:before:left-1/2`
+            : ""
+          }`}
+      >
+        <div className="absolute w-full h-full top-0 left-0">
+          <div
+            className={` absolute top-[95%] lg:top-1/2 left-1/2 grid grid-cols-1 z-[5] -translate-x-1/2 
+               -translate-y-full lg:-translate-y-1/2 lg:w-1/2 w-full transition-all duration-[1000ms] 
+               lg:duration-[700ms] ease-in-out   ${isSignUpMode
+                ? "lg:left-1/4   max-lg:top-[-10%]   max-lg:-translate-x-2/4   max-lg:translate-y-0"
+                : "lg:left-3/4 "
+              } `}
+          >
+            {/* SignIn Form Container */}
+            <div
+              className={` flex items-center justify-center flex-col transition-all duration-[200ms] delay-[700ms] 
+                overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 px-20 max-lg:mt-60  z-20 max-md:px-6 
+                max-md:py-0 ${isSignUpMode ? " opacity-0 z-10 pointer-events-none" : " pointer-events-auto"
+                }`}
+            >
+              {/* --- SIGN IN FORM CONTENT --- */}
+              <div className="w-full bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] md:mt-0 sm:max-w-md xl:p-0 border border-white/50 relative">
+                <div className="py-8 px-20 flex flex-col gap-6 md:gap-7 sm:py-10">
+                  <div className="text-center">
+                    <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl">
+                      Welcome Back
+                    </h1>
+                    <p className="text-sm font-normal text-gray-500 mt-1">
+                      Sign in to your account
+                    </p>
+                  </div>
 
-      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${G.bg} 0%,#1a1f3a 100%)`,position:"relative",overflow:"hidden",padding:"20px"}}>
-        <ParticlesBg/>
+                  <form className="flex flex-col" style={{ gap: '16px' }} onSubmit={handleSubmit}>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                      </div>
+                      <input
+                        type="email"
+                        value={form.email} onChange={e => handleChange("email", e.target.value)} onBlur={() => handleBlur("email")}
+                        className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                        placeholder="Email address"
+                      />
+                      {touched.email && errors.email && <div className="text-red-500 text-xs mt-1 font-medium">{errors.email}</div>}
+                    </div>
 
-        {/* Glow blobs */}
-        <div style={{position:"absolute",top:"15%",left:"8%",width:400,height:400,background:`radial-gradient(circle,${G.accent}18 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(60px)",pointerEvents:"none"}}/>
-        <div style={{position:"absolute",bottom:"15%",right:"8%",width:500,height:500,background:`radial-gradient(circle,${G.purple}15 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(60px)",pointerEvents:"none"}}/>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+                        </svg>
+                      </div>
+                      <input
+                        type="password"
+                        value={form.password} onChange={e => handleChange("password", e.target.value)} onBlur={() => handleBlur("password")}
+                        className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                        placeholder="Password"
+                      />
+                      {touched.password && errors.password && <div className="text-red-500 text-xs mt-1 font-medium">{errors.password}</div>}
+                    </div>
 
-        {/* Card */}
-        <div className="auth-card auth-split" style={{display:"flex",width:"min(900px,100%)",minHeight:560,borderRadius:24,overflow:"hidden",border:`1px solid ${G.border}`,boxShadow:`0 32px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,107,157,0.08)`,backdropFilter:"blur(20px)",position:"relative",zIndex:1}}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start">
+                        <div className="flex items-center h-5">
+                          <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-brightColor focus:ring-brightColor cursor-pointer" />
+                        </div>
+                        <div className="text-sm" style={{ marginLeft: '12px' }}>
+                          <label className="text-gray-500 cursor-pointer" style={{ color: '#6b7280' }}>Remember me</label>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => showToast("Password reset email sent!", "success")} className="text-sm font-medium text-brightColor hover:underline transition-colors bg-transparent border-none cursor-pointer">
+                        Forgot password?
+                      </button>
+                    </div>
 
-          {/* ── Left decorative panel ── */}
-          <div className="auth-deco" style={{flex:"0 0 42%",background:`linear-gradient(160deg,${G.surface} 0%,#0f1535 100%)`,padding:"48px 36px",display:"flex",flexDirection:"column",justifyContent:"space-between",position:"relative",overflow:"hidden",borderRight:`1px solid ${G.border}`}}>
-            {/* Grid pattern */}
-            <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(rgba(255,107,157,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,157,0.03) 1px,transparent 1px)`,backgroundSize:"32px 32px",pointerEvents:"none"}}/>
-            {/* Glow */}
-            <div style={{position:"absolute",top:-60,right:-60,width:240,height:240,background:`radial-gradient(circle,${G.accent}20 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(40px)"}}/>
-            <div style={{position:"absolute",bottom:-40,left:-40,width:200,height:200,background:`radial-gradient(circle,${G.purple}20 0%,transparent 70%)`,borderRadius:"50%",filter:"blur(40px)"}}/>
+                    <button type="submit" disabled={loading} className={buttonClasses} style={{ height: '48px' }}>
+                      {loading ? "Signing in..." : "Sign in"}
+                    </button>
+                  </form>
 
-            <div style={{position:"relative",zIndex:1}}>
-              {/* Logo */}
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:48}}>
-                <div style={{width:40,height:40,background:`linear-gradient(135deg,${G.accent},${G.purple})`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:`0 0 20px rgba(255,107,157,0.4)`}}>R</div>
-                <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:G.text}}>Rejex<span style={{color:G.accent}}>IQ</span></span>
-              </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 text-gray-500 bg-white/60 backdrop-blur-md rounded-full border border-white/50">Or continue with</span>
+                    </div>
+                  </div>
 
-              <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:28,fontWeight:800,color:G.text,lineHeight:1.2,marginBottom:16}}>
-                {mode==="signin" ? "Welcome\nback 👋" : "Start your\njourney 🚀"}
-              </h2>
-              <p style={{fontSize:14,color:G.muted,lineHeight:1.7,marginBottom:32}}>
-                {mode==="signin"
-                  ? "Sign in to access your career intelligence dashboard, skill assessments, and personalized roadmap."
-                  : "Join thousands of developers who've discovered their career readiness score and best-fit roles."}
-              </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={buttonForGFT} style={{ height: '44px' }}>
+                      {gLoading ? <div className="w-5 h-5 border-2 border-gray-300 border-t-backgroundColor rounded-full animate-spin" /> :
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                        </svg>}
+                    </button>
+                    <button type="button" onClick={() => showToast("Facebook sign-in not configured", "info")} className={buttonForGFT}>
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button type="button" onClick={() => showToast("Twitter sign-in not configured", "info")} className={buttonForGFT}>
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
+                      </svg>
+                    </button>
+                  </div>
 
-              {/* Feature bullets */}
-              {["AI-powered skill assessment","Real-time market demand data","Personalized career roadmap","Professional resume builder"].map((f,i) => (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                  <div style={{width:20,height:20,borderRadius:"50%",background:`${G.accent}20`,border:`1px solid ${G.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:G.accent,flexShrink:0}}>✓</div>
-                  <span style={{fontSize:13,color:G.mutedBright||G.muted}}>{f}</span>
+                  <p className="text-sm text-center text-gray-600 mt-4 border-t border-gray-200 pt-4">
+                    If you don&apos;t have an account, <button type="button" onClick={toggleSignUpMode} className="text-brightColor font-medium cursor-pointer bg-transparent border-none">Do Sign Up</button>
+                  </p>
                 </div>
-              ))}
+              </div>
             </div>
 
-            {/* Switch mode */}
-            <div style={{position:"relative",zIndex:1,marginTop:32}}>
-              <p style={{fontSize:13,color:G.muted,marginBottom:12}}>{mode==="signin"?"Don't have an account?":"Already have an account?"}</p>
-              <button className="mode-btn" onClick={()=>switchMode(mode==="signin"?"signup":"signin")}
-                style={{background:"rgba(255,107,157,0.08)",border:`1px solid ${G.accent}40`,borderRadius:10,padding:"10px 20px",color:G.accent,fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.2s",fontFamily:"'Space Grotesk',sans-serif"}}>
-                {mode==="signin"?"Create account →":"Sign in →"}
-              </button>
+            {/* SignUp Form Container */}
+            <div
+              className={`flex items-center justify-center flex-col px-20 transition-all ease-in-out duration-[200ms]
+                 delay-[700ms] overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 py-0 z-10 max-md:px-6 
+                 max-md:py-0 opacity-0 ${isSignUpMode ? "opacity-100 z-20 pointer-events-auto" : " pointer-events-none"
+                }`}
+            >
+              {/* --- SIGN UP FORM CONTENT --- */}
+              <div className="w-full bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] md:mt-0 sm:max-w-md xl:p-0 border border-white/50 relative">
+                <div className="py-8 px-10 flex flex-col gap-6 md:gap-7 sm:py-10 sm:px-14">
+                  <div className="text-center">
+                    <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl">
+                      Create Account
+                    </h1>
+                    <p className="text-sm font-normal text-gray-500 mt-1">
+                      Sign up to get started
+                    </p>
+                  </div>
+
+                  <form className="flex flex-col" style={{ gap: '16px' }} onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-2 lg:grid-cols-1" style={{ gap: '16px' }}>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
+                          </svg>
+                        </div>
+                        <input
+                          type="text" value={form.name} onChange={e => handleChange("name", e.target.value)} onBlur={() => handleBlur("name")}
+                          className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                          placeholder="Full name"
+                        />
+                        {touched.name && errors.name && <div className="text-red-500 text-xs mt-1 font-medium">{errors.name}</div>}
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                          </svg>
+                        </div>
+                        <input
+                          type="email" value={form.email} onChange={e => handleChange("email", e.target.value)} onBlur={() => handleBlur("email")}
+                          className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                          placeholder="Email address"
+                        />
+                        {touched.email && errors.email && <div className="text-red-500 text-xs mt-1 font-medium">{errors.email}</div>}
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+                          </svg>
+                        </div>
+                        <input
+                          type="password" value={form.password} onChange={e => handleChange("password", e.target.value)} onBlur={() => handleBlur("password")}
+                          className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                          placeholder="Password"
+                        />
+                        {touched.password && errors.password && <div className="text-red-500 text-xs mt-1 font-medium">{errors.password}</div>}
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+                          </svg>
+                        </div>
+                        <input
+                          type="password" value={form.confirm} onChange={e => handleChange("confirm", e.target.value)} onBlur={() => handleBlur("confirm")}
+                          className="bg-[#fff5f5]/60 border border-rose-200/60 text-gray-900 placeholder-gray-500 sm:text-sm rounded-lg focus:ring-brightColor focus:border-brightColor block w-full transition-all duration-200 shadow-sm outline-none backdrop-blur-sm" style={{ height: '48px', paddingLeft: '50px', paddingTop: '12px', paddingBottom: '12px' }}
+                          placeholder="Confirm password"
+                        />
+                        {touched.confirm && errors.confirm && <div className="text-red-500 text-xs mt-1 font-medium">{errors.confirm}</div>}
+                      </div>
+                    </div>
+
+                    {form.password && isSignUpMode && (
+                      <div className="mt-2">
+                        <div className="h-[5px] bg-gray-200 rounded-full overflow-hidden mb-[3px]">
+                          <div style={{ width: `${strength.pct}%`, background: strength.color }} className="h-full rounded-full transition-all duration-400" />
+                        </div>
+                        <div className="flex justify-between text-[11px]">
+                          <span style={{ color: strength.color }} className="font-semibold">{strength.label}</span>
+                          <span className="text-gray-400">{strength.score < 2 ? "Add uppercase, numbers & symbols" : strength.score < 4 ? "Getting stronger!" : "Great password!"}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input type="checkbox" checked={form.terms} onChange={e => handleChange("terms", e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-brightColor focus:ring-brightColor cursor-pointer" />
+                      </div>
+                      <div className="text-sm" style={{ marginLeft: '12px' }}>
+                        <label className="text-gray-500 cursor-pointer" style={{ color: '#6b7280' }} onClick={() => handleChange("terms", !form.terms)}>
+                          I agree to the <span className="text-brightColor font-medium">Terms of Service</span> and <span className="text-brightColor font-medium">Privacy Policy</span>
+                        </label>
+                        {touched.terms && errors.terms && <div className="text-red-500 text-xs mt-1 font-medium">{errors.terms}</div>}
+                      </div>
+                    </div>
+
+                    <button type="submit" disabled={loading} className={buttonClasses} style={{ height: '48px' }}>
+                      {loading ? "Creating Account..." : "Create Account"}
+                    </button>
+                  </form>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 text-gray-500 bg-white/60 backdrop-blur-md rounded-full border border-white/50">Or sign up with</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={buttonForGFT} style={{ height: '44px' }}>
+                      {gLoading ? <div className="w-5 h-5 border-2 border-gray-300 border-t-backgroundColor rounded-full animate-spin" /> :
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                        </svg>}
+                    </button>
+                    <button type="button" onClick={() => showToast("Facebook sign-in not configured", "info")} className={buttonForGFT}>
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button type="button" onClick={() => showToast("Twitter sign-in not configured", "info")} className={buttonForGFT}>
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-center text-gray-600 mt-4 border-t border-gray-200 pt-4">
+                    Already have an account? <button type="button" onClick={toggleSignUpMode} className="text-brightColor font-medium cursor-pointer bg-transparent border-none">Sign in</button>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* ── Right form panel ── */}
-          <div className="auth-form-wrap" style={{flex:1,background:G.card,padding:"40px 36px",display:"flex",flexDirection:"column",justifyContent:"center",overflowY:"auto"}}>
-            <div className={`auth-form${animating?" out":""}`}>
-              <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:G.text,marginBottom:4}}>
-                {mode==="signin"?"Sign in to RejexIQ":"Create your account"}
-              </h1>
-              <p style={{fontSize:13,color:G.muted,marginBottom:24}}>
-                {mode==="signin"?"New here? ":"Already have an account? "}
-                <span onClick={()=>switchMode(mode==="signin"?"signup":"signin")} style={{color:G.accent,cursor:"pointer",fontWeight:600}}>
-                  {mode==="signin"?"Create account":"Sign in"}
-                </span>
+        {/* Text/Images panels container */}
+        <div className="absolute h-full w-full top-0 left-0 grid grid-cols-1   max-lg:grid-rows-[1fr_2fr_1fr]  
+        lg:grid-cols-2">
+          {/* Sign Up side (Right visually, but logic-wise left panel) */}
+          <div
+            className={`flex flex-row justify-around lg:flex-col items-center  max-lg:col-start-1 max-lg:col-end-2  
+              max-lg:px-[8%]   max-lg:py-10 lg:items-center  text-center z-[6]   max-lg:row-start-1 max-lg:row-end-2    
+               px-[10%] pt-12 pb-0 ${isSignUpMode ? "pointer-events-none" : " pointer-events-auto"
+              }`}
+          >
+            <div
+              className={`text-white transition-transform duration-[900ms] lg:duration-[1100ms] ease-in-out 
+                 delay-[800ms] lg:delay-[400ms] max-lg:pr-[15%] max-md:px-4 max-md:py-2 ${isSignUpMode
+                  ? "lg:translate-x-[-800px]   max-lg:translate-y-[-300px]"
+                  : ""
+                }`}
+            >
+              <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-white">
+                New here ?
+              </h3>
+              <p className="text-[0.7rem] lg:text-[0.95rem] px-0 py-2 lg:py-[0.7rem] text-white/80">
+                Sign up and discover our platform
               </p>
-
-              {/* Google button */}
-              <button className="btn-google" onClick={handleGoogle} disabled={gLoading}
-                style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:10,background:"rgba(255,255,255,0.06)",border:`1px solid ${G.border}`,borderRadius:10,padding:"11px 16px",color:G.text,fontSize:14,fontWeight:500,cursor:gLoading?"not-allowed":"pointer",transition:"all 0.2s",marginBottom:20,fontFamily:"'Inter',sans-serif"}}>
-                {gLoading
-                  ? <><div style={{width:16,height:16,border:`2px solid ${G.border}`,borderTop:`2px solid ${G.accent}`,borderRadius:"50%",animation:"spin 0.7s linear infinite"}}/> Connecting...</>
-                  : <><GoogleIcon/> Continue with Google</>}
+              <button
+                className="bg-transparent w-[110px] h-[35px] text-white text-[0.7rem] lg:w-[130px] lg:h-[41px] 
+                lg:text-[0.8rem]  font-semibold   border-2 border-white rounded-full transition-colors duration-300 
+                hover:bg-white hover:text-backgroundColor cursor-pointer"
+                onClick={toggleSignUpMode}
+              >
+                Sign up
               </button>
-
-              {/* Divider */}
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-                <div style={{flex:1,height:1,background:G.border}}/>
-                <span style={{fontSize:12,color:G.muted}}>or continue with email</span>
-                <div style={{flex:1,height:1,background:G.border}}/>
-              </div>
-
-              {/* Name (signup only) */}
-              {mode==="signup" && (
-                <Field label="Full Name" value={form.name} placeholder="Jane Doe"
-                  onChange={v=>handleChange("name",v)} onBlur={()=>handleBlur("name")}
-                  error={touched.name&&errors.name} valid={touched.name&&!errors.name&&form.name.length>=2}
-                  autoComplete="name"/>
-              )}
-
-              {/* Email */}
-              <Field label="Email Address" type="email" value={form.email} placeholder="you@example.com"
-                onChange={v=>handleChange("email",v)} onBlur={()=>handleBlur("email")}
-                error={touched.email&&errors.email} valid={touched.email&&!errors.email&&form.email}
-                autoComplete="email"/>
-
-              {/* Password */}
-              <Field label="Password" type={showPw?"text":"password"} value={form.password}
-                placeholder={mode==="signup"?"Min. 8 chars, uppercase, number, symbol":"Your password"}
-                onChange={v=>handleChange("password",v)} onBlur={()=>handleBlur("password")}
-                error={touched.password&&errors.password} valid={touched.password&&!errors.password&&form.password}
-                autoComplete={mode==="signup"?"new-password":"current-password"}
-                right={<button type="button" onClick={()=>setShowPw(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",color:G.muted,display:"flex",padding:0}}><Eye open={showPw}/></button>}/>
-
-              {/* Password strength meter (signup) */}
-              {mode==="signup" && form.password && (
-                <div style={{marginTop:-8,marginBottom:14}}>
-                  <div style={{height:3,background:G.border,borderRadius:2,overflow:"hidden",marginBottom:4}}>
-                    <div style={{height:"100%",width:`${strength.pct}%`,background:strength.color,borderRadius:2,transition:"all 0.4s ease",boxShadow:`0 0 8px ${strength.color}80`}}/>
-                  </div>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:11}}>
-                    <span style={{color:strength.color,fontWeight:600}}>{strength.label}</span>
-                    <span style={{color:G.muted}}>
-                      {strength.score<2?"Add uppercase, numbers & symbols":strength.score<4?"Getting stronger!":"Great password!"}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Confirm password (signup) */}
-              {mode==="signup" && (
-                <Field label="Confirm Password" type={showCf?"text":"password"} value={form.confirm}
-                  placeholder="Re-enter your password"
-                  onChange={v=>handleChange("confirm",v)} onBlur={()=>handleBlur("confirm")}
-                  error={touched.confirm&&errors.confirm}
-                  valid={touched.confirm&&!errors.confirm&&form.confirm&&form.confirm===form.password}
-                  autoComplete="new-password"
-                  right={<button type="button" onClick={()=>setShowCf(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",color:G.muted,display:"flex",padding:0}}><Eye open={showCf}/></button>}/>
-              )}
-
-              {/* Forgot password (signin) */}
-              {mode==="signin" && (
-                <div style={{textAlign:"right",marginTop:-6,marginBottom:16}}>
-                  <span onClick={()=>showToast("Password reset email sent! Check your inbox.","success")} style={{fontSize:12,color:G.accent,cursor:"pointer",fontWeight:500}}>Forgot password?</span>
-                </div>
-              )}
-
-              {/* Submit */}
-              <button className="btn-primary-auth" onClick={handleSubmit} disabled={loading}
-                style={{width:"100%",background:loading?"rgba(255,107,157,0.3)":`linear-gradient(135deg,${G.accent},${G.purple})`,border:"none",borderRadius:10,padding:"12px",color:"#fff",fontSize:14,fontWeight:700,cursor:loading?"not-allowed":"pointer",transition:"all 0.25s",boxShadow:`0 4px 20px rgba(255,107,157,0.3)`,fontFamily:"'Space Grotesk',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
-                {loading
-                  ? <><div style={{width:16,height:16,border:"2px solid rgba(255,255,255,0.3)",borderTop:"2px solid #fff",borderRadius:"50%",animation:"spin 0.7s linear infinite"}}/>{mode==="signin"?"Signing in...":"Creating account..."}</>
-                  : mode==="signin"?"Sign In":"Create Account"}
-              </button>
-
-              {/* Terms (signup) */}
-              {mode==="signup" && (
-                <p style={{fontSize:11,color:G.muted,textAlign:"center",lineHeight:1.6}}>
-                  By creating an account you agree to our{" "}
-                  <span style={{color:G.accent,cursor:"pointer"}}>Terms of Service</span> and{" "}
-                  <span style={{color:G.accent,cursor:"pointer"}}>Privacy Policy</span>
-                </p>
-              )}
             </div>
+
+            <img
+              src={log}
+              className={`  max-md:hidden max-lg:translate-y-[-40px] w-[200px] lg:w-[380px] mt-auto transition-transform 
+                duration-[900ms] lg:duration-[1100ms] ease-in-out delay-[600ms] lg:delay-[400ms] ${isSignUpMode
+                  ? "lg:translate-x-[-800px]   max-lg:translate-y-[-300px]"
+                  : ""
+                }`}
+              alt="login"
+            />
+          </div>
+
+          {/* Sign In side (Left visually, but logic-wise right panel) */}
+          <div
+            className={`flex flex-row   max-lg:row-start-3 max-lg:row-end-4 lg:flex-col items-center lg:items-center 
+              justify-around text-center z-[6]   max-lg:col-start-1 max-lg:col-end-2  max-lg:px-[8%]   max-lg:py-10 
+               px-[10%] pt-12 pb-0 ${isSignUpMode ? " pointer-events-auto" : "pointer-events-none"
+              }`}
+          >
+            <div
+              className={`text-white transition-transform duration-[900ms] lg:duration-[1100ms] ease-in-out delay-[800ms]
+                 lg:delay-[400ms] max-lg:pr-[15%] max-md:px-4 max-md:py-2 ${isSignUpMode
+                  ? ""
+                  : "lg:translate-x-[800px]   max-lg:translate-y-[300px]"
+                }`}
+            >
+              <h3 className="font-semibold leading-none text-[1.2rem] lg:text-[1.5rem] text-white">
+                One of us ?
+              </h3>
+              <p className=" py-2 text-[0.7rem] lg:text-[0.95rem] px-0  lg:py-[0.7rem] text-white/80">
+                Sign in to your account to have hassle free experience
+              </p>
+              <button
+                className=" text-white bg-transparent w-[110px] h-[35px]  text-[0.7rem] lg:w-[130px] 
+                lg:h-[41px] lg:text-[0.8rem]  font-semibold   border-2 border-white rounded-full 
+                transition-colors duration-300 hover:bg-white hover:text-backgroundColor cursor-pointer"
+                onClick={toggleSignUpMode}
+              >
+                Sign in
+              </button>
+            </div>
+
+            <img
+              src={register}
+              className={`  max-md:hidden w-[200px] lg:w-[450px] transition-transform duration-[900ms] 
+                lg:duration-[1100ms] ease-in-out delay-[600ms] lg:delay-[400ms] ${isSignUpMode
+                  ? ""
+                  : "lg:translate-x-[800px]  max-lg:translate-y-[300px]"
+                }`}
+              alt="register"
+            />
           </div>
         </div>
 
         {/* Toast */}
         {toast && (
-          <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",zIndex:9999,padding:"12px 24px",borderRadius:50,fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",boxShadow:"0 8px 32px rgba(0,0,0,0.3)",animation:"fadeUp 0.3s ease",whiteSpace:"nowrap",maxWidth:"90vw",
-            background:toast.type==="success"?"rgba(52,211,153,0.15)":toast.type==="info"?"rgba(34,211,238,0.15)":"rgba(248,113,113,0.15)",
-            border:`1px solid ${toast.type==="success"?G.success:toast.type==="info"?G.cyan:G.danger}40`,
-            color:toast.type==="success"?G.success:toast.type==="info"?G.cyan:G.danger}}>
+          <div className={`fixed bottom-7 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full text-[13px] font-medium shadow-xl whitespace-nowrap max-w-[90vw] animate-[fadeUp_0.3s_ease] ${toast.type === "success" ? "bg-[#34d399]/15 border border-[#10b981]/40 text-[#10b981]" :
+            toast.type === "info" ? "bg-[#22d3ee]/15 border border-[#06b6d4]/40 text-[#06b6d4]" :
+              "bg-[#f87171]/15 border border-[#ef4444]/40 text-[#ef4444]"
+            }`}>
             {toast.msg}
           </div>
         )}
