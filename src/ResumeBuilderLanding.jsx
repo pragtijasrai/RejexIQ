@@ -1688,7 +1688,7 @@ function TemplatesSection({ onSelect }) {
 
         {/* ══ LEFT PANEL (40%) — ATS score + suggestions + fix cards ══ */}
         <div className="flex-shrink-0 border-r border-white/10" style={{width:"40%",height:"100%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-6">
 
             {/* Upload zone */}
             <div onClick={()=>fr.current?.click()} className="border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 group text-center" style={{padding:"28px 20px",borderColor:file?"#06b6d4":"rgba(255,255,255,0.15)",background:file?"rgba(6,182,212,0.08)":"rgba(255,255,255,0.03)"}}>
@@ -1758,25 +1758,29 @@ function TemplatesSection({ onSelect }) {
                   </div>
                   <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc"}}>AI Powered</span>
                 </div>
-                <div className="p-4 space-y-3">
+                <div style={{display:"flex",flexDirection:"column",gap:"20px",padding:"16px"}}>
                   {advisorCards.map((item,i)=>(
                     <motion.div key={i} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:0.1+i*0.08}}
-                      className="rounded-xl border border-white/8 overflow-hidden" style={{background:"rgba(255,255,255,0.03)"}}>
-                      <div className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-base">{item.icon}</span>
-                          <span className="text-sm font-bold text-white">{item.title}</span>
-                          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:item.color+"22",color:item.color}}>{item.priority}</span>
-                        </div>
-                        <p className="text-xs text-slate-400 mb-3" style={{lineHeight:"1.7"}}>{item.advice}</p>
-                        <div className="space-y-1.5">
-                          {item.examples.map((ex,j)=>(
-                            <div key={j} className="flex items-start gap-2">
-                              <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{background:item.color}}/>
-                              <p className="text-xs text-slate-300" style={{lineHeight:"1.7"}}>{ex}</p>
-                            </div>
-                          ))}
-                        </div>
+                      className="rounded-2xl overflow-hidden"
+                      style={{
+                        background:"rgba(255,255,255,0.04)",
+                        border:"1px solid rgba(255,255,255,0.1)",
+                        boxShadow:"0 4px 20px rgba(0,0,0,0.25)",
+                        padding:"20px"
+                      }}>
+                      <div className="flex items-center gap-2" style={{marginBottom:"12px"}}>
+                        <span className="text-base">{item.icon}</span>
+                        <span className="text-sm font-bold text-white">{item.title}</span>
+                        <span className="ml-auto text-xs px-2 py-1 rounded-full font-semibold" style={{background:item.color+"22",color:item.color}}>{item.priority}</span>
+                      </div>
+                      <p className="text-xs text-slate-400" style={{lineHeight:"1.8",marginBottom:"14px"}}>{item.advice}</p>
+                      <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
+                        {item.examples.map((ex,j)=>(
+                          <div key={j} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{background:item.color,marginTop:"5px"}}/>
+                            <p className="text-xs text-slate-300" style={{lineHeight:"1.8"}}>{ex}</p>
+                          </div>
+                        ))}
                       </div>
                     </motion.div>
                   ))}
@@ -1786,48 +1790,58 @@ function TemplatesSection({ onSelect }) {
 
             {/* Line-by-Line Fix Cards */}
             {improvements.length>0&&(
-              <div>
-                <h4 className="font-bold text-white mb-3 flex items-center gap-2 text-sm">
+              <div style={{marginTop:"24px"}}>
+                <h4 className="font-bold text-white flex items-center gap-2 text-sm" style={{marginBottom:"24px"}}>
                   <span>📝</span> Line-by-Line Fixes
                   <span className="ml-auto text-xs text-slate-500 font-normal">{improvements.length} found · {appliedCount} fixed</span>
                 </h4>
-                <div className="space-y-3">
+                <div style={{display:"flex",flexDirection:"column",gap:"32px"}}>
                   {improvements.map((issue,i)=>(
                     <motion.div key={issue.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.06}}
-                      className="rounded-xl border overflow-hidden transition-all duration-300"
-                      style={{background:lineStates[issue.id]==="done"?"rgba(16,185,129,0.06)":"rgba(255,255,255,0.04)",border:lineStates[issue.id]==="done"?"1px solid rgba(16,185,129,0.3)":"1px solid rgba(255,255,255,0.1)"}}>
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{background:"rgba(245,158,11,0.15)",color:"#fbbf24"}}>{issue.type}</span>
-                            <span className="text-xs text-slate-500">{issue.section}</span>
-                          </div>
-                          {lineStates[issue.id]==="done"&&<span className="text-xs text-emerald-400 font-bold">✓ Fixed</span>}
+                      className="rounded-2xl overflow-hidden transition-all duration-300"
+                      style={{
+                        background:lineStates[issue.id]==="done"?"rgba(16,185,129,0.07)":"rgba(255,255,255,0.05)",
+                        border:lineStates[issue.id]==="done"?"1px solid rgba(16,185,129,0.35)":"1px solid rgba(255,255,255,0.12)",
+                        boxShadow:"0 4px 24px rgba(0,0,0,0.3)",
+                        padding:"20px"
+                      }}>
+                      {/* Card header: type badge + section + fixed badge */}
+                      <div className="flex items-center justify-between" style={{marginBottom:"16px"}}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2 py-1 rounded-full font-semibold" style={{background:"rgba(245,158,11,0.15)",color:"#fbbf24"}}>{issue.type}</span>
+                          <span className="text-xs text-slate-500" style={{marginTop:"2px"}}>{issue.section}</span>
                         </div>
-                        <div className="mb-3">
-                          <div className="text-xs text-red-400/70 font-semibold mb-1.5 uppercase tracking-wider">❌ Before</div>
-                          <p className="text-xs text-slate-400 p-3 rounded-lg" style={{lineHeight:"1.7",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)"}}>{issue.original}</p>
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-xs text-emerald-400/70 font-semibold mb-1.5 uppercase tracking-wider">✅ Improved</div>
-                          <p className="text-xs text-slate-200 p-3 rounded-lg" style={{lineHeight:"1.7",background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)"}}>{issue.improved}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          {lineStates[issue.id]!=="done"?(
-                            <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>improveLine(issue)} disabled={lineStates[issue.id]==="loading"}
-                              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-semibold transition-all"
-                              style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc",border:"1px solid rgba(99,102,241,0.3)"}}>
-                              {lineStates[issue.id]==="loading"?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"}
-                              {lineStates[issue.id]==="loading"?"Applying...":"Apply This Fix"}
-                            </motion.button>
-                          ):(
-                            <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>undoFix(issue)}
-                              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-semibold transition-all"
-                              style={{background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)"}}>
-                              ↩ Undo
-                            </motion.button>
-                          )}
-                        </div>
+                        {lineStates[issue.id]==="done"&&<span className="text-xs text-emerald-400 font-bold">✓ Fixed</span>}
+                      </div>
+
+                      {/* BEFORE */}
+                      <div style={{marginBottom:"16px"}}>
+                        <div className="text-xs font-semibold uppercase tracking-wider" style={{color:"rgba(248,113,113,0.8)",marginBottom:"8px"}}>❌ Before</div>
+                        <p className="text-xs text-slate-400 rounded-xl" style={{lineHeight:"1.8",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",padding:"12px 14px"}}>{issue.original}</p>
+                      </div>
+
+                      {/* IMPROVED */}
+                      <div style={{marginBottom:"20px"}}>
+                        <div className="text-xs font-semibold uppercase tracking-wider" style={{color:"rgba(52,211,153,0.8)",marginBottom:"8px"}}>✅ Improved</div>
+                        <p className="text-xs text-slate-200 rounded-xl" style={{lineHeight:"1.8",background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)",padding:"12px 14px"}}>{issue.improved}</p>
+                      </div>
+
+                      {/* Action button */}
+                      <div className="flex gap-2">
+                        {lineStates[issue.id]!=="done"?(
+                          <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>improveLine(issue)} disabled={lineStates[issue.id]==="loading"}
+                            className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all"
+                            style={{background:"rgba(99,102,241,0.2)",color:"#a5b4fc",border:"1px solid rgba(99,102,241,0.3)",padding:"8px 16px"}}>
+                            {lineStates[issue.id]==="loading"?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"✨"}
+                            {lineStates[issue.id]==="loading"?"Applying...":"Apply This Fix"}
+                          </motion.button>
+                        ):(
+                          <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>undoFix(issue)}
+                            className="flex items-center gap-1.5 text-xs rounded-lg font-semibold transition-all"
+                            style={{background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)",padding:"8px 16px"}}>
+                            ↩ Undo
+                          </motion.button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
