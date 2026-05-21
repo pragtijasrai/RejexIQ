@@ -5,6 +5,7 @@ import CodeArena from "./CodeArena.jsx";
 import AIAssistantPage from "./AIAssistantPage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
+import CareerLanding from "./CareerLanding.jsx";
 const StoryMode = lazy(() => import("./StoryMode.jsx"));
 import DSATutorial from "./DSATutorial.jsx";
 import ArraysRecursion from "./ArraysRecursion.jsx";
@@ -804,7 +805,7 @@ function LandingPage({ onNav, onDemo }) {
 
 // AUTH PAGE — uses the new standalone AuthPage component
 function AuthPage({ type, onLogin, onNav }) {
-  return <NewAuthPage onLogin={onLogin} onNav={onNav} type={type === "login" ? "signin" : "signup"} />;
+  return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
 
 // SIDEBAR
@@ -815,7 +816,6 @@ function Sidebar({ active, onNav, user, onLogout }) {
     { key: "assessment", icon: "🎯", label: "Skill Assessment" },
     { key: "dsa", icon: "📚", label: "DSA Tutorial" },
     { key: "story", icon: "⚔️", label: "Story Mode" },
-    { key: "codearena", icon: "💻", label: "Code Arena" },
     { key: "career", icon: "🏆", label: "Career Match" },
     { key: "market", icon: "📈", label: "Market Demand" },
     { key: "resume", icon: "📄", label: "Resume Builder" },
@@ -2725,7 +2725,6 @@ export default function App() {
     setPage("home");
     setShowTour(false);
     localStorage.removeItem("rejexiq_user");
-    localStorage.removeItem("rejexiq_token");
   }
 
   function handleSaveSkills(skills) {
@@ -2772,7 +2771,7 @@ export default function App() {
     <>
       <style>{css}</style>
 
-      {page === "home" && <LandingPage onNav={navigate} onDemo={handleDemo} />}
+      {page === "home" && <CareerLanding onNav={navigate} onDemo={handleDemo} />}
       {page === "login" && <AuthPage type="login" onLogin={handleLogin} onNav={navigate} />}
       {page === "signup" && <AuthPage type="signup" onLogin={handleLogin} onNav={navigate} />}
       {page === "assessment" && !user && (
@@ -2824,13 +2823,12 @@ export default function App() {
             {appPage === "dsa" && <DSAGame />}
             {appPage === "story" && (
               <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto" }}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", overflowX: "hidden" }}>
                   <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
                 </div>
               </Suspense>
             )}
             {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
-            {appPage === "codearena" && <CodeArena user={user} />}
             {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
             {appPage === "resume" && <ResumeBuilder user={user} />}
             {appPage === "assistant" && <AIAssistantPage user={user} />}

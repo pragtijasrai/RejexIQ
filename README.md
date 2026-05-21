@@ -17,6 +17,7 @@ A skill evaluation and career readiness platform for students and professionals.
 - Recharts for data visualization
 - Tailwind CSS
 - Framer Motion for animations
+- Lenis for smooth scrolling
 
 **Backend:**
 - Node.js + Express

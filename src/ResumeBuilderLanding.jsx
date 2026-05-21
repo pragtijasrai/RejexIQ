@@ -162,12 +162,144 @@ function AnimatedDivider({ variant = "orbs" }) {
 }
 
 // ── HERO ─────────────────────────────────────────────────────────────────
-function Hero({ onBuild }) {
+// Compute a lightweight ATS score from resume data stored in localStorage
+function computeHeroStats(user) {
+  // Try user-specific key first, then fall back to generic key
+  let resumeData = null;
+  try {
+    const userKey = user && (user.email || user.username || user.name)
+      ? `resume_builder_data_${(user.email || user.username || user.name).replace(/\s+/g,"_").toLowerCase()}`
+      : null;
+    const raw = (userKey && localStorage.getItem(userKey)) || localStorage.getItem("resume_builder_data");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Only use if it has real content — not just empty placeholders
+      if (parsed && (parsed.name || parsed.email || (parsed.skills && parsed.skills.length > 0))) {
+        resumeData = parsed;
+      }
+    }
+  } catch (_) {}
+
+  // Prefer the parsed resume name over the login username
+  // (resume name = "Ruchika Aggarwal", login username = "ruchikaaggarwal31")
+  const displayName = (resumeData && resumeData.name)
+    || (user && user.displayName)
+    || (user && user.name && !user.name.includes("@") && !/\d{4,}/.test(user.name) ? user.name : null)
+    || null;
+
+  // Role: prefer resume title, then first 6 words of summary, then user role
+  const displayRole = (resumeData && resumeData.title)
+    || (resumeData && resumeData.summary && resumeData.summary.split(" ").slice(0,6).join(" ") + "...")
+    || (user && user.role)
+    || null;
+
+  // ATS score — mirrors the calcATS logic from ResumeBuilder
+  let ats = 0;
+  if (resumeData) {
+    const ATS_KEYWORDS = ["led","managed","developed","built","designed","implemented","optimized","increased","reduced","improved","collaborated","delivered","launched","architected","scaled","automated","deployed","integrated","mentored","results","impact","metrics","performance","agile","scrum"];
+    const txt = [
+      resumeData.summary || "",
+      ...(resumeData.experience || []).map(e => e.description || ""),
+      ...(resumeData.projects   || []).map(p => p.description || ""),
+      (resumeData.skills || []).join(" "),
+    ].join(" ").toLowerCase();
+
+    if (resumeData.name)     ats += 5;
+    if (resumeData.title)    ats += 5;
+    if (resumeData.email)    ats += 3;
+    if (resumeData.phone)    ats += 3;
+    if (resumeData.location) ats += 2;
+    if ((resumeData.summary || "").length > 50)  ats += 8;
+    if ((resumeData.skills  || []).length >= 5)  ats += 7;
+    if ((resumeData.experience || []).length >= 1) ats += 7;
+    ats += Math.min(30, ATS_KEYWORDS.filter(k => txt.includes(k)).length * 2);
+    if ((resumeData.summary || "").length > 100) ats += 5;
+    if ((resumeData.experience || []).some(e => /\d+%|\d+x/.test(e.description || ""))) ats += 10;
+    if ((resumeData.education || []).length >= 1)       ats += 5;
+    if ((resumeData.certifications || []).length >= 1)  ats += 5;
+    if ((resumeData.projects || []).length >= 2)        ats += 5;
+    ats = Math.min(100, ats);
+  }
+
+  // AI suggestions count — count sections that could be improved
+  let suggestions = 0;
+  if (resumeData) {
+    if (!resumeData.summary || resumeData.summary.length < 80) suggestions++;
+    if ((resumeData.skills || []).length < 5) suggestions++;
+    if ((resumeData.experience || []).some(e => !(e.description || "").includes("•"))) suggestions++;
+    if (!(resumeData.linkedin || resumeData.github)) suggestions++;
+    if ((resumeData.certifications || []).length === 0) suggestions++;
+  } else {
+    suggestions = 3; // default hint for new users
+  }
+
+  // Section fill widths — only count entries that have real content (not empty placeholders)
+  const realSkills  = (resumeData?.skills || []).filter(s => s && s.trim().length > 0);
+  const realExp     = (resumeData?.experience || []).filter(e => e.role || e.company || e.description);
+  const realProj    = (resumeData?.projects || []).filter(p => p.name || p.description);
+  const realEdu     = (resumeData?.education || []).filter(e => e.degree || e.institution);
+
+  const sections = [
+    { label: "SKILLS",     color: "#6366f1", fill: resumeData ? Math.min(100, (realSkills.length  / 8) * 100) : 100 },
+    { label: "EXPERIENCE", color: "#8b5cf6", fill: resumeData ? Math.min(100, (realExp.length     / 3) * 100) : 80  },
+    { label: "PROJECTS",   color: "#06b6d4", fill: resumeData ? Math.min(100, (realProj.length    / 3) * 100) : 75  },
+    { label: "EDUCATION",  color: "#10b981", fill: resumeData ? Math.min(100, (realEdu.length     / 2) * 100) : 65  },
+  ];
+
+  return { displayName, displayRole, ats, suggestions, sections, hasResume: !!resumeData };
+}
+
+function Hero({ onBuild, user, heroStats: heroStatsProp }) {
   const [idx,setIdx]=useState(0);
   const [disp,setDisp]=useState("");
   const [typing,setTyping]=useState(true);
   const cr=useRef(0);
   const phrases=["Software Engineer","Product Manager","Data Scientist","UX Designer","DevOps Engineer"];
+
+  // Use prop when available (parent recomputes on view change), fall back to local state
+  const [localStats, setLocalStats] = useState(() => heroStatsProp || computeHeroStats(user));
+  const stats = heroStatsProp || localStats;
+
+  useEffect(() => {
+    // Sync local state when prop updates
+    if (heroStatsProp) setLocalStats(heroStatsProp);
+  }, [heroStatsProp]);
+
+  useEffect(() => {
+    // Cross-tab: recompute if another tab writes to localStorage
+    const handler = () => setLocalStats(computeHeroStats(user));
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [user]);
+
+  // Derived display values
+  const isLoggedIn = !!(user && (user.name || user.username || user.email));
+
+  // Clean display name: prefer resume name, then strip numbers/symbols from username
+  const rawUserName = user && (user.name || user.username || "");
+  const cleanUserName = rawUserName
+    .replace(/[0-9@._+\-]+/g, " ")   // strip digits and special chars
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+
+  const heroName = stats.displayName
+    || (cleanUserName.length > 1 ? cleanUserName : null)
+    || "Your Name";
+
+  const heroRole = stats.displayRole
+    || (isLoggedIn ? "Upload your resume to get started" : "Software Engineer");
+
+  const heroInitials = heroName === "Your Name" ? "?"
+    : heroName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+  const atsScore   = stats.hasResume ? stats.ats : (isLoggedIn ? 0 : 92);
+  const atsLabel   = atsScore >= 75 ? "Excellent ✓" : atsScore >= 50 ? "Good" : atsScore > 0 ? "Needs Work" : "Upload Resume";
+  const atsColor   = atsScore >= 75 ? "#10b981" : atsScore >= 50 ? "#f59e0b" : "#6366f1";
+  const suggCount  = stats.suggestions;
+  const suggLabel  = suggCount === 0 ? "All good! ✓" : `${suggCount} improvement${suggCount !== 1 ? "s" : ""}`;
+  const suggColor  = suggCount === 0 ? "#10b981" : "#6366f1";
   useEffect(()=>{
     const p=phrases[idx];
     if(typing){
@@ -252,33 +384,75 @@ function Hero({ onBuild }) {
               {/* Main resume card */}
               <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-80" style={{boxShadow:"0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.1)"}}>
                 <div className="h-24 flex items-center px-6 gap-4" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
-                  <div className="w-14 h-14 rounded-full bg-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0">JD</div>
-                  <div><div className="text-white font-bold text-lg leading-tight">John Doe</div><div className="text-indigo-200 text-sm">Senior Engineer</div></div>
+                  <div className="w-14 h-14 rounded-full bg-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0"
+                    style={{letterSpacing:"-0.5px"}}>
+                    {heroInitials}
+                  </div>
+                  <div style={{overflow:"hidden"}}>
+                    <div className="text-white font-bold text-lg leading-tight truncate" style={{maxWidth:180}}>{heroName}</div>
+                    <div className="text-indigo-200 text-sm truncate" style={{maxWidth:180}}>{heroRole}</div>
+                  </div>
                 </div>
-                <div className="p-6 space-y-5">
-                  {[["SKILLS","w-full","#6366f1"],["EXPERIENCE","w-4/5","#8b5cf6"],["PROJECTS","w-3/4","#06b6d4"],["EDUCATION","w-2/3","#10b981"]].map(([l,ww,c])=>(
-                    <div key={l}>
-                      <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{color:c}}>{l}</div>
-                      <div className={`h-2 ${ww} rounded-full mb-1.5`} style={{background:`linear-gradient(90deg,${c},${c}88)`}}/>
-                      <div className="h-1.5 w-3/4 bg-gray-100 rounded-full"/>
+                <div className="p-6 space-y-4">
+                  {stats.sections.map(({label,color,fill})=>(
+                    <div key={label}>
+                      <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{color}}>{label}</div>
+                      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{width:0}}
+                          animate={{width:`${fill}%`}}
+                          transition={{duration:1.2,ease:"easeOut",delay:0.5}}
+                          className="h-full rounded-full"
+                          style={{background:`linear-gradient(90deg,${color},${color}88)`}}
+                        />
+                      </div>
                     </div>
                   ))}
+                  {isLoggedIn && !stats.hasResume && (
+                    <div className="text-center pt-2">
+                      <span className="text-xs text-gray-400 font-medium">Upload your resume to see live data</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
               {/* Floating ATS badge */}
-              <motion.div animate={{y:[0,-8,0]}} transition={{duration:3,repeat:Infinity,ease:"easeInOut"}} className="absolute -top-8 -right-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg" style={{background:"linear-gradient(135deg,#10b981,#059669)"}}>92</div>
-                <div><div className="text-xs text-gray-400 font-semibold">ATS Score</div><div className="text-sm font-bold text-emerald-600">Excellent ✓</div></div>
+              <motion.div animate={{y:[0,-8,0]}} transition={{duration:3,repeat:Infinity,ease:"easeInOut"}}
+                className="absolute -top-8 -right-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0"
+                  style={{background:`linear-gradient(135deg,${atsColor},${atsColor}cc)`}}>
+                  {stats.hasResume ? atsScore : (isLoggedIn ? "—" : 92)}
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 font-semibold">ATS Score</div>
+                  <div className="text-sm font-bold" style={{color:atsColor}}>{atsLabel}</div>
+                </div>
               </motion.div>
-              {/* Floating AI badge */}
-              <motion.div animate={{y:[0,8,0]}} transition={{duration:3.5,repeat:Infinity,ease:"easeInOut",delay:0.5}} className="absolute -bottom-6 -left-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
-                <span className="text-2xl">🤖</span>
-                <div><div className="text-xs text-gray-400 font-semibold">AI Suggestions</div><div className="text-sm font-bold text-indigo-600">3 improvements</div></div>
+
+              {/* Floating AI suggestions badge */}
+              <motion.div animate={{y:[0,8,0]}} transition={{duration:3.5,repeat:Infinity,ease:"easeInOut",delay:0.5}}
+                className="absolute -bottom-6 -left-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
+                <span className="text-2xl flex-shrink-0">🤖</span>
+                <div>
+                  <div className="text-xs text-gray-400 font-semibold">AI Suggestions</div>
+                  <div className="text-sm font-bold" style={{color:suggColor}}>{suggLabel}</div>
+                </div>
               </motion.div>
-              {/* Floating match badge */}
-              <motion.div animate={{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:"easeInOut",delay:1}} className="absolute top-1/2 -right-14 bg-white rounded-2xl px-4 py-3 shadow-2xl border border-gray-100 text-center">
-                <div className="text-2xl font-black text-indigo-600">98%</div>
-                <div className="text-xs text-gray-400 font-semibold">Job Match</div>
+
+              {/* Floating skills / match badge */}
+              <motion.div animate={{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:"easeInOut",delay:1}}
+                className="absolute top-1/2 -right-14 bg-white rounded-2xl px-4 py-3 shadow-2xl border border-gray-100 text-center">
+                {stats.hasResume ? (
+                  <>
+                    <div className="text-2xl font-black" style={{color:"#6366f1"}}>{stats.sections[0]?.fill > 0 ? Math.round(stats.sections[0].fill / 12.5) : "—"}</div>
+                    <div className="text-xs text-gray-400 font-semibold">Skills</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-black text-indigo-600">{isLoggedIn ? "—" : "98%"}</div>
+                    <div className="text-xs text-gray-400 font-semibold">Job Match</div>
+                  </>
+                )}
               </motion.div>
             </motion.div>
           </div>
@@ -1791,6 +1965,13 @@ export default function ResumeBuilderLanding({ user = {} }) {
   const [selTpl, setSelTpl] = useState("modern");
   const [selAccent, setSelAccent] = useState("#6366f1");
 
+  // Recompute hero stats every time we return to the landing view
+  // (builder writes to localStorage, so reading on view change picks up fresh data)
+  const [heroStats, setHeroStats] = useState(() => computeHeroStats(user));
+  useEffect(() => {
+    if (view === "landing") setHeroStats(computeHeroStats(user));
+  }, [view, user]);
+
   // Map 22 template IDs -> { tpl: "modern"|"classic"|"minimal", accent }
   const TPL_MAP = {
     "modern-pro":    { tpl:"sidebar",   accent:"#6366f1" },
@@ -1840,7 +2021,7 @@ export default function ResumeBuilderLanding({ user = {} }) {
 
   return (
     <div className="font-sans">
-      <Hero onBuild={()=>setView("builder")} />
+      <Hero onBuild={()=>setView("builder")} user={user} heroStats={heroStats} />
       <AnimatedDivider variant="stats" />
       <Features />
       <HowItWorks onBuild={()=>setView("builder")} />
