@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
   useScroll,
@@ -13,7 +13,7 @@ import Lenis from "lenis";
 /* ============================================================
    RejexIQ — animated single-file career landing page
    Inspired by the Solais reel: 3D shards, splash portals,
-   reddish gradient ΓåÆ "stairs" transitions, filling dashboards.
+   reddish gradient → "stairs" transitions, filling dashboards.
    ============================================================ */
 
 /* ---------- smooth scroll ---------- */
@@ -445,13 +445,13 @@ function Hero() {
         transition={{ delay: 2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.3em] text-white/50"
       >
-        SCROLL Γåô
+        SCROLL ↓
       </motion.div>
     </section>
   );
 }
 
-/* ---------- Section title block (UNDERSTANDING / WHAT IS ΓÇª) ---------- */
+/* ---------- Section title block (UNDERSTANDING / WHAT IS …) ---------- */
 function SectionTitle({ kicker, title, accent, light = false }) {
   return (
     <div>
@@ -570,17 +570,17 @@ function WhatIsSection() {
         <div style={{ position: "relative", height: 520 }}>
           <CareerOrb mouse={{ x: mx, y: my }} />
           <PointCard light index={0}
-            title="Γùç VISIBILITY ANALYSIS"
+            title="◇ VISIBILITY ANALYSIS"
             body="See where your profile surfaces across recruiter searches, AI assistants, and job boards — and which competitors appear alongside you."
             x="-40px" y="20px"
           />
           <PointCard light index={1}
-            title="Γùç SENTIMENT INSIGHT"
+            title="◇ SENTIMENT INSIGHT"
             body="Understand how hiring AI describes your skills — the language it uses, the confidence of its references, and the trust signals it relies on."
             x="60%" y="35%"
           />
           <PointCard light index={2}
-            title="Γùç ACTIONABLE DIRECTION"
+            title="◇ ACTIONABLE DIRECTION"
             body="Identify where visibility is strong, where it drops away, and where opportunity exists. We highlight the moves that influence how engines surface your story."
             x="-20px" y="75%"
           />
@@ -892,7 +892,7 @@ function IndustrySection({ onNav }) {
               padding: "12px 24px", background: "transparent", color: "white", cursor: "pointer",
             }}
           >
-            GET STARTED ΓåÆ
+            GET STARTED →
           </motion.button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
@@ -911,7 +911,7 @@ function IndustrySection({ onNav }) {
               }}
             >
               <div>
-                <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#be123c", marginBottom: 12 }}>Γùç {c.tag}</div>
+                <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#be123c", marginBottom: 12 }}>◇ {c.tag}</div>
                 <div style={{ fontSize: 22, fontWeight: 300, lineHeight: 1.2 }}>{c.title}</div>
               </div>
               <p style={{ fontSize: 12, color: "rgba(0,0,0,0.55)", lineHeight: 1.65, margin: 0 }}>{c.body}</p>
@@ -965,7 +965,7 @@ function MarqueeCTA({ onNav }) {
           border: "none", cursor: "pointer",
         }}
       >
-        CREATE FREE ACCOUNT ΓåÆ
+        CREATE FREE ACCOUNT →
       </motion.button>
       <div style={{ position: "relative", zIndex: 10, marginTop: 40, display: "flex", gap: 32, fontSize: 10, letterSpacing: "0.3em", color: "rgba(255,255,255,0.35)" }}>
         <a href="#" style={{ color: "inherit", textDecoration: "none" }}>ABOUT</a>
@@ -1054,7 +1054,7 @@ function Footer({ onNav }) {
             onMouseEnter={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "black"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "white"; }}
           >
-            GET STARTED ΓåÆ
+            GET STARTED →
           </motion.button>
         </div>
 
@@ -1106,7 +1106,7 @@ function Footer({ onNav }) {
       {/* bottom row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
         <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0, letterSpacing: "0.05em" }}>
-          ┬⌐ 2025 RejexIQ — Skill Evaluation &amp; Career Readiness Platform
+          © 2025 RejexIQ — Skill Evaluation &amp; Career Readiness Platform
         </p>
         <div style={{ display: "flex", gap: 28, fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,255,255,0.25)" }}>
           <a href="#" style={{ color: "inherit", textDecoration: "none" }}>PRIVACY</a>

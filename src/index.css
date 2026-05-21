@@ -3,6 +3,12 @@
 
 @import "tailwindcss";
 
+@theme {
+  --color-brightColor: #ff4d6d;
+  --color-backgroundColor: #590d22;
+  --color-textColor: #ffffff;
+}
+
 :root {
   --space-xxs: 0.25rem;
   --space-xs: 0.5rem;
