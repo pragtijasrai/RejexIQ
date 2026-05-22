@@ -383,7 +383,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
             <motion.div initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} transition={{duration:0.9,delay:0.3}}>
               {/* Main resume card */}
               <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-80" style={{boxShadow:"0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.1)"}}>
-                <div className="h-24 flex items-center px-6 gap-4" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
+                <div className="h-24 flex items-center px-12 lg:px-16 gap-4" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
                   <div className="w-14 h-14 rounded-full bg-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0"
                     style={{letterSpacing:"-0.5px"}}>
                     {heroInitials}

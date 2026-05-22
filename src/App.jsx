@@ -3263,7 +3263,7 @@ export default function App() {
               width: `calc(100vw - ${!sidebarCollapsed ? 240 : 72}px)`,
               minWidth: 0,
               flex: 1,
-              padding: (appPage === "dsa" || appPage === "resume" || appPage === "story") ? 0 : "40px",
+              padding: "40px",
               overflowY: "auto",
               overflowX: "hidden",
               minHeight: "100vh",
@@ -3285,15 +3285,25 @@ export default function App() {
               {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
               {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
               {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
-              {appPage === "dsa" && <DSAGame />}
+              {appPage === "dsa" && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, background: "#0a0e27", overflowY: "auto", overflowX: "hidden" }}>
+                  <DSAGame />
+                </div>
+              )}
               {appPage === "story" && (
                 <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
-                  <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
+                  <div style={{ position: "absolute", inset: 0, zIndex: 20, overflowY: "auto", overflowX: "hidden" }}>
+                    <StoryMode user={user} onExit={() => setAppPage("dashboard")} />
+                  </div>
                 </Suspense>
               )}
               {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
               {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
-              {appPage === "resume" && <ResumeBuilder user={user} />}
+              {appPage === "resume" && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, background: "#0f172a", overflowY: "auto", overflowX: "hidden" }}>
+                  <ResumeBuilder user={user} />
+                </div>
+              )}
               {appPage === "assistant" && <CuteAIAssistant user={user} />}
               {appPage === "arena" && <CodeArena user={user} />}
               {appPage === "leaderboard" && <Leaderboard />}
