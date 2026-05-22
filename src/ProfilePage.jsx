@@ -44,7 +44,7 @@ function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
         <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--gray-800)" }}>
           {label}
           {editMode && onDelete && (
-            <button 
+            <button
               onClick={onDelete}
               style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", marginLeft: 8, fontSize: "0.75rem" }}
               title="Delete skill"
@@ -56,11 +56,11 @@ function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
         <span style={{ fontSize: "0.75rem", color: "var(--gray-600)" }}>{pct}%</span>
       </div>
       {editMode ? (
-        <input 
-          type="range" 
-          min="0" 
-          max="100" 
-          value={pct} 
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={pct}
           onChange={e => onChangePct(parseInt(e.target.value))}
           style={{ width: "100%", accentColor: "var(--g-light)", cursor: "pointer" }}
         />
@@ -85,7 +85,7 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
 
   useEffect(() => {
     if (!inView || editMode) return;
-    let start = 0; 
+    let start = 0;
     const end = parseInt(String(num).replace(/\D/g, "")) || 0;
     if (end === 0) {
       setCount(0);
@@ -105,17 +105,17 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
       <div className="stat-icon">{icon}</div>
       {editMode ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6 }}>
-          <input 
-            type="text" 
-            value={num || ""} 
-            onChange={e => onNumChange(e.target.value)} 
+          <input
+            type="text"
+            value={num || ""}
+            onChange={e => onNumChange(e.target.value)}
             placeholder="e.g. 4+"
             style={{ width: "100%", textAlign: "center", border: "1px solid var(--gray-200)", borderRadius: 8, padding: "4px", fontSize: "1.2rem", fontWeight: 700, outline: "none", background: "var(--gray-100)", color: "var(--gray-800)" }}
           />
-          <input 
-            type="text" 
-            value={label || ""} 
-            onChange={e => onLabelChange(e.target.value)} 
+          <input
+            type="text"
+            value={label || ""}
+            onChange={e => onLabelChange(e.target.value)}
             placeholder="Label"
             style={{ width: "100%", textAlign: "center", border: "1px solid var(--gray-200)", borderRadius: 6, padding: "2px", fontSize: "0.7rem", color: "var(--gray-600)", outline: "none", background: "var(--gray-100)" }}
           />
@@ -133,7 +133,7 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
 // ─── Timeline Item ───────────────────────────────────────────────────────────
 function TimelineItem({ title, org, period, desc, tags, index, editMode, onUpdate, onDelete }) {
   const [ref, inView] = useInView();
-  
+
   return (
     <div
       ref={ref}
@@ -147,7 +147,7 @@ function TimelineItem({ title, org, period, desc, tags, index, editMode, onUpdat
       <div className="tl-dot" />
       <div className="tl-content" style={{ position: "relative" }}>
         {editMode && onDelete && (
-          <button 
+          <button
             onClick={onDelete}
             style={{ position: "absolute", top: 0, right: 0, background: "rgba(248,113,113,0.1)", border: "none", color: "#f87171", cursor: "pointer", padding: "4px 8px", borderRadius: "50px", fontSize: "0.75rem", fontWeight: 600 }}
           >
@@ -334,7 +334,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [tempFollowing, setTempFollowing] = useState(user?.following || 45);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
-  
+
   // Custom Sections
   const [tempCustomSections, setTempCustomSections] = useState(user?.customSections || []);
 
@@ -350,21 +350,21 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     const colors = ["#f8f6f0", "#93c5fd", "#3b82f6", "#1e3a8a", "#0f172a"]; // Adjusted base color to match the cream background of stats cards
     const today = new Date();
     const streak = activityStats.currentStreak || 12;
-    
+
     // Exactly 365 days (1 year)
-    const TOTAL_DAYS = 365; 
-    
+    const TOTAL_DAYS = 365;
+
     for (let i = TOTAL_DAYS - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      
+
       // Force "no activity" for dates before February 2026
       const isBeforeFeb = d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() < 1);
       const isMissed = isBeforeFeb ? true : (i < streak ? false : Math.random() < 0.75);
-      
+
       let intensity = 0;
       let activeMinutes = 0;
-      
+
       if (!isMissed) {
         // Random active time between 15 mins and 300 mins (5 hrs)
         activeMinutes = 15 + Math.floor(Math.random() * 285);
@@ -373,14 +373,14 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         else if (activeMinutes < 240) intensity = 3;
         else intensity = 4;
       }
-      
+
       const hours = Math.floor(activeMinutes / 60);
       const mins = activeMinutes % 60;
       let statusText = "No activity";
       if (activeMinutes > 0) {
         statusText = `Active for ${hours > 0 ? hours + 'h ' : ''}${mins}m`;
       }
-      
+
       data.push({
         dateObj: d,
         date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -396,23 +396,23 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const monthLabels = [];
   let currentMonth = -1;
   const startDay = activityGrid[0]?.dayOfWeek || 0;
-  
+
   activityGrid.forEach((day, index) => {
     const month = day.dateObj.getMonth();
     const colIndex = Math.floor((index + startDay) / 7);
-    
+
     if (month !== currentMonth) {
       const lastLabel = monthLabels[monthLabels.length - 1];
       if (!lastLabel || (colIndex - lastLabel.colIndex > 2)) {
         const isFirstLabel = monthLabels.length === 0;
         const isJanuary = month === 0;
         let labelText = day.dateObj.toLocaleDateString('en-US', { month: 'short' });
-        
+
         // Add the year if it's the start of the graph or the start of a new year
         if (isFirstLabel || isJanuary) {
           labelText += ` ${day.dateObj.getFullYear()}`;
         }
-        
+
         monthLabels.push({
           label: labelText,
           colIndex
@@ -430,7 +430,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [onboardSchool, setOnboardSchool] = useState("");
   const [onboardBranch, setOnboardBranch] = useState("");
   const [onboardSkills, setOnboardSkills] = useState([]);
-  
+
   const [schoolSuggestions, setSchoolSuggestions] = useState([]);
   const [branchSuggestions, setBranchSuggestions] = useState([]);
   const [usernameSuggestions, setUsernameSuggestions] = useState([]);
@@ -463,7 +463,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       if (user.languages && Array.isArray(user.languages)) setTempLanguages(user.languages);
       if (user.certifications && Array.isArray(user.certifications)) setTempCertifications(user.certifications);
       if (user.projects && Array.isArray(user.projects)) setTempProjects(user.projects);
-      
+
       if (user.name && !onboardName) {
         setOnboardName(user.name);
       }
@@ -481,7 +481,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     const first = parts[0] || "";
     const last = parts[1] || "";
     const base = parts.join("");
-    
+
     const sug = [];
     if (first && last) {
       sug.push(`${first}_${last}`);
@@ -501,7 +501,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setSchoolSuggestions([]);
       return;
     }
-    const filtered = FAMOUS_SCHOOLS.filter(s => 
+    const filtered = FAMOUS_SCHOOLS.filter(s =>
       s.toLowerCase().includes(val.toLowerCase())
     ).slice(0, 5);
     setSchoolSuggestions(filtered);
@@ -513,7 +513,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setBranchSuggestions([]);
       return;
     }
-    const filtered = FAMOUS_BRANCHS.filter(b => 
+    const filtered = FAMOUS_BRANCHS.filter(b =>
       b.toLowerCase().includes(val.toLowerCase())
     ).slice(0, 5);
     setBranchSuggestions(filtered);
@@ -647,15 +647,15 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   // Sync custom school schooling to education head
   const dynamicEducation = tempSchool
     ? [
-        {
-          title: tempBranch || "Specialization",
-          org: tempSchool,
-          period: "Present",
-          desc: "Currently pursuing custom learning track and DSA roadmaps on RejexIQ.",
-          tags: user?.skills || ["Algorithms", "Web Development"]
-        },
-        ...tempEducation
-      ]
+      {
+        title: tempBranch || "Specialization",
+        org: tempSchool,
+        period: "Present",
+        desc: "Currently pursuing custom learning track and DSA roadmaps on RejexIQ.",
+        tags: user?.skills || ["Algorithms", "Web Development"]
+      },
+      ...tempEducation
+    ]
     : tempEducation;
 
   const showOnboarding = !user?.onboarded && user?.email !== "demo@rejexiq.com";
@@ -672,7 +672,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   }
 
   // ─── CRUD Helper Functions ─────────────────────────────────────────────────
-  
+
   // Stats
   const updateStatItem = (index, key, val) => {
     if (!tempStats || !tempStats[index]) return;
@@ -1170,30 +1170,31 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         /* ─── Onboarding overlay ─── */
         .onboard-overlay {
           position: fixed; inset: 0; z-index: 999;
-          background: rgba(7, 10, 30, 0.92); backdrop-filter: blur(25px);
+          background: rgba(45, 10, 10, 0.85); backdrop-filter: blur(25px);
           display: flex; align-items: center; justify-content: center; padding: 20px;
         }
         .onboard-card {
-          background: rgba(14, 22, 56, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(253, 245, 230, 0.98); border: 1px solid rgba(128, 0, 0, 0.15);
           border-radius: 24px; width: 100%; max-width: 580px; padding: 40px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); backdrop-filter: blur(16px);
-          position: relative; color: white;
+          position: relative; color: #3d1b1b;
         }
         .onboard-input {
           width: 100%; padding: 14px 16px;
-          background: rgba(7, 10, 30, 0.6); border: 1.5px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px; color: white; margin-bottom: 16px; transition: all 0.3s;
+          background: rgba(255, 255, 255, 0.7); border: 1.5px solid rgba(128, 0, 0, 0.2);
+          border-radius: 12px; color: #3d1b1b; margin-bottom: 16px; transition: all 0.3s;
         }
-        .onboard-input:focus { border-color: var(--g-light); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); outline: none; }
+        .onboard-input:focus { border-color: #800000; box-shadow: 0 0 10px rgba(128, 0, 0, 0.2); outline: none; }
         .onboard-btn-primary {
-          background: linear-gradient(135deg, var(--g-light), var(--purple));
-          border: none; color: white; padding: 14px; width: 100%; border-radius: 12px;
+          background: linear-gradient(135deg, #800000, #4a0404);
+          border: none; color: #fdf5e6; padding: 14px; width: 100%; border-radius: 12px;
           cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.25s;
-          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
+          box-shadow: 0 4px 15px rgba(128, 0, 0, 0.25);
         }
-        .onboard-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
-        .onboard-progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 24px; }
-        .onboard-progress-fill { height: 100%; background: linear-gradient(90deg, var(--g-light), var(--purple)); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+        .onboard-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(128, 0, 0, 0.4); }
+        .onboard-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .onboard-progress-bar { height: 6px; background: rgba(128,0,0,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 24px; }
+        .onboard-progress-fill { height: 100%; background: linear-gradient(90deg, #800000, #4a0404); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
 
         /* ─── Premium List Input Controls ─── */
         .crud-input {
@@ -1268,9 +1269,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
       {/* ─── Compact Hero Cover Photo ─── */}
       <section className="hero-cover" ref={heroRef}>
-        <div 
-          className="hero-bg" 
-          style={{ 
+        <div
+          className="hero-bg"
+          style={{
             position: "absolute", inset: 0,
             transform: `translateY(${parallaxBg}px)`,
             background: tempCoverBackground()
@@ -1294,7 +1295,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           position: "absolute", inset: 0,
           background: "linear-gradient(to top, rgba(253, 253, 251, 0.15) 0%, transparent 100%)"
         }} />
-        
+
         {/* Cover Background Customizer & Presets Bar (Visible in Edit Mode) */}
         {editMode && (
           <div style={{
@@ -1341,9 +1342,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               ))}
             </div>
             <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-            <button 
-              className="hero-btn" 
-              style={{ 
+            <button
+              className="hero-btn"
+              style={{
                 background: "rgba(255, 255, 255, 0.15)",
                 border: "1px solid rgba(255, 255, 255, 0.25)",
                 borderRadius: "50px",
@@ -1365,8 +1366,8 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       <section className="profile-header-card">
         {/* Avatar Container in Column 1 */}
         <div className="profile-header-avatar-container">
-          <div 
-            className="hero-avatar-wrap profile-header-avatar-inner" 
+          <div
+            className="hero-avatar-wrap profile-header-avatar-inner"
             onClick={() => document.getElementById("avatar-input-file").click()}
           >
             {user?.avatar ? (
@@ -1389,92 +1390,92 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", marginTop: 8 }} className="profile-header-inputs">
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Full Name</label>
-                <input 
-                  type="text" 
-                  value={tempName || ""} 
-                  onChange={e => setTempName(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempName || ""}
+                  onChange={e => setTempName(e.target.value)}
                   placeholder="Full Name"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Role / Track</label>
-                <input 
-                  type="text" 
-                  value={tempTrack || ""} 
-                  onChange={e => setTempTrack(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempTrack || ""}
+                  onChange={e => setTempTrack(e.target.value)}
                   placeholder="Track e.g. Senior Frontend Engineer"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>College / School</label>
-                <input 
-                  type="text" 
-                  value={tempSchool || ""} 
-                  onChange={e => setTempSchool(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempSchool || ""}
+                  onChange={e => setTempSchool(e.target.value)}
                   placeholder="College"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Branch</label>
-                <input 
-                  type="text" 
-                  value={tempBranch || ""} 
-                  onChange={e => setTempBranch(e.target.value)} 
+                <input
+                  type="text"
+                  value={tempBranch || ""}
+                  onChange={e => setTempBranch(e.target.value)}
                   placeholder="Branch"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Location</label>
-                <input 
-                  type="text" 
-                  value={tempContact?.location || ""} 
-                  onChange={e => setTempContact({ ...tempContact, location: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempContact?.location || ""}
+                  onChange={e => setTempContact({ ...tempContact, location: e.target.value })}
                   placeholder="e.g. Bengaluru, India"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Availability Status</label>
-                <input 
-                  type="text" 
-                  value={tempContact?.availability || ""} 
-                  onChange={e => setTempContact({ ...tempContact, availability: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempContact?.availability || ""}
+                  onChange={e => setTempContact({ ...tempContact, availability: e.target.value })}
                   placeholder="e.g. Available for freelance"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Facebook URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.facebook || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, facebook: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.facebook || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, facebook: e.target.value })}
                   placeholder="e.g. facebook.com/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>LinkedIn URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.linkedin || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, linkedin: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.linkedin || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, linkedin: e.target.value })}
                   placeholder="e.g. linkedin.com/in/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Twitter URL</label>
-                <input 
-                  type="text" 
-                  value={tempSocials?.twitter || ""} 
-                  onChange={e => setTempSocials({ ...tempSocials, twitter: e.target.value })} 
+                <input
+                  type="text"
+                  value={tempSocials?.twitter || ""}
+                  onChange={e => setTempSocials({ ...tempSocials, twitter: e.target.value })}
                   placeholder="e.g. twitter.com/username"
-                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }} 
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none" }}
                 />
               </div>
             </div>
@@ -1485,17 +1486,17 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 fontSize: "2rem", fontWeight: 700, lineHeight: 1.1, letterSpacing: "-0.01em",
                 margin: 0, marginBottom: 4, color: "var(--gray-800)"
               }}>{tempName}</h1>
-              
+
               {tempTrack && (
                 <div style={{ fontSize: "0.95rem", color: "var(--gray-600)", marginBottom: "16px", fontWeight: "400" }}>
                   {tempTrack}
                 </div>
               )}
-              
+
               <div className="profile-header-meta-row">
                 {tempContact?.location && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                     </span>
                     <span>{tempContact.location}</span>
@@ -1503,7 +1504,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.facebook && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                     </span>
                     <a href={tempSocials.facebook.startsWith('http') ? tempSocials.facebook : `https://${tempSocials.facebook}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.facebook.replace(/https?:\/\/(www\.)?facebook\.com\//, '')}</a>
@@ -1511,7 +1512,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.linkedin && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                     </span>
                     <a href={tempSocials.linkedin.startsWith('http') ? tempSocials.linkedin : `https://${tempSocials.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.linkedin.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//, '')}</a>
@@ -1519,7 +1520,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
                 {tempSocials?.twitter && (
                   <div className="profile-header-meta-item">
-                    <span className="profile-header-meta-icon" style={{color: "var(--gray-400)"}}>
+                    <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
                     </span>
                     <a href={tempSocials.twitter.startsWith('http') ? tempSocials.twitter : `https://${tempSocials.twitter}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.twitter.replace(/https?:\/\/(www\.)?twitter\.com\//, '')}</a>
@@ -1556,13 +1557,13 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", color: "var(--gray-400)", transition: "all 0.2s"
           }}
-          onMouseOver={e => e.currentTarget.style.background = 'var(--gray-100)'}
-          onMouseOut={e => { if (!showOptions) e.currentTarget.style.background = 'transparent'; }}
-          onClick={() => setShowOptions(!showOptions)}
+            onMouseOver={e => e.currentTarget.style.background = 'var(--gray-100)'}
+            onMouseOut={e => { if (!showOptions) e.currentTarget.style.background = 'transparent'; }}
+            onClick={() => setShowOptions(!showOptions)}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
           </button>
-          
+
           {showOptions && (
             <div style={{
               position: "absolute", top: "65px", right: 0, width: "200px",
@@ -1586,16 +1587,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
       {/* ─── Creamish Body Container ─── */}
       <div className="profile-body">
-        
+
         {/* Stats Row (Fully Editable in Place) */}
         <Section direction="up" delay={0}>
           <div className="stats-row">
             {Array.isArray(tempStats) && tempStats.map((s, idx) => (
-              <StatCard 
+              <StatCard
                 key={idx}
-                num={s?.num || ""} 
-                label={s?.label || ""} 
-                icon={s?.icon || ""} 
+                num={s?.num || ""}
+                label={s?.label || ""}
+                icon={s?.icon || ""}
                 editMode={editMode}
                 onNumChange={val => updateStatItem(idx, "num", val)}
                 onLabelChange={val => updateStatItem(idx, "label", val)}
@@ -1614,11 +1615,11 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             <div className="about-card about-card-bio">
               <p className="bio-text">
                 {editMode ? (
-                  <textarea 
-                    value={tempBio} 
-                    onChange={e => setTempBio(e.target.value)} 
-                    rows={6} 
-                    style={{ width: "100%", background: "transparent", color: "var(--gray-800)", border: "1px solid var(--gray-200)", borderRadius: 8, padding: 10, outline: "none", fontFamily: "'Inter', sans-serif" }} 
+                  <textarea
+                    value={tempBio}
+                    onChange={e => setTempBio(e.target.value)}
+                    rows={6}
+                    style={{ width: "100%", background: "transparent", color: "var(--gray-800)", border: "1px solid var(--gray-200)", borderRadius: 8, padding: 10, outline: "none", fontFamily: "'Inter', sans-serif" }}
                   />
                 ) : (
                   tempBio
@@ -1749,18 +1750,18 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           <div style={{ background: "#ffffff", border: "1px solid #bfdbfe", borderRadius: 16, padding: 32, boxShadow: "0 10px 40px rgba(0,0,0,0.05)", marginBottom: 56 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "32px" }}>
               <div style={{ flex: 1, minWidth: "100%", overflowX: "auto" }}>
-                
+
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
                   <div style={{ fontSize: "1rem", color: "#475569" }}>
-                     <strong style={{ color: "#1e293b", fontSize: "1.2rem" }}>{activityGrid.reduce((sum, d) => sum + (d.intensity > 0 ? d.intensity * 2 + 1 : 0), 0)}</strong> submissions in the past one year
+                    <strong style={{ color: "#1e293b", fontSize: "1.2rem" }}>{activityGrid.reduce((sum, d) => sum + (d.intensity > 0 ? d.intensity * 2 + 1 : 0), 0)}</strong> submissions in the past one year
                   </div>
                   <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", gap: "16px" }}>
-                     <span>Total active days: <strong style={{ color: "#1e293b" }}>{activityGrid.filter(d => d.intensity > 0).length}</strong></span>
-                     <span>Max streak: <strong style={{ color: "#1e293b" }}>{activityStats.maxStreak}</strong></span>
-                     <span>Current streak: <strong style={{ color: "#1e293b" }}>{activityStats.currentStreak}</strong></span>
+                    <span>Total active days: <strong style={{ color: "#1e293b" }}>{activityGrid.filter(d => d.intensity > 0).length}</strong></span>
+                    <span>Max streak: <strong style={{ color: "#1e293b" }}>{activityStats.maxStreak}</strong></span>
+                    <span>Current streak: <strong style={{ color: "#1e293b" }}>{activityStats.currentStreak}</strong></span>
                   </div>
                 </div>
-                
+
                 <div style={{ display: "flex", gap: "8px", minWidth: "max-content", paddingBottom: "10px" }}>
                   {/* Y-axis labels */}
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "0px", paddingBottom: "32px", fontSize: "0.75rem", color: "#64748b" }}>
@@ -1774,13 +1775,13 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    
+
                     {/* 7-row grid (column flow) */}
-                    <div style={{ 
-                      display: "grid", 
-                      gridTemplateRows: "repeat(7, 12px)", 
-                      gridAutoFlow: "column", 
-                      gap: "4px" 
+                    <div style={{
+                      display: "grid",
+                      gridTemplateRows: "repeat(7, 12px)",
+                      gridAutoFlow: "column",
+                      gap: "4px"
                     }}>
                       {activityGrid.map((day, i) => (
                         <div key={i} title={`${day.status} on ${day.date}`} style={{
@@ -1788,9 +1789,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                           background: day.color, transition: "transform 0.1s",
                           gridRow: i === 0 ? day.dayOfWeek + 1 : "auto",
                           cursor: "pointer", border: "1px solid rgba(27,31,35,0.06)"
-                        }} 
-                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.3)"}
-                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.3)"}
+                          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                         />
                       ))}
                     </div>
@@ -1803,18 +1804,18 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                         if (m.label.includes("Feb")) badge = { text: "Noob", icon: "🌱", color: "#3b82f6" };
                         if (m.label.includes("Mar")) badge = { text: "Pro", icon: "⭐", color: "#8b5cf6" };
                         if (m.label.includes("Apr")) badge = { text: "Elite", icon: "🏆", color: "#f59e0b" };
-                        
+
                         return (
-                          <div key={i} style={{ 
-                            position: "absolute", 
-                            left: `${m.colIndex * 16}px`, 
+                          <div key={i} style={{
+                            position: "absolute",
+                            left: `${m.colIndex * 16}px`,
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center"
                           }}>
                             {badge ? (
                               <div title={`Badge earned: ${badge.text} - Active whole month!`} style={{
-                                background: badge.color, color: "white", fontSize: "0.6rem", 
+                                background: badge.color, color: "white", fontSize: "0.6rem",
                                 padding: "2px 6px", borderRadius: "8px", fontWeight: "bold",
                                 whiteSpace: "nowrap", cursor: "pointer", boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                                 transform: "translateY(-2px)"
@@ -1895,10 +1896,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
           <div className="timeline">
             {Array.isArray(tempExperience) && tempExperience.filter(Boolean).map((e, i) => (
-              <TimelineItem 
-                key={i} 
-                {...e} 
-                index={i} 
+              <TimelineItem
+                key={i}
+                {...e}
+                index={i}
                 editMode={editMode}
                 onUpdate={updates => updateExperienceItem(i, updates)}
                 onDelete={() => deleteExperienceItem(i)}
@@ -1921,10 +1922,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           <div className="timeline">
             {editMode ? (
               Array.isArray(tempEducation) && tempEducation.filter(Boolean).map((e, i) => (
-                <TimelineItem 
-                  key={i} 
-                  {...e} 
-                  index={i} 
+                <TimelineItem
+                  key={i}
+                  {...e}
+                  index={i}
                   editMode={editMode}
                   onUpdate={updates => updateEducationItem(i, updates)}
                   onDelete={() => deleteEducationItem(i)}
@@ -1956,18 +1957,18 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               {Array.isArray(tempSkills) && tempSkills.map((s, idx) => (
                 <div key={idx}>
                   {editMode && (
-                    <input 
-                      type="text" 
-                      value={s?.label || ""} 
-                      onChange={e => updateTechSkillItem(idx, "label", e.target.value)} 
+                    <input
+                      type="text"
+                      value={s?.label || ""}
+                      onChange={e => updateTechSkillItem(idx, "label", e.target.value)}
                       style={{ padding: 4, width: "100%", border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", marginBottom: 4, background: "var(--gray-100)", color: "var(--gray-800)" }}
                       placeholder="Skill Name"
                     />
                   )}
-                  <SkillBar 
-                    label={s?.label || ""} 
-                    pct={s?.pct || 0} 
-                    color={s?.color} 
+                  <SkillBar
+                    label={s?.label || ""}
+                    pct={s?.pct || 0}
+                    color={s?.color}
                     editMode={editMode}
                     onChangePct={val => updateTechSkillItem(idx, "pct", val)}
                     onDelete={() => deleteTechSkillItem(idx)}
@@ -1987,25 +1988,25 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               {Array.isArray(tempSoftSkills) && tempSoftSkills.map((s, idx) => (
                 <div key={idx}>
                   {editMode && (
-                    <input 
-                      type="text" 
-                      value={s?.label || ""} 
-                      onChange={e => updateSoftSkillItem(idx, "label", e.target.value)} 
+                    <input
+                      type="text"
+                      value={s?.label || ""}
+                      onChange={e => updateSoftSkillItem(idx, "label", e.target.value)}
                       style={{ padding: 4, width: "100%", border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", marginBottom: 4, background: "var(--gray-100)", color: "var(--gray-800)" }}
                       placeholder="Soft Skill Name"
                     />
                   )}
-                  <SkillBar 
-                    label={s?.label || ""} 
-                    pct={s?.pct || 0} 
-                    color={s?.color} 
+                  <SkillBar
+                    label={s?.label || ""}
+                    pct={s?.pct || 0}
+                    color={s?.color}
                     editMode={editMode}
                     onChangePct={val => updateSoftSkillItem(idx, "pct", val)}
                     onDelete={() => deleteSoftSkillItem(idx)}
                   />
                 </div>
               ))}
-              
+
               <div style={{ marginTop: 28 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <span className="section-label" style={{ margin: 0 }}>Languages</span>
@@ -2017,11 +2018,11 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   {Array.isArray(tempLanguages) && tempLanguages.map((l, idx) => (
                     <span key={idx} className="tag" style={{ fontSize: "0.78rem", padding: "5px 14px", display: "flex", alignItems: "center", gap: 6 }}>
                       {editMode ? (
-                        <input 
-                          type="text" 
-                          value={l || ""} 
-                          onChange={e => updateLanguageItem(idx, e.target.value)} 
-                          style={{ border: "none", background: "transparent", width: "100px", color: "var(--g-light)", fontWeight: 500 }} 
+                        <input
+                          type="text"
+                          value={l || ""}
+                          onChange={e => updateLanguageItem(idx, e.target.value)}
+                          style={{ border: "none", background: "transparent", width: "100px", color: "var(--g-light)", fontWeight: 500 }}
                         />
                       ) : (
                         l || ""
@@ -2053,7 +2054,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <Section key={i} direction="up" delay={i * 80}>
                 <div className="cert-card" style={{ position: "relative" }}>
                   {editMode && (
-                    <button 
+                    <button
                       onClick={() => deleteCertificationItem(i)}
                       style={{ position: "absolute", top: 8, right: 8, background: "transparent", border: "none", color: "#f87171", cursor: "pointer", fontSize: "0.78rem" }}
                     >
@@ -2094,9 +2095,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             </div>
             {editMode && (
               <div style={{ display: "flex", gap: 10 }}>
-                <button 
-                  onClick={fetchGitHubProjects} 
-                  className="crud-btn-add" 
+                <button
+                  onClick={fetchGitHubProjects}
+                  className="crud-btn-add"
                   disabled={githubLoading}
                   style={{ background: githubLoading ? "var(--gray-200)" : "rgba(59, 130, 246, 0.08)", borderColor: "var(--g-light)", borderStyle: "solid" }}
                 >
@@ -2106,7 +2107,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               </div>
             )}
           </div>
-          
+
           {githubError && (
             <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: 16, background: "rgba(239,68,68,0.06)", padding: "10px 16px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>
               ⚠️ {githubError} (Verify your Username in User Profile Details card)
@@ -2118,7 +2119,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <Section key={i} direction="up" delay={i * 100}>
                 <div className="project-card" style={{ position: "relative" }}>
                   {editMode && (
-                    <button 
+                    <button
                       onClick={() => deleteProjectItem(i)}
                       className="crud-btn-delete"
                       style={{ position: "absolute", top: 12, right: 12 }}
@@ -2237,47 +2238,47 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         <div className="onboard-overlay">
           <div className="onboard-card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <h2 style={{ fontSize: "1.4rem", fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#f0f4ff", margin: 0 }}>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#3d1b1b", margin: 0 }}>
                 Set Up Your Profile
               </h2>
-              <span style={{ fontSize: "0.8rem", color: "var(--gray-400)", fontWeight: 600 }}>Step {onboardStep} of 3</span>
+              <span style={{ fontSize: "0.8rem", color: "#6b2c2c", fontWeight: 600 }}>Step {onboardStep} of 3</span>
             </div>
-            
+
             <div className="onboard-progress-bar">
               <div className="onboard-progress-fill" style={{ width: `${(onboardStep / 3) * 100}%` }} />
             </div>
-            
+
             {onboardStep === 1 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Let's start by learning who you are and defining your public alias.</p>
-                
+                <p style={{ color: "#5a2222", fontSize: "0.88rem", marginBottom: 20 }}>Let's start by learning who you are and defining your public alias.</p>
+
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Full Name</label>
+                  <label style={{ fontSize: "0.75rem", color: "#4a1c1c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Full Name</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Arjun Sharma" value={onboardName} onChange={e => setOnboardName(e.target.value)} />
                 </div>
-                
+
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Username</label>
+                  <label style={{ fontSize: "0.75rem", color: "#4a1c1c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Username</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. arjun_codes" value={onboardUsername} onChange={e => setOnboardUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""))} />
                 </div>
 
                 {usernameSuggestions.length > 0 && (
                   <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: "0.75rem", color: "var(--gray-400)", marginBottom: 8 }}>Suggested usernames (click to choose):</div>
+                    <div style={{ fontSize: "0.75rem", color: "#5a2222", marginBottom: 8 }}>Suggested usernames (click to choose):</div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {usernameSuggestions.map(sug => (
-                        <span 
-                          key={sug} 
-                          onClick={() => setOnboardUsername(sug)} 
-                          style={{ 
-                            fontSize: "0.75rem", 
-                            background: onboardUsername === sug ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.06)", 
-                            border: `1px solid ${onboardUsername === sug ? "var(--g-light)" : "rgba(255,255,255,0.12)"}`, 
-                            color: onboardUsername === sug ? "var(--g-pale)" : "#cbd5e1",
-                            padding: "6px 12px", 
-                            borderRadius: "20px", 
-                            cursor: "pointer", 
-                            transition: "all 0.2s" 
+                        <span
+                          key={sug}
+                          onClick={() => setOnboardUsername(sug)}
+                          style={{
+                            fontSize: "0.75rem",
+                            background: onboardUsername === sug ? "rgba(128,0,0,0.1)" : "rgba(128,0,0,0.03)",
+                            border: `1px solid ${onboardUsername === sug ? "#800000" : "rgba(128,0,0,0.1)"}`,
+                            color: onboardUsername === sug ? "#800000" : "#5a2222",
+                            padding: "6px 12px",
+                            borderRadius: "20px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
                           }}
                         >
                           @{sug}
@@ -2286,36 +2287,36 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   </div>
                 )}
-                
+
                 <button className="onboard-btn-primary" disabled={!onboardName || !onboardUsername} onClick={() => setOnboardStep(2)}>
                   Continue to Education →
                 </button>
               </div>
             )}
-            
+
             {onboardStep === 2 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Select your academic context to receive university learning roadmaps.</p>
-                
+                <p style={{ color: "#5a2222", fontSize: "0.88rem", marginBottom: 20 }}>Select your academic context to receive university learning roadmaps.</p>
+
                 <div style={{ marginBottom: 16, position: "relative" }}>
-                  <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>School / College</label>
+                  <label style={{ fontSize: "0.75rem", color: "#4a1c1c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>School / College</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Chitkara University" value={onboardSchool} onChange={e => handleSchoolChange(e.target.value)} onFocus={() => { if (onboardSchool) handleSchoolChange(onboardSchool); }} />
                   {schoolSuggestions.length > 0 && (
-                    <div style={{ 
-                      position: "absolute", top: "100%", left: 0, right: 0, 
-                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)", 
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0,
+                      background: "#fdf5e6", border: "1px solid rgba(128,0,0,0.15)",
                       borderRadius: "8px", zIndex: 10, maxHeight: "150px", overflowY: "auto",
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
                     }}>
                       {schoolSuggestions.map(item => (
-                        <div 
-                          key={item} 
+                        <div
+                          key={item}
                           onClick={() => { setOnboardSchool(item); setSchoolSuggestions([]); }}
-                          style={{ 
-                            padding: "10px 14px", cursor: "pointer", color: "#cbd5e1", fontSize: "0.85rem",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s"
+                          style={{
+                            padding: "10px 14px", cursor: "pointer", color: "#3d1b1b", fontSize: "0.85rem",
+                            borderBottom: "1px solid rgba(128,0,0,0.05)", transition: "background 0.2s"
                           }}
-                          onMouseEnter={e => e.target.style.background = "rgba(59,130,246,0.15)"}
+                          onMouseEnter={e => e.target.style.background = "rgba(128,0,0,0.05)"}
                           onMouseLeave={e => e.target.style.background = "transparent"}
                         >
                           {item}
@@ -2324,26 +2325,26 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   )}
                 </div>
-                
+
                 <div style={{ marginBottom: 24, position: "relative" }}>
-                  <label style={{ fontSize: "0.75rem", color: "#cbd5e1", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Branch / Specialization</label>
+                  <label style={{ fontSize: "0.75rem", color: "#4a1c1c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 600 }}>Branch / Specialization</label>
                   <input className="onboard-input" style={{ margin: 0 }} placeholder="e.g. Computer Science & Engineering" value={onboardBranch} onChange={e => handleBranchChange(e.target.value)} onFocus={() => { if (onboardBranch) handleBranchChange(onboardBranch); }} />
                   {branchSuggestions.length > 0 && (
-                    <div style={{ 
-                      position: "absolute", top: "100%", left: 0, right: 0, 
-                      background: "#141b3a", border: "1px solid rgba(255,255,255,0.15)", 
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0,
+                      background: "#fdf5e6", border: "1px solid rgba(128,0,0,0.15)",
                       borderRadius: "8px", zIndex: 10, maxHeight: "150px", overflowY: "auto",
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
                     }}>
                       {branchSuggestions.map(item => (
-                        <div 
-                          key={item} 
+                        <div
+                          key={item}
                           onClick={() => { setOnboardBranch(item); setBranchSuggestions([]); }}
-                          style={{ 
-                            padding: "10px 14px", cursor: "pointer", color: "#cbd5e1", fontSize: "0.85rem",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s"
+                          style={{
+                            padding: "10px 14px", cursor: "pointer", color: "#3d1b1b", fontSize: "0.85rem",
+                            borderBottom: "1px solid rgba(128,0,0,0.05)", transition: "background 0.2s"
                           }}
-                          onMouseEnter={e => e.target.style.background = "rgba(59,130,246,0.15)"}
+                          onMouseEnter={e => e.target.style.background = "rgba(128,0,0,0.05)"}
                           onMouseLeave={e => e.target.style.background = "transparent"}
                         >
                           {item}
@@ -2352,9 +2353,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     </div>
                   )}
                 </div>
-                
+
                 <div style={{ display: "flex", gap: 12 }}>
-                  <button className="onboard-btn-primary" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#cbd5e1", boxShadow: "none" }} onClick={() => setOnboardStep(1)}>
+                  <button className="onboard-btn-primary" style={{ background: "rgba(128,0,0,0.05)", border: "1px solid rgba(128,0,0,0.1)", color: "#3d1b1b", boxShadow: "none" }} onClick={() => setOnboardStep(1)}>
                     ← Back
                   </button>
                   <button className="onboard-btn-primary" disabled={!onboardSchool || !onboardBranch} onClick={() => setOnboardStep(3)}>
@@ -2363,17 +2364,17 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 </div>
               </div>
             )}
-            
+
             {onboardStep === 3 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <p style={{ color: "var(--gray-400)", fontSize: "0.88rem", marginBottom: 20 }}>Select the programming concepts and technologies you want to master.</p>
-                
+                <p style={{ color: "#5a2222", fontSize: "0.88rem", marginBottom: 20 }}>Select the programming concepts and technologies you want to master.</p>
+
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24, maxHeight: "250px", overflowY: "auto", padding: "4px" }}>
                   {POPULAR_SKILLS.map(s => {
                     const active = onboardSkills.includes(s);
                     return (
-                      <span 
-                        key={s} 
+                      <span
+                        key={s}
                         onClick={() => {
                           if (active) {
                             setOnboardSkills(onboardSkills.filter(x => x !== s));
@@ -2381,16 +2382,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                             setOnboardSkills([...onboardSkills, s]);
                           }
                         }}
-                        style={{ 
-                          fontSize: "0.8rem", 
-                          background: active ? "linear-gradient(135deg, var(--g-light), var(--purple))" : "rgba(255,255,255,0.06)", 
-                          border: active ? "none" : "1px solid rgba(255,255,255,0.12)", 
-                          color: active ? "white" : "#cbd5e1",
-                          padding: "8px 14px", 
-                          borderRadius: "20px", 
-                          cursor: "pointer", 
-                          boxShadow: active ? "0 0 10px rgba(59,130,246,0.25)" : "none",
-                          transition: "all 0.2s" 
+                        style={{
+                          fontSize: "0.8rem",
+                          background: active ? "linear-gradient(135deg, #800000, #4a0404)" : "rgba(128,0,0,0.05)",
+                          border: active ? "none" : "1px solid rgba(128,0,0,0.1)",
+                          color: active ? "#fdf5e6" : "#5a2222",
+                          padding: "8px 14px",
+                          borderRadius: "20px",
+                          cursor: "pointer",
+                          boxShadow: active ? "0 0 10px rgba(128,0,0,0.2)" : "none",
+                          transition: "all 0.2s"
                         }}
                       >
                         {s}
@@ -2398,9 +2399,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     );
                   })}
                 </div>
-                
+
                 <div style={{ display: "flex", gap: 12 }}>
-                  <button className="onboard-btn-primary" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#cbd5e1", boxShadow: "none" }} onClick={() => setOnboardStep(2)}>
+                  <button className="onboard-btn-primary" style={{ background: "rgba(128,0,0,0.05)", border: "1px solid rgba(128,0,0,0.1)", color: "#3d1b1b", boxShadow: "none" }} onClick={() => setOnboardStep(2)}>
                     ← Back
                   </button>
                   <button className="onboard-btn-primary" disabled={onboardSkills.length === 0} onClick={() => {
@@ -2413,6 +2414,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                         skills: onboardSkills,
                         onboarded: true
                       });
+                    }
+                    if (onNav) {
+                      onNav("dashboard");
                     }
                   }}>
                     ✨ Launch Dashboard

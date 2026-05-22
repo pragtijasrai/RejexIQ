@@ -1182,7 +1182,7 @@ function TrackSelection({ onSelect }) {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)",
+      background: "linear-gradient(135deg, #f9f3ee 0%, #f2e8df 50%, #ede0d4 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -1192,25 +1192,26 @@ function TrackSelection({ onSelect }) {
       overflow: "hidden"
     }}>
       {/* Background Glows */}
-      <div style={{ position: "absolute", top: "10%", left: "10%", width: 350, height: 350, background: "radial-gradient(circle, rgba(255,107,157,0.12) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(50px)" }} />
-      <div style={{ position: "absolute", bottom: "10%", right: "10%", width: 450, height: 450, background: "radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(50px)" }} />
+      <div style={{ position: "absolute", top: "5%", left: "5%", width: 400, height: 400, background: "radial-gradient(circle, rgba(126,0,35,0.08) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
+      <div style={{ position: "absolute", bottom: "5%", right: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(190,18,60,0.07) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(70px)" }} />
 
       <div style={{
         maxWidth: 1100,
         width: "100%",
-        background: "rgba(20, 27, 58, 0.75)",
-        backdropFilter: "blur(16px)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        borderRadius: 24,
-        padding: "48px 32px",
-        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.4)",
+        background: "rgba(255, 250, 245, 0.85)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(126, 0, 35, 0.12)",
+        borderRadius: 28,
+        padding: "52px 40px",
+        boxShadow: "0 24px 60px rgba(126, 0, 35, 0.1), 0 4px 16px rgba(0,0,0,0.06)",
         textAlign: "center",
         zIndex: 10
       }}>
-        <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, color: "#f0f4ff", marginBottom: 12, letterSpacing: "-0.02em" }}>
-          Choose Your Focus <span style={{ background: "linear-gradient(135deg, #ff6b9d, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Track & Persona</span>
+        <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 600, color: "#be123c", letterSpacing: "0.1em", textTransform: "uppercase" }}>Welcome aboard</div>
+        <h2 className="syne" style={{ fontSize: 36, fontWeight: 800, color: "#3b0012", marginBottom: 12, letterSpacing: "-0.02em" }}>
+          Choose Your Focus <span style={{ background: "linear-gradient(135deg, #be123c, #7e0023)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Track & Persona</span>
         </h2>
-        <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 40, maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 16, color: "#7c5c5c", marginBottom: 40, maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.7 }}>
           Select the option that matches your current goal. We'll tailor your dashboard, roadmaps, and tools to fit your specific needs perfectly.
         </p>
 
@@ -1227,53 +1228,54 @@ function TrackSelection({ onSelect }) {
                 key={t.key}
                 onClick={() => setSelected(t.key)}
                 style={{
-                  background: isSel ? "rgba(255, 107, 157, 0.08)" : "rgba(26, 35, 71, 0.4)",
-                  border: isSel ? "2px solid #ff6b9d" : "1.5px solid rgba(255, 255, 255, 0.06)",
-                  borderRadius: 20,
-                  padding: "24px 20px",
+                  background: isSel ? "linear-gradient(135deg, rgba(190,18,60,0.08), rgba(126,0,35,0.05))" : "rgba(255, 248, 243, 0.7)",
+                  border: isSel ? "2px solid #be123c" : "1.5px solid rgba(126, 0, 35, 0.1)",
+                  borderRadius: 18,
+                  padding: "22px 18px",
                   cursor: "pointer",
                   transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
                   textAlign: "left",
                   display: "flex",
                   flexDirection: "column",
                   position: "relative",
-                  boxShadow: isSel ? "0 10px 24px rgba(255, 107, 157, 0.15), inset 0 1px 1px rgba(255,255,255,0.1)" : "none",
-                  transform: isSel ? "translateY(-3px)" : "none"
+                  boxShadow: isSel ? "0 8px 24px rgba(190, 18, 60, 0.15), inset 0 1px 1px rgba(255,255,255,0.8)" : "0 2px 8px rgba(126,0,35,0.05)",
+                  transform: isSel ? "translateY(-4px)" : "none"
                 }}
               >
                 <div style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
-                  background: isSel ? "linear-gradient(135deg, #ff6b9d, #be123c)" : "rgba(255, 255, 255, 0.05)",
+                  width: 46,
+                  height: 46,
+                  borderRadius: 13,
+                  background: isSel ? "linear-gradient(135deg, #be123c, #7e0023)" : "rgba(126, 0, 35, 0.07)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
-                  marginBottom: 16,
-                  transition: "all 0.25s ease"
+                  fontSize: 21,
+                  marginBottom: 14,
+                  transition: "all 0.25s ease",
+                  boxShadow: isSel ? "0 4px 12px rgba(190,18,60,0.3)" : "none"
                 }}>
                   {t.icon}
                 </div>
-                <h3 style={{ fontSize: 17, fontWeight: 650, color: "#f0f4ff", marginBottom: 8, letterSpacing: "-0.01em" }}>{t.title}</h3>
-                <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, margin: 0, flex: 1 }}>{t.desc}</p>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#3b0012", marginBottom: 7, letterSpacing: "-0.01em" }}>{t.title}</h3>
+                <p style={{ fontSize: 13, color: "#9a6e6e", lineHeight: 1.55, margin: 0, flex: 1 }}>{t.desc}</p>
 
                 {isSel && (
                   <div style={{
                     position: "absolute",
-                    top: 16,
-                    right: 16,
+                    top: 14,
+                    right: 14,
                     width: 22,
                     height: 22,
                     borderRadius: "50%",
-                    background: "#ff6b9d",
-                    color: "#0a0e27",
+                    background: "linear-gradient(135deg, #be123c, #7e0023)",
+                    color: "#fff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 12,
                     fontWeight: "bold",
-                    boxShadow: "0 0 8px rgba(255, 107, 157, 0.5)"
+                    boxShadow: "0 2px 8px rgba(190,18,60,0.4)"
                   }}>
                     ✓
                   </div>
@@ -1287,28 +1289,28 @@ function TrackSelection({ onSelect }) {
           onClick={() => selected && onSelect(selected)}
           disabled={!selected}
           style={{
-            padding: "14px 54px",
-            background: selected ? "linear-gradient(135deg, #ff6b9d, #c084fc)" : "rgba(255,255,255,0.06)",
+            padding: "14px 56px",
+            background: selected ? "linear-gradient(135deg, #be123c, #7e0023)" : "rgba(126,0,35,0.08)",
             border: "none",
             borderRadius: 50,
-            color: selected ? "#0a0e27" : "#94a3b8",
+            color: selected ? "#fff" : "#b08080",
             fontSize: 16,
             fontWeight: 700,
             cursor: selected ? "pointer" : "not-allowed",
             transition: "all 0.25s",
-            boxShadow: selected ? "0 10px 25px rgba(255, 107, 157, 0.3)" : "none",
-            transform: selected ? "translateY(0)" : "none",
+            boxShadow: selected ? "0 10px 28px rgba(190, 18, 60, 0.35)" : "none",
+            letterSpacing: "0.01em"
           }}
           onMouseEnter={e => {
             if (selected) {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 12px 30px rgba(255, 107, 157, 0.4)";
+              e.currentTarget.style.boxShadow = "0 14px 32px rgba(190, 18, 60, 0.45)";
             }
           }}
           onMouseLeave={e => {
             if (selected) {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 10px 25px rgba(255, 107, 157, 0.3)";
+              e.currentTarget.style.boxShadow = "0 10px 28px rgba(190, 18, 60, 0.35)"; e.currentTarget.style.boxShadow = "0 10px 25px rgba(255, 107, 157, 0.3)";
             }
           }}
         >
@@ -3099,7 +3101,7 @@ export default function App() {
         if (!userData.trackSelected) {
           setAppPage("track-select");
         } else {
-          setAppPage("profile");
+          setAppPage(userData.onboarded ? "dashboard" : "profile");
         }
       } catch (e) {
         console.error("Failed to load user data:", e);
@@ -3118,16 +3120,18 @@ export default function App() {
   }, [user]);
 
   function handleLogin(userData) {
-    const isNew = !userData.assessmentDone;
+    const isNew = !userData.onboarded;
     setUser(userData);
     setPage("app");
     if (!userData.trackSelected) {
       setAppPage("track-select");
     } else {
-      setAppPage("profile");
       if (isNew) {
+        setAppPage("profile");
         setIsFirstLogin(true);
         setTimeout(() => setShowTour(true), 600);
+      } else {
+        setAppPage("dashboard");
       }
     }
   }
@@ -3259,7 +3263,7 @@ export default function App() {
               width: `calc(100vw - ${!sidebarCollapsed ? 240 : 72}px)`,
               minWidth: 0,
               flex: 1,
-              padding: 0,
+              padding: "40px",
               overflowY: "auto",
               overflowX: "hidden",
               minHeight: "100vh",
@@ -3281,7 +3285,11 @@ export default function App() {
               {appPage === "dashboard" && <Dashboard user={user} onNav={setAppPage} showTour={showTour} setShowTour={setShowTour} />}
               {appPage === "profile" && <ProfilePage user={user} onUpdateUser={handleUpdateUser} onNav={setAppPage} />}
               {appPage === "assessment" && <SkillAssessment user={user} onSave={handleSaveSkills} onNav={setAppPage} />}
-              {appPage === "dsa" && <DSAGame />}
+              {appPage === "dsa" && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, background: "#0a0e27", overflowY: "auto", overflowX: "hidden" }}>
+                  <DSAGame />
+                </div>
+              )}
               {appPage === "story" && (
                 <Suspense fallback={<div style={{ color: "#94a3b8", padding: 40 }}>Loading Story Mode...</div>}>
                   <div style={{ position: "absolute", inset: 0, zIndex: 20, overflowY: "auto", overflowX: "hidden" }}>
@@ -3291,7 +3299,11 @@ export default function App() {
               )}
               {appPage === "career" && <CareerMatch user={user} onNav={setAppPage} />}
               {appPage === "market" && <MarketDemand onNav={setAppPage} user={user} />}
-              {appPage === "resume" && <ResumeBuilder user={user} />}
+              {appPage === "resume" && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, background: "#0f172a", overflowY: "auto", overflowX: "hidden" }}>
+                  <ResumeBuilder user={user} />
+                </div>
+              )}
               {appPage === "assistant" && <CuteAIAssistant user={user} />}
               {appPage === "arena" && <CodeArena user={user} />}
               {appPage === "leaderboard" && <Leaderboard />}

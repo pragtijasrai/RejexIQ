@@ -83,7 +83,7 @@ const GAME_CSS = `
     border-bottom: 1px solid transparent;
     background-clip: padding-box;
     box-shadow: 0 1px 0 0 rgba(108,99,255,0.4);
-    padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 10px 40px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
 
   .game-avatar { font-size: 32px; line-height: 1; }
@@ -115,7 +115,7 @@ const GAME_CSS = `
   .game-tab:hover { border-color: #6c63ff; color: #f0f4ff; }
   .game-tab.active { background: #6c63ff; border-color: #6c63ff; color: #fff; }
 
-  .game-section { padding: 20px; animation: fadeUp 0.4s ease; }
+  .game-section { padding: 20px 40px; animation: fadeUp 0.4s ease; }
 
   @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 

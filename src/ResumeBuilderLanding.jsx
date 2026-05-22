@@ -59,7 +59,7 @@ function AnimatedDivider({ variant = "orbs" }) {
     return (
       <div className="relative overflow-hidden py-6" style={{background:"linear-gradient(90deg,#05071a,#0c0f2e,#05071a)"}}>
         <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px)",backgroundSize:"40px 40px"}}/>
-        <div className="relative z-10 max-w-5xl mx-auto px-6">
+        <div className="relative z-10 max-w-5xl mx-auto px-12 lg:px-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {stats.map(([val,label],i)=>(
               <motion.div key={label}
@@ -87,7 +87,7 @@ function AnimatedDivider({ variant = "orbs" }) {
     ];
     return (
       <div className="relative overflow-hidden py-8" style={{background:"linear-gradient(180deg,#05071a,#0c0f2e,#05071a)"}}>
-        <div className="flex justify-center gap-4 flex-wrap px-6">
+        <div className="flex justify-center gap-4 flex-wrap px-12 lg:px-16">
           {cards.map((c,i)=>(
             <motion.div key={c.label}
               animate={{y:[0,-8,0]}} transition={{duration:2.5+i*0.4,repeat:Infinity,ease:"easeInOut",delay:i*0.3}}
@@ -128,7 +128,7 @@ function AnimatedDivider({ variant = "orbs" }) {
     const items = ["React","Node.js","Python","AWS","Docker","TypeScript","GraphQL","PostgreSQL","Redis","Kubernetes"];
     return (
       <div className="relative overflow-hidden py-6" style={{background:"linear-gradient(180deg,#0c0f2e,#05071a)"}}>
-        <div className="flex justify-center gap-3 flex-wrap px-6 opacity-60">
+        <div className="flex justify-center gap-3 flex-wrap px-12 lg:px-16 opacity-60">
           {items.map((tech,i)=>(
             <motion.span key={tech}
               initial={{opacity:0,scale:0.8}} whileInView={{opacity:1,scale:1}}
@@ -320,7 +320,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
       <motion.div animate={{scale:[1,1.2,1],opacity:[0.1,0.25,0.1]}} transition={{duration:9,repeat:Infinity,delay:2}} className="absolute bottom-1/4 right-1/5 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none" style={{background:"radial-gradient(circle,rgba(139,92,246,0.5),transparent)"}}/>
       <motion.div animate={{scale:[1,1.15,1],opacity:[0.08,0.2,0.08]}} transition={{duration:11,repeat:Infinity,delay:4}} className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" style={{background:"radial-gradient(circle,rgba(6,182,212,0.4),transparent)"}}/>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-28 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16 py-28 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* LEFT */}
           <div>
@@ -383,7 +383,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
             <motion.div initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} transition={{duration:0.9,delay:0.3}}>
               {/* Main resume card */}
               <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-80" style={{boxShadow:"0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.1)"}}>
-                <div className="h-24 flex items-center px-6 gap-4" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
+                <div className="h-24 flex items-center px-12 lg:px-16 gap-4" style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}}>
                   <div className="w-14 h-14 rounded-full bg-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0"
                     style={{letterSpacing:"-0.5px"}}>
                     {heroInitials}
@@ -471,7 +471,7 @@ function Features() {
       <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
       <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none" style={{background:"radial-gradient(circle,#6366f1,transparent)"}}/>
       <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-15 pointer-events-none" style={{background:"radial-gradient(circle,#8b5cf6,transparent)"}}/>
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-12">
           <br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>⚡ Why Choose Us</div>
@@ -518,7 +518,7 @@ function HowItWorks({ onBuild }) {
     <section ref={ref} className="relative py-16 overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#130a2e 50%,#05071a 100%)"}}>
       <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(139,92,246,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.05) 1px,transparent 1px)",backgroundSize:"80px 80px"}}/>
       <div className="absolute top-1/2 left-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 pointer-events-none" style={{background:"radial-gradient(circle,#8b5cf6,transparent)"}}/>
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div>
             <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU}>
@@ -803,7 +803,7 @@ function TemplatesSection({ onSelect }) {
       <div className="absolute inset-0" style={{ backgroundImage:"linear-gradient(rgba(244,63,94,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(244,63,94,0.04) 1px,transparent 1px)", backgroundSize:"70px 70px" }}/>
       <div className="absolute top-1/3 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-10 pointer-events-none -translate-x-1/2" style={{ background:"radial-gradient(ellipse,#f43f5e,transparent)" }}/>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16">
         {/* Header */}
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-10">
           <br></br><br></br> <br></br><br></br><div className="flex justify-center mb-6">
@@ -1650,17 +1650,13 @@ function TemplatesSection({ onSelect }) {
   }
 
   return(
-    <section ref={ref} className="relative overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)",paddingTop:"48px"}}>
-      {/* BG decorations */}
-      <div className="absolute inset-0 pointer-events-none" style={{backgroundImage:"linear-gradient(rgba(6,182,212,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.04) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
-      <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
-
-      {/* ── HEADER BAR ── */}
-      <div className="relative z-10 border-b border-white/10 px-8 py-5" style={{background:"rgba(5,7,26,0.8)",backdropFilter:"blur(12px)",marginBottom:"16px"}}>
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold" style={{padding:"5px 16px"}}>🎯 ATS Score Checker</div>
-            <h2 className="text-xl font-black text-white hidden sm:block">Check your <span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span></h2>
+    <section ref={ref} className="relative py-16 overflow-hidden" style={{background:"linear-gradient(180deg,#05071a 0%,#0c0f2e 50%,#05071a 100%)"}}>
+      <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(6,182,212,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.05) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
+      <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none" style={{background:"radial-gradient(circle,#06b6d4,transparent)"}}/>
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16">
+        <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-12">
+          <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🎯 ATS Score Checker</div>
           </div>
           <div className="flex items-center gap-3">
             {atsScore!=null&&(
@@ -1930,7 +1926,7 @@ function AITools({ onBuild }) {
     <section ref={ref} className="relative py-16 overflow-hidden" style={{background:"linear-gradient(135deg,#05071a 0%,#0c0f2e 40%,#130a2e 70%,#05071a 100%)"}}>
       <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
       <div className="absolute top-1/4 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-15 pointer-events-none -translate-x-1/2" style={{background:"radial-gradient(ellipse,#6366f1,transparent)"}}/>
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-12 lg:px-16">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-14">
           <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🤖 AI-Powered Features</div>
@@ -2107,7 +2103,7 @@ function AITools({ onBuild }) {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-12 lg:px-16">
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-14">
           <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>💎 Pricing Plans</div>
@@ -2164,7 +2160,7 @@ function FooterCTA({ onBuild }) {
     <section className="relative py-20 overflow-hidden" style={{background:"linear-gradient(135deg,#05071a 0%,#0c0f2e 40%,#130a2e 70%,#05071a 100%)"}}>
       <div className="absolute inset-0" style={{backgroundImage:"linear-gradient(rgba(99,102,241,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.07) 1px,transparent 1px)",backgroundSize:"64px 64px"}}/>
       <div className="absolute top-1/2 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-20 pointer-events-none -translate-x-1/2 -translate-y-1/2" style={{background:"radial-gradient(ellipse,#6366f1,transparent)"}}/>
-      <div className="relative z-10 text-center px-6">
+      <div className="relative z-10 text-center px-12 lg:px-16">
         <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}}>
           <br></br><br></br><br></br><br></br><br></br><div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🚀 Get Started Today</div>
