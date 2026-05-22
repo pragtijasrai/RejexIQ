@@ -7,7 +7,7 @@ export default function AIAssistant({ user }) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const apiKey = "AIzaSyB7R_rJqiuMw8OcoEkmGNyM2nGlc11pQKg";
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
   const msgRef = useRef(null);
 
   // Suggestions for the user

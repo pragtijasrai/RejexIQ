@@ -197,14 +197,16 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
           >
             {/* SignIn Form Container */}
             <div
-              className={` flex items-center justify-center flex-col transition-all duration-[200ms] delay-[700ms] 
-                overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 px-20 max-lg:mt-60  z-20 max-md:px-6 
-                max-md:py-0 ${isSignUpMode ? " opacity-0 z-10 pointer-events-none" : " pointer-events-auto"
+              className={` flex items-center justify-center flex-col transition-all duration-[500ms] delay-[400ms] 
+                overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 px-6 max-lg:mt-60  z-20 max-md:px-4 
+                max-md:py-0 ${isSignUpMode
+                  ? "opacity-0 z-10 pointer-events-none -translate-x-12 scale-95"
+                  : "opacity-100 pointer-events-auto translate-x-0 scale-100"
                 }`}
             >
               {/* --- SIGN IN FORM CONTENT --- */}
-              <div className="w-full bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] md:mt-0 sm:max-w-md xl:p-0 border border-white/50 relative">
-                <div className="py-8 px-20 flex flex-col gap-6 md:gap-7 sm:py-10">
+              <div className="w-full md:mt-0 sm:max-w-md relative">
+                <div className="py-8 px-8 flex flex-col gap-6 md:gap-7 sm:py-10 sm:px-10">
                   <div className="text-center">
                     <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl">
                       Welcome Back
@@ -214,7 +216,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                     </p>
                   </div>
 
-                  <form className="flex flex-col" style={{ gap: '16px' }} onSubmit={handleSubmit}>
+                  <form className="flex flex-col px-2" style={{ gap: '16px' }} onSubmit={handleSubmit}>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6b7280', width: '20px', height: '20px' }}>
@@ -265,7 +267,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                     </button>
                   </form>
 
-                  <div className="relative">
+                  <div className="relative px-2">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-200"></div>
                     </div>
@@ -274,22 +276,13 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={buttonForGFT} style={{ height: '44px' }}>
+                  <div className="px-2">
+                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={`${buttonForGFT} w-full gap-3`} style={{ height: '44px' }}>
                       {gLoading ? <div className="w-5 h-5 border-2 border-gray-300 border-t-backgroundColor rounded-full animate-spin" /> :
                         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
                         </svg>}
-                    </button>
-                    <button type="button" onClick={() => showToast("Facebook sign-in not configured", "info")} className={buttonForGFT}>
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <button type="button" onClick={() => showToast("Twitter sign-in not configured", "info")} className={buttonForGFT}>
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
-                      </svg>
+                      <span className="text-sm font-medium text-gray-600">Continue with Google</span>
                     </button>
                   </div>
 
@@ -302,13 +295,15 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
 
             {/* SignUp Form Container */}
             <div
-              className={`flex items-center justify-center flex-col px-20 transition-all ease-in-out duration-[200ms]
-                 delay-[700ms] overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 py-0 z-10 max-md:px-6 
-                 max-md:py-0 opacity-0 ${isSignUpMode ? "opacity-100 z-20 pointer-events-auto" : " pointer-events-none"
+              className={`flex items-center justify-center flex-col px-6 transition-all duration-[500ms]
+                 delay-[400ms] overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 py-0 z-10 max-md:px-4 
+                 max-md:py-0 ${isSignUpMode
+                  ? "opacity-100 z-20 pointer-events-auto translate-x-0 scale-100"
+                  : "opacity-0 pointer-events-none translate-x-12 scale-95"
                 }`}
             >
               {/* --- SIGN UP FORM CONTENT --- */}
-              <div className="w-full bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] md:mt-0 sm:max-w-md xl:p-0 border border-white/50 relative">
+              <div className="w-full md:mt-0 sm:max-w-md relative">
                 <div className="py-8 px-10 flex flex-col gap-6 md:gap-7 sm:py-10 sm:px-14">
                   <div className="text-center">
                     <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl">
@@ -417,22 +412,13 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={buttonForGFT} style={{ height: '44px' }}>
+                  <div className="px-2">
+                    <button type="button" onClick={handleGoogle} disabled={gLoading} className={`${buttonForGFT} w-full gap-3`} style={{ height: '44px' }}>
                       {gLoading ? <div className="w-5 h-5 border-2 border-gray-300 border-t-backgroundColor rounded-full animate-spin" /> :
                         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
                         </svg>}
-                    </button>
-                    <button type="button" onClick={() => showToast("Facebook sign-in not configured", "info")} className={buttonForGFT}>
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <button type="button" onClick={() => showToast("Twitter sign-in not configured", "info")} className={buttonForGFT}>
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
-                      </svg>
+                      <span className="text-sm font-medium text-gray-600">Continue with Google</span>
                     </button>
                   </div>
 

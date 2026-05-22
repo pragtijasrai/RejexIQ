@@ -3,7 +3,7 @@ import React from "react";
 const SignInForm = ({ buttonClasses, buttonForGFT }) => {
   return (
     <div className="w-full bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0 border border-gray-100">
-      <div className="p-6 space-y-6 md:space-y-7 sm:p-8">
+      <div className="px-10 py-8 space-y-6 md:space-y-7 sm:px-12">
         <h1 className="text-xl font-bold leading-tight tracking-tight text-backgroundColor md:text-2xl text-center">
           Welcome Back
           <p className="text-sm font-normal text-gray-500 mt-1">
