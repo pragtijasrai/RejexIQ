@@ -824,20 +824,6 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ background: G.surface, borderTop: `1px solid ${G.border}`, padding: "40px", textAlign: "center" }}>
-        <div className="syne" style={{ fontSize: 20, fontWeight: 800, color: G.accent, marginBottom: 16 }}>
-          Rejex<span style={{ color: G.text }}>IQ</span>
-        </div>
-        <div style={{ display: "flex", gap: 32, justifyContent: "center", marginBottom: 24 }}>
-          {["About", "Features", "Assessment", "Resume Builder"].map(l => (
-            <span key={l} style={{ color: G.muted, fontSize: 14, cursor: "pointer" }}
-              onClick={() => onNav(l === "Assessment" ? "assessment" : l === "Resume Builder" ? "resume" : "signup")}>{l}</span>
-          ))}
-          <a href="https://github.com/pragtijasrai/RejexIQ" target="_blank" rel="noreferrer" style={{ color: G.muted, fontSize: 14 }}>GitHub</a>
-        </div>
-        <p style={{ color: G.muted, fontSize: 13 }}>© 2025 RejexIQ — Skill Evaluation & Career Readiness Platform</p>
-      </footer>
     </div>
   );
 }
