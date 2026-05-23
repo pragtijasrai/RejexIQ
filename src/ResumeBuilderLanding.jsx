@@ -1676,7 +1676,7 @@ function TemplatesSection({ onSelect }) {
               </motion.button>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ── SPLIT-SCREEN LAYOUT ── */}
