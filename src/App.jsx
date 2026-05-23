@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import NewAuthPage from "./AuthPage.jsx";
 import NewProfilePage from "./ProfilePage.jsx";
-import CodeArena from "./CodeArena.jsx";
 import AIAssistantPage from "./AIAssistantPage.jsx";
 import PremiumResumeBuilder from "./ResumeBuilderLanding.jsx";
 import CareerMatch from "./CareerMatch.jsx";
