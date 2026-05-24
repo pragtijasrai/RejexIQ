@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap');
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 :root {
   --bl:#0A7EA4; --gr:#2D9E5F; --am:#f59e0b; --pu:#7B52E8; --re:#D04040; --te:#22d3ee; --pk:#ff6b9d;
   --card:var(--color-background-primary); --bg:var(--color-background-secondary);

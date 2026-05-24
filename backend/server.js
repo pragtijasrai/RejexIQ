@@ -12,6 +12,7 @@ const fs = require("fs");              // File handling module
 const jwt = require("jsonwebtoken");   // JWT authentication
 const bcrypt = require("bcryptjs");    // Password hashing
 const cors = require("cors");          // CORS middleware
+const multer = require("multer");      // File uploads
 
 // Load .env if present
 try { require("dotenv").config({ path: path.join(__dirname, ".env") }); } catch (_) {}
@@ -30,27 +31,28 @@ const JWT_SECRET = process.env.JWT_SECRET || "rejexiq_dev_secret_2025";
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const MONGO_URI  = process.env.MONGO_URI  || "";
 
-// ── MongoDB connection (optional — falls back to in-memory) ──────────────────
-if (MONGO_URI) {
-  const mongoose = require("mongoose");
-  mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ MongoDB connected"))
-    .catch(err => console.warn("⚠️  MongoDB connection failed — using in-memory store:", err.message));
-} else {
-  console.log("ℹ️  No MONGO_URI set — using in-memory user store (data resets on restart)");
+// ── MongoDB connection ──────────────────
+if (!MONGO_URI) {
+  console.log("ℹ️  No MONGO_URI set — using default local MongoDB (mongodb://127.0.0.1:27017/rejexiq)");
+  process.env.MONGO_URI = "mongodb://127.0.0.1:27017/rejexiq";
 }
+const mongoose = require("mongoose");
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected successfully to", process.env.MONGO_URI))
+  .catch(err => console.error("⚠️  MongoDB connection failed:", err.message));
 
 // ── IN-MEMORY DATABASE (legacy — kept for non-auth routes) ──────────────────
 const users = [];          // Simulates user collection
 const assessments = [];    // Simulates assessments collection
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Serving static files — demonstrates Node.js static file serving
 app.use(express.static(path.join(__dirname, "../dist")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Request logging middleware — demonstrates middleware concept
 app.use((req, res, next) => {
@@ -119,8 +121,12 @@ function generateReport(userSkills) {
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
 
-// NEW: Auth routes (signup, signin, google, me)
+// New auth routes (JWT + MongoDB)
 app.use("/api/auth", authRouter);
+
+// Community & Networking routes
+const communityRoutes = require("./communityRoutes");
+app.use("/api/community", communityRoutes);
 
 // Story Mode routes
 app.use("/api", storyRoutes);
@@ -388,6 +394,32 @@ app.post("/api/parse-resume", async (req, res, next) => {
   }
 });
 
+// ── FILE UPLOAD ENDPOINT (MULTER) ─────────────────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + "-" + file.originalname.replace(/\s+/g, "_"));
+  }
+});
+const upload = multer({ storage });
+
+app.post("/api/upload", newAuthMiddleware, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  // Construct the public URL for the file
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.json({
+    message: "File uploaded successfully",
+    fileUrl,
+    fileName: req.file.originalname,
+    fileType: req.file.mimetype
+  });
+});
+
 // ── SERVE REACT APP ───────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../dist", "index.html"));
@@ -396,6 +428,7 @@ app.use((req, res) => {
 // ── ERROR HANDLING MIDDLEWARE ─────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error("Server error:", err.message);
+  console.error(err.stack);
   res.status(err.status || 500).json({
     error: err.message || "Internal server error",
     path: req.path,
@@ -403,20 +436,25 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── SERVER CREATION (HTTP module) ────────────────────────────────────────────
+// ── SERVER CREATION (HTTP module) & WebSockets ───────────────────────────────
 const server = http.createServer(app);  // Using Node.js HTTP module
+const { initSocket } = require("./socketManager");
+
+// Initialize Socket.io
+const io = initSocket(server, { origin: CLIENT_URL, credentials: true });
+app.set("io", io);
 
 server.listen(PORT, () => {
   console.log(`\n🚀 RejexIQ Server running at http://localhost:${PORT}`);
   console.log(`📋 API available at http://localhost:${PORT}/api`);
+  console.log(`💬 WebSockets ready`);
   console.log(`\nDemonstrating NodeJS concepts:`);
   console.log(`  ✅ Client-Server Architecture`);
   console.log(`  ✅ Express Framework & Routing`);
   console.log(`  ✅ JWT Authentication`);
-  console.log(`  ✅ Middleware (auth, logging, error handling)`);
-  console.log(`  ✅ File Handling & Streaming`);
-  console.log(`  ✅ Route Parameters`);
-  console.log(`  ✅ Exception Handling\n`);
+  console.log(`  ✅ MongoDB with Mongoose`);
+  console.log(`  ✅ WebSockets via Socket.IO`);
+  console.log(`  ✅ Middleware (auth, logging, error handling)\n`);
 });
 
 module.exports = app;

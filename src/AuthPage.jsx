@@ -28,26 +28,7 @@ function pwStrength(p) {
   return { score: s, ...map[s] };
 }
 
-function makeToken(user) {
-  const payload = btoa(JSON.stringify({ id: user.id, email: user.email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }));
-  return `local.${payload}.sig`;
-}
-
-function localAuth(mode, { name, email, password }) {
-  const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-  if (mode === "signup") {
-    if (users.find(u => u.email === email.toLowerCase())) return null;
-    const user = { id: "local_" + Date.now(), name, email: email.toLowerCase(), provider: "local", skills: {}, assessmentDone: false };
-    users.push({ ...user, _pw: btoa(password) });
-    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-    return { token: makeToken(user), user };
-  } else {
-    const found = users.find(u => u.email === email.toLowerCase() && u._pw === btoa(password));
-    if (!found) return null;
-    const user = { id: found.id, name: found.name, email: found.email, provider: found.provider, skills: found.skills || {}, assessmentDone: found.assessmentDone || false };
-    return { token: makeToken(user), user };
-  }
-}
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function AuthPage({ onLogin, onNav, type, initialMode }) {
   const [isSignUpMode, setIsSignUpMode] = useState(() => (initialMode || type) === "signup");
@@ -117,13 +98,22 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
+    
     try {
+      const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       const body = mode === "signup"
         ? { name: form.name.trim(), email: form.email.trim(), password: form.password }
         : { email: form.email.trim(), password: form.password };
-      const data = localAuth(mode, body);
-      if (!data) throw new Error(mode === "signin" ? "Invalid email or password." : "Email already registered. Sign in instead.");
+        
+      const res = await fetch(`${API}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Authentication failed");
+      
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       _onSuccess(data.user);
@@ -135,16 +125,17 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
     setGLoading(true);
     try {
       const { signInWithGoogle } = await import("./firebase.js");
-      const { name, email, avatar } = await signInWithGoogle();
-      const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      let found = users.find(u => u.email === email.toLowerCase());
-      if (!found) {
-        found = { id: "g_" + Date.now(), name, email: email.toLowerCase(), avatar, provider: "google", skills: {}, assessmentDone: false };
-        users.push(found);
-        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-      }
-      const user = { id: found.id, name: found.name, email: found.email, avatar: found.avatar || avatar, provider: "google", skills: found.skills || {}, assessmentDone: found.assessmentDone || false };
-      const data = { token: makeToken(user), user };
+      const { idToken, name, email, avatar, uid } = await signInWithGoogle();
+      
+      const res = await fetch(`${API}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, name, email, avatar, uid }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Google sign-in failed");
+      
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       _onSuccess(data.user);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap');
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 :root {
   --java-orange:#E76F00; --java-blue:#0A7EA4; --java-green:#2D9E5F;
   --java-purple:#7B52E8; --java-red:#D04040;

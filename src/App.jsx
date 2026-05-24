@@ -167,7 +167,7 @@ const G = {
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
   
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
   
   body, #root { 
     background: linear-gradient(135deg, ${G.bg} 0%, #1a1f3a 100%);
@@ -1368,7 +1368,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
         /* Onboarding CTA */
         <div className="gradient-border" style={{ padding: 40, textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-          <h2 className="syne" style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Start Your Skill Assessment</h2>
+          <h2 className="syne" style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: "#F5E6D3" }}>Start Your Skill Assessment</h2>
           <p style={{ color: G.muted, marginBottom: 24 }}>Rate yourself on 8 key skills to unlock your personalized career readiness score, role matches, and improvement plan.</p>
           <button className="btn-primary" style={{ padding: "14px 40px", fontSize: 16 }} onClick={() => onNav("assessment")}>
             🚀 Begin Assessment
@@ -3108,7 +3108,13 @@ export default function App() {
   }, [user]);
 
   function handleLogin(userData) {
-    const isNew = !userData.onboarded;
+    let isNew = false;
+    if (userData.isNewUser !== undefined) {
+      isNew = userData.isNewUser && !userData.onboarded;
+    } else {
+      const hasData = userData.school || (userData.skills && Object.keys(userData.skills).length > 0) || userData.assessmentDone;
+      isNew = !userData.onboarded && !hasData;
+    }
     setUser(userData);
     setPage("app");
     if (!userData.trackSelected) {
@@ -3125,16 +3131,26 @@ export default function App() {
   }
 
   function handleSelectTrack(selectedTrack) {
+    handleUpdateUser({ track: selectedTrack, trackSelected: true });
+    
     setUser(prev => {
-      const updated = {
-        ...prev,
-        track: selectedTrack,
-        trackSelected: true
-      };
-      localStorage.setItem("rejexiq_user", JSON.stringify(updated));
-      return updated;
+      let isNew = false;
+      if (prev?.isNewUser !== undefined) {
+        isNew = prev.isNewUser && !prev.onboarded;
+      } else {
+        const hasData = prev?.school || (prev?.skills && Object.keys(prev?.skills || {}).length > 0) || prev?.assessmentDone;
+        isNew = !prev?.onboarded && !hasData;
+      }
+
+      if (!isNew) {
+        setAppPage("dashboard");
+      } else {
+        setAppPage("profile");
+        setIsFirstLogin(true);
+        setTimeout(() => setShowTour(true), 600);
+      }
+      return prev;
     });
-    setAppPage("profile"); // Navigate straight to profile view
   }
 
   function handleDemo() {
@@ -3149,15 +3165,21 @@ export default function App() {
   }
 
   function handleSaveSkills(skills) {
-    setUser(prev => {
-      const updated = { ...prev, skills, assessmentDone: true };
-      return updated;
-    });
+    handleUpdateUser({ skills, assessmentDone: true });
   }
 
   function handleUpdateUser(updates) {
     setUser(prev => {
       const updated = { ...prev, ...updates };
+      const token = localStorage.getItem("rejexiq_token");
+      if (token) {
+        const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        fetch(`${API}/api/auth/profile`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify(updates)
+        }).catch(err => console.error("Failed to update profile:", err));
+      }
       return updated;
     });
   }
@@ -3295,7 +3317,7 @@ export default function App() {
               {appPage === "assistant" && <CuteAIAssistant user={user} />}
               {appPage === "arena" && <CodeArena user={user} />}
               {appPage === "leaderboard" && <Leaderboard />}
-              {appPage === "community" && <Community />}
+              {appPage === "community" && <Community user={user} />}
             </div>
 
             {/* Guided Tour */}

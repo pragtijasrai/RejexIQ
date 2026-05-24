@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 
 const G = {
   bg: "#0a0e27",
@@ -13,38 +13,54 @@ const G = {
   danger: "#f87171"
 };
 
-// Raw unsorted users with mock scores
-const RAW_USERS = [
-  { name: "StealthNinja42", points: 100.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Stealth&backgroundColor=transparent", prize: 500.00 },
-  { name: "EpicGamerX", points: 70.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Epic&backgroundColor=transparent", prize: 250.00 },
-  { name: "PixelWarrior99", points: 20.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Pixel&backgroundColor=transparent", prize: 100.00 },
-  { name: "NinjaWarriorZ", points: 512.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Ninja&backgroundColor=transparent", prize: 120.50 },
-  { name: "PixelProwler99", points: 789.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Prowler&backgroundColor=transparent", prize: 85.75 },
-  { name: "CodeMaster", points: 642.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=CodeMaster&backgroundColor=transparent", prize: 50.00 },
-  { name: "ShadowCoder", points: 590.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Shadow&backgroundColor=transparent", prize: 30.00 },
-  { name: "BugHunter", points: 410.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=BugHunter&backgroundColor=transparent", prize: 15.00 },
-  { name: "You", points: 850.00, avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=You&backgroundColor=transparent", prize: 0.00, isYou: true },
-];
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const FUN_NAMES = ["Code Ninja", "Mystery Hacker", "Tech Wizard", "Pixel Pioneer", "Cyber Surfer", "Data Jedi", "Logic Lord", "Bug Hunter", "Byte Boss", "Syntax Slayer"];
+function getFunName(id) {
+  if (!id) return "Mystery Coder";
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i);
+    hash |= 0;
+  }
+  return FUN_NAMES[Math.abs(hash) % FUN_NAMES.length];
+}
 
 export default function Leaderboard() {
   const [tab, setTab] = useState("Daily");
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dynamically sort and assign ranks
-  const leaderboardData = useMemo(() => {
-    // Sort descending by points
-    const sorted = [...RAW_USERS].sort((a, b) => b.points - a.points);
-    // Assign rank
-    return sorted.map((user, index) => ({ ...user, rank: index + 1 }));
-  }, []);
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const token = localStorage.getItem("rejexiq_token") || "";
+        const res = await fetch(`${API}/api/community/leaderboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setLeaderboardData(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch leaderboard", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, [tab]); // refetch if tab changes (future implementation)
 
   // Top 3 for Pedestals
   const top3 = leaderboardData.slice(0, 3);
   // Reorder for UI rendering: 2nd on left, 1st in center, 3rd on right
   const pedestals = [
-    { ...top3[1], position: 2 },
-    { ...top3[0], position: 1 },
-    { ...top3[2], position: 3 }
-  ];
+    top3[1] ? { ...top3[1], position: 2 } : null,
+    top3[0] ? { ...top3[0], position: 1 } : null,
+    top3[2] ? { ...top3[2], position: 3 } : null
+  ].filter(Boolean);
+
+  if (loading) {
+    return <div style={{ padding: 64, textAlign: "center" }}>Loading leaderboard...</div>;
+  }
 
   return (
     <div className="section-enter" style={{ paddingBottom: 64, background: "#fdfbf7", minHeight: "100vh", padding: "32px 48px" }}>
@@ -105,16 +121,19 @@ export default function Leaderboard() {
           >
             <div style={{ fontWeight: 800, fontSize: 16, color: "#991b1b" }}>{p.rank}th</div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <img src={p.avatar} style={{ width: 32, height: 32, borderRadius: "50%", background: "#fdfbf7", border: "1px solid rgba(128,0,0,0.1)" }} alt="" />
-              <span style={{ fontWeight: 700, color: "#451a1a" }}>{p.name} {p.isYou && "(You)"}</span>
+              <img src={p.avatar} onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.id}&backgroundColor=transparent`; }} style={{ width: 32, height: 32, borderRadius: "50%", background: "#fdfbf7", border: "1px solid rgba(128,0,0,0.1)", objectFit: "cover" }} alt="" />
+              <span style={{ fontWeight: 700, color: "#451a1a" }}>{p.name || getFunName(p.id)} {p.isYou && "(You)"}</span>
             </div>
-            <div style={{ fontWeight: 700, color: "#451a1a" }}>{p.points.toFixed(2)}</div>
+            <div style={{ fontWeight: 700, color: "#451a1a" }}>{(p.points || 0).toFixed(2)}</div>
             <div style={{ textAlign: "right", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#7f1d1d", fontSize: 12 }}>⭐</span>
-              <span style={{ fontWeight: 700, color: "#451a1a" }}>{p.prize.toFixed(2)}</span>
+              <span style={{ fontWeight: 700, color: "#451a1a" }}>{(p.prize || 0).toFixed(2)}</span>
             </div>
           </div>
         ))}
+        {leaderboardData.length <= 3 && (
+           <div style={{ padding: "16px 24px", color: "#991b1b", fontStyle: "italic", textAlign: "center" }}>No other players on the board yet!</div>
+        )}
       </div>
     </div>
   );
@@ -128,13 +147,13 @@ function Pedestal({ rank, player, height }) {
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: 20, zIndex: 10, position: "relative" }}>
         {isWinner && (
           <div style={{ position: "absolute", top: -55, zIndex: 11 }}>
-            <img src="https://img.icons8.com/fluency/96/jester-hat.png" style={{ width: 70, height: 70, filter: "drop-shadow(0 4px 10px rgba(128,0,0,0.3))" }} alt="Winner Hat" />
+            <img src="https://www.pngarts.com/files/12/Winner-Award-Badge-PNG-Photo.png" style={{ width: 70, height: 70, filter: "drop-shadow(0 4px 10px rgba(128,0,0,0.3))" }} alt="Winner Crown" />
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Avatar with rank pill inside */}
           <div style={{ position: "relative" }}>
-            <img src={player.avatar} style={{ width: isWinner ? 80 : 64, height: isWinner ? 80 : 64, borderRadius: "50%", border: `3px solid #fdfbf7`, background: "#fdfbf7", boxShadow: "0 10px 20px rgba(128,0,0,0.2)" }} alt="" />
+            <img src={player.avatar} onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${player.id}&backgroundColor=transparent`; }} style={{ width: isWinner ? 80 : 64, height: isWinner ? 80 : 64, borderRadius: "50%", border: `3px solid #fdfbf7`, background: "#fdfbf7", boxShadow: "0 10px 20px rgba(128,0,0,0.2)", objectFit: "cover" }} alt="" />
             <div style={{ position: "absolute", bottom: -2, right: -2, background: "#7f1d1d", color: "white", fontSize: 11, fontWeight: 800, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fdfbf7", boxShadow: "0 2px 5px rgba(128,0,0,0.3)" }}>
               {rank}
             </div>
@@ -142,10 +161,10 @@ function Pedestal({ rank, player, height }) {
           
           {/* Name and Points pill to the right */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#451a1a" }}>{player.name}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#451a1a" }}>{player.name || getFunName(player.id)} {player.isYou && "(You)"}</div>
             <div style={{ background: "linear-gradient(135deg, #991b1b, #7f1d1d)", border: "1px solid rgba(128,0,0,0.2)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 10px rgba(128,0,0,0.2)" }}>
                <span style={{ background: "#fff", color: "#991b1b", borderRadius: "50%", width: 12, height: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8 }}>✦</span> 
-               {player.points.toFixed(2)}
+               {(player.points || 0).toFixed(2)}
             </div>
           </div>
         </div>
@@ -184,11 +203,10 @@ function Pedestal({ rank, player, height }) {
             fontFamily: "'Space Grotesk', sans-serif",
             textShadow: "0 2px 10px rgba(253,251,247,0.5)"
           }}>
-            {rank}{rank === 1 ? 'st' : rank === 2 ? 'nd' : 'rd'}
+            {rank}{rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'}
           </span>
         </div>
       </div>
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 const styles = `
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 .ll-root { font-family: var(--font-sans, sans-serif); }
 .ll-wrap { max-width: 860px; margin: 0 auto; padding: 0 0 48px; }
 .ll-nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 16px 0 20px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 24px; }

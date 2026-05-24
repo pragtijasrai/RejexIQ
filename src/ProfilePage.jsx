@@ -225,6 +225,31 @@ const POPULAR_SKILLS = [
 export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [scrollY, setScrollY] = useState(0);
   const [editMode, setEditMode] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+
+  const SectionMenu = ({ sectionId }) => {
+    const isOpen = activeMenu === sectionId;
+    return (
+      <div style={{ position: "relative" }}>
+        <button className="icon-btn" style={{ padding: "6px", background: "var(--white)", border: "1px solid var(--gray-200)", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+          onMouseOver={e => e.currentTarget.style.background = 'var(--gray-100)'}
+          onMouseOut={e => { if (!isOpen) e.currentTarget.style.background = 'var(--white)'; }}
+          onClick={() => setActiveMenu(isOpen ? null : sectionId)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </button>
+        {isOpen && (
+          <div style={{ position: "absolute", top: "35px", right: 0, width: "150px", background: "var(--white)", borderRadius: "12px", padding: "8px", boxShadow: "var(--card-hover)", border: "1px solid var(--gray-200)", zIndex: 100, display: "flex", flexDirection: "column", gap: "4px" }}>
+            {editingSection === sectionId ? (
+              <button className="dropdown-item" onClick={() => { setActiveMenu(null); setEditingSection(null); handleSave(); }}>✓ Save Section</button>
+            ) : (
+              <button className="dropdown-item" onClick={() => { setActiveMenu(null); setEditingSection(sectionId); }}>✏️ Edit Section</button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
   const [githubLoading, setGithubLoading] = useState(false);
   const [githubError, setGithubError] = useState("");
   const heroRef = useRef(null);
@@ -237,6 +262,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [tempUsername, setTempUsername] = useState(user?.username || "arjun_codes");
   const [tempSchool, setTempSchool] = useState(user?.school || "IIT Delhi");
   const [tempBranch, setTempBranch] = useState(user?.branch || "Computer Science");
+  const [tempPrivacy, setTempPrivacy] = useState(user?.privacy || "public");
 
   // Stats
   const [tempStats, setTempStats] = useState(user?.stats || [
@@ -444,6 +470,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       setTempUsername(user.username || "arjun_codes");
       setTempSchool(user.school || "IIT Delhi");
       setTempBranch(user.branch || "Computer Science");
+      setTempPrivacy(user.privacy || "public");
       if (user.stats && Array.isArray(user.stats)) setTempStats(user.stats);
       if (user.contactInfo) setTempContact(user.contactInfo);
       if (user.socialLinks) setTempSocials(user.socialLinks);
@@ -528,6 +555,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         username: tempUsername,
         school: tempSchool,
         branch: tempBranch,
+        privacy: tempPrivacy,
         stats: tempStats,
         contactInfo: tempContact,
         socialLinks: tempSocials,
@@ -658,7 +686,14 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     ]
     : tempEducation;
 
-  const showOnboarding = !user?.onboarded && user?.email !== "demo@rejexiq.com";
+  let isNew = false;
+  if (user?.isNewUser !== undefined) {
+    isNew = user.isNewUser && !user.onboarded;
+  } else {
+    const hasData = user?.school || (user?.skills && Object.keys(user.skills).length > 0) || user?.assessmentDone;
+    isNew = !user?.onboarded && !hasData;
+  }
+  const showOnboarding = isNew && user?.email !== "demo@rejexiq.com";
 
   // Helper function to return background cover styling
   function tempCoverBackground() {
@@ -828,7 +863,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
         :root {
           --g-dark: ${theme.dark}; --g-mid: ${theme.mid}; --g-light: ${theme.light}; --g-pale: ${theme.pale};
           --cream: #fdfdfb; --white: #ffffff;
@@ -1429,6 +1464,17 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 />
               </div>
               <div>
+                <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Profile Privacy</label>
+                <select
+                  value={tempPrivacy}
+                  onChange={e => setTempPrivacy(e.target.value)}
+                  style={{ background: "var(--gray-100)", border: "1.5px solid var(--gray-200)", borderRadius: 8, color: "var(--gray-800)", fontSize: "0.85rem", padding: "8px 12px", width: "100%", outline: "none", cursor: "pointer" }}
+                >
+                  <option value="public">🌍 Public (Discoverable)</option>
+                  <option value="private">🔒 Private (Request to connect)</option>
+                </select>
+              </div>
+              <div>
                 <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase", display: "block", marginBottom: 4, fontWeight: 600 }}>Location</label>
                 <input
                   type="text"
@@ -1607,14 +1653,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
         {/* About Section */}
         <Section direction="up" delay={0}>
-          <div className="section-head">
-            <div className="section-label">About</div>
-            <div className="section-title">Who I Am</div>
+          <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div>
+              <div className="section-label">About</div>
+              <div className="section-title">Who I Am</div>
+            </div>
           </div>
           <div className="about-grid">
             <div className="about-card about-card-bio">
               <p className="bio-text">
-                {editMode ? (
+                {(editMode || editingSection === 'about') ? (
                   <textarea
                     value={tempBio}
                     onChange={e => setTempBio(e.target.value)}
@@ -1864,7 +1912,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 <div className="roadmap-card">
                   <div className="roadmap-icon">{r?.icon || ""}</div>
                   <div className="roadmap-level">{r?.level || ""}</div>
-                  {editMode ? (
+                  {(editMode || editingSection === 'roadmap') ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
                       <input type="text" value={r?.label || ""} onChange={e => updateRoadmapItem(i, "label", e.target.value)} style={{ width: "100%", padding: 6, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.85rem", background: "var(--gray-100)" }} />
                       <textarea value={Array.isArray(r?.items) ? r.items.join("\n") : (typeof r?.items === "string" ? r.items : "")} onChange={e => updateRoadmapItem(i, "items", e.target.value.split("\n"))} rows={3} style={{ width: "100%", padding: 6, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.75rem", background: "var(--gray-100)", resize: "vertical" }} placeholder="One item per line" />
@@ -1920,7 +1968,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             )}
           </div>
           <div className="timeline">
-            {editMode ? (
+            {(editMode || editingSection === 'experience') ? (
               Array.isArray(tempEducation) && tempEducation.filter(Boolean).map((e, i) => (
                 <TimelineItem
                   key={i}
@@ -2017,7 +2065,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {Array.isArray(tempLanguages) && tempLanguages.map((l, idx) => (
                     <span key={idx} className="tag" style={{ fontSize: "0.78rem", padding: "5px 14px", display: "flex", alignItems: "center", gap: 6 }}>
-                      {editMode ? (
+                      {(editMode || editingSection === 'education') ? (
                         <input
                           type="text"
                           value={l || ""}
@@ -2065,7 +2113,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <span style={{ fontSize: "1.1rem" }}>🏅</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    {editMode ? (
+                    {(editMode || editingSection === 'education') ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "95%" }}>
                         <input type="text" value={c?.name || ""} onChange={e => updateCertificationItem(i, "name", e.target.value)} placeholder="Certification Name" style={{ width: "100%", padding: 4, border: "1px solid var(--gray-200)", borderRadius: 6, fontSize: "0.8rem", background: "var(--gray-100)" }} />
                         <div style={{ display: "flex", gap: 6 }}>
@@ -2127,7 +2175,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                       Delete
                     </button>
                   )}
-                  {editMode ? (
+                  {(editMode || editingSection === 'projects') ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                       <div>
                         <label style={{ fontSize: "0.65rem", color: "var(--gray-400)", textTransform: "uppercase" }}>Project Name</label>
@@ -2177,7 +2225,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
               <div>
                 <div className="section-label">Custom</div>
-                {editMode ? (
+                {(editMode || editingSection === 'skills') ? (
                   <input
                     type="text"
                     value={sec.title}
@@ -2202,7 +2250,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               )}
             </div>
             <div className="about-card" style={{ marginBottom: 56 }}>
-              {editMode ? (
+              {(editMode || editingSection === 'certifications') ? (
                 <textarea
                   value={sec.content}
                   onChange={(e) => {
