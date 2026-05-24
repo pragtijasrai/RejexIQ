@@ -1998,17 +1998,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <div key={l} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0"><span className="text-base">{ok?"✅":"⭕"}</span><span className={"text-sm "+(ok?tp:tm)}>{l}</span></div>
               ))}
             </div>
-﻿            {/* Quick Actions */}
-            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
-              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>⚡ Quick Actions</p>
-              <div className="space-y-2">
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>✨ AI Improve Summary</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);}} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>⚡ Add Suggested Skills</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} className="w-full text-left text-xs rounded-xl font-semibold transition-all" style={{padding:"10px 18px",background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>📥 Export as PDF</motion.button>
-              </div>
-            </div>
-
-            {/* ── NEW: Resume Health Score ── */}
+﻿            {/* ── NEW: Resume Health Score ── */}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🏥 Resume Health</p>
               <div className="space-y-2">
