@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const styles = `
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 :root {
   --c1: #1a6fbd; --c2: #0f9b6e; --c3: #b85c00; --c4: #7b3fcf; --c5: #c0392b;
   --card: var(--color-background-primary); --bg: var(--color-background-secondary);

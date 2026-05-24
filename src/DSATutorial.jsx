@@ -28,7 +28,7 @@ const dsaCss = `
     line-height: 1.75;
     min-height: 100vh;
   }
-  .dsa-root * { box-sizing: border-box; margin: 0; padding: 0; }
+  .dsa-root * { box-sizing: border-box; }
 
   .dsa-hero {
     background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1e 40%, #13101e 100%);

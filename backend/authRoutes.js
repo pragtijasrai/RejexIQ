@@ -67,9 +67,11 @@ async function createLocalUser({ fullName, email, password }) {
     fullName, email: email.toLowerCase(),
     password: hashed, provider: "local",
     avatar: "", role: "user", skills: {}, assessmentDone: false,
+    onboarded: false, school: "", branch: "", username: "",
+    track: "", trackSelected: false,
     createdAt: new Date().toISOString(),
     toPublic() {
-      return { id: this._id, name: this.fullName, email: this.email, avatar: this.avatar, provider: this.provider, role: this.role, skills: this.skills, assessmentDone: this.assessmentDone };
+      return { id: this._id, name: this.fullName, username: this.username, email: this.email, avatar: this.avatar, provider: this.provider, role: this.role, skills: this.skills, assessmentDone: this.assessmentDone, onboarded: this.onboarded, school: this.school, branch: this.branch, track: this.track, trackSelected: this.trackSelected };
     },
     comparePassword(plain) { return bcrypt.compare(plain, this.password); },
   };
@@ -83,23 +85,31 @@ async function findOrCreateGoogleUser({ name, email, avatar, uid }) {
     if (u) {
       // Update avatar if changed
       if (avatar && u.avatar !== avatar) { u.avatar = avatar; await u.save(); }
+      u.isNewUser = false;
       return u;
     }
     u = new User({ fullName: name, email, avatar, provider: "google", googleUid: uid });
     await u.save();
+    u.isNewUser = true;
     return u;
   }
   // In-memory fallback
   let u = inMemoryUsers.find(x => x.email === email.toLowerCase());
-  if (u) return u;
+  if (u) {
+    u.isNewUser = false;
+    return u;
+  }
   u = {
     _id: "g_" + Date.now(),
     fullName: name, email: email.toLowerCase(),
     avatar, provider: "google", googleUid: uid,
     role: "user", skills: {}, assessmentDone: false,
+    onboarded: false, school: "", branch: "", username: "",
+    track: "", trackSelected: false,
+    isNewUser: true,
     createdAt: new Date().toISOString(),
     toPublic() {
-      return { id: this._id, name: this.fullName, email: this.email, avatar: this.avatar, provider: this.provider, role: this.role, skills: this.skills, assessmentDone: this.assessmentDone };
+      return { id: this._id, name: this.fullName, username: this.username, email: this.email, avatar: this.avatar, provider: this.provider, role: this.role, skills: this.skills, assessmentDone: this.assessmentDone, onboarded: this.onboarded, school: this.school, branch: this.branch, track: this.track, trackSelected: this.trackSelected, isNewUser: this.isNewUser };
     },
   };
   inMemoryUsers.push(u);
@@ -125,6 +135,7 @@ router.post("/signup", async (req, res, next) => {
       return res.status(409).json({ error: "Email already registered. Please sign in." });
 
     const user  = await createLocalUser({ fullName: name, email, password });
+    user.isNewUser = true;
     const token = signToken({ id: user._id.toString(), email: user.email });
 
     res.status(201).json({ message: "Account created successfully", token, user: user.toPublic() });
@@ -154,6 +165,7 @@ router.post("/signin", async (req, res, next) => {
       return res.status(401).json({ error: "Invalid email or password" });
 
     const token = signToken({ id: user._id.toString(), email: user.email });
+    user.isNewUser = false;
     res.json({ message: "Signed in successfully", token, user: user.toPublic() });
   } catch (err) { next(err); }
 });
@@ -194,6 +206,53 @@ router.get("/me", authMiddleware, async (req, res, next) => {
     }
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json({ user: user.toPublic() });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/auth/profile
+// ─────────────────────────────────────────────────────────────────────────────
+router.put("/profile", authMiddleware, async (req, res, next) => {
+  try {
+    const { fullName, bio, avatar, skills, privacy, onboarded, school, branch, username, track, trackSelected } = req.body;
+    let user;
+    if (User) {
+      user = await User.findById(req.user.id);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if (fullName !== undefined) user.fullName = fullName;
+      if (bio !== undefined) user.bio = bio;
+      if (avatar !== undefined) user.avatar = avatar;
+      if (skills !== undefined) user.skills = skills;
+      if (privacy !== undefined) user.privacy = privacy;
+      if (onboarded !== undefined) user.onboarded = onboarded;
+      if (school !== undefined) user.school = school;
+      if (branch !== undefined) user.branch = branch;
+      if (username !== undefined) user.username = username;
+      if (track !== undefined) user.track = track;
+      if (trackSelected !== undefined) user.trackSelected = trackSelected;
+      await user.save();
+    } else {
+      user = inMemoryUsers.find(u => u._id === req.user.id);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if (fullName !== undefined) user.fullName = fullName;
+      if (bio !== undefined) user.bio = bio;
+      if (avatar !== undefined) user.avatar = avatar;
+      if (skills !== undefined) user.skills = skills;
+      if (privacy !== undefined) user.privacy = privacy;
+      if (onboarded !== undefined) user.onboarded = onboarded;
+      if (school !== undefined) user.school = school;
+      if (branch !== undefined) user.branch = branch;
+      if (username !== undefined) user.username = username;
+      if (track !== undefined) user.track = track;
+      if (trackSelected !== undefined) user.trackSelected = trackSelected;
+    }
+    
+    // Broadcast the update to all connected clients
+    if (req.app.get("io")) {
+      req.app.get("io").emit("userProfileUpdated", { userId: req.user.id });
+    }
+
+    res.json({ message: "Profile updated successfully", user: user.toPublic() });
   } catch (err) { next(err); }
 });
 
