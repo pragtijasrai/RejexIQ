@@ -5,19 +5,18 @@ const User = require("./models/User");
 const Message = require("./models/Message");
 const Connection = require("./models/Connection");
 
-// Get all community users (excluding self)
 router.get("/users", authMiddleware, async (req, res, next) => {
   try {
     const users = await User.find({ _id: { $ne: req.user.id } })
       .select("fullName username avatar skills tags bio status lastSeen points rank role privacy");
     
-    // Format to match frontend needs
+    
     const formattedUsers = users.map(u => ({
       id: u._id.toString(),
       name: u.fullName,
       role: u.role === "user" ? "Member" : "Admin",
-      rank: u.rank || Math.floor(Math.random() * 100) + 1, // Mock rank if 0
-      points: u.points || Math.floor(Math.random() * 2000), // Mock points if 0
+      rank: u.rank || Math.floor(Math.random() * 100) + 1, 
+      points: u.points || Math.floor(Math.random() * 2000), 
       tags: u.tags && u.tags.length > 0 ? u.tags : Object.keys(u.skills || {}).slice(0, 3),
       avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(u.fullName || "User").replace(/\s+/g,'')}&backgroundColor=fdfbf7`,
       status: u.status,
@@ -32,7 +31,6 @@ router.get("/users", authMiddleware, async (req, res, next) => {
   }
 });
 
-// Get leaderboard data
 router.get("/leaderboard", authMiddleware, async (req, res, next) => {
   try {
     const users = await User.find({})
@@ -44,7 +42,7 @@ router.get("/leaderboard", authMiddleware, async (req, res, next) => {
       id: u._id.toString(),
       name: u.fullName,
       avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(u.fullName || "User").replace(/\s+/g,'')}&backgroundColor=transparent`,
-      points: u.points || Math.floor(Math.random() * 2000), // Mock points if 0
+      points: u.points || Math.floor(Math.random() * 2000), 
       rank: index + 1,
       isYou: u._id.toString() === req.user.id,
       prize: index === 0 ? 500 : index === 1 ? 250 : index === 2 ? 100 : 0
@@ -56,7 +54,6 @@ router.get("/leaderboard", authMiddleware, async (req, res, next) => {
   }
 });
 
-// Get chat history with a specific user
 router.get("/chat/:userId", authMiddleware, async (req, res, next) => {
   try {
     const messages = await Message.find({
@@ -72,7 +69,6 @@ router.get("/chat/:userId", authMiddleware, async (req, res, next) => {
   }
 });
 
-// Toggle connection or send request
 router.post("/connect/:userId", authMiddleware, async (req, res, next) => {
   try {
     const receiverId = req.params.userId;
@@ -86,12 +82,12 @@ router.post("/connect/:userId", authMiddleware, async (req, res, next) => {
     });
 
     if (existing) {
-      // If connection exists (pending or accepted), remove it (toggle off / cancel request)
+      
       await Connection.findByIdAndDelete(existing._id);
       return res.json({ connected: false, status: "removed" });
     }
 
-    // Check receiver's privacy
+    
     const receiver = await User.findById(receiverId);
     if (!receiver) return res.status(404).json({ error: "User not found" });
 
@@ -107,7 +103,6 @@ router.post("/connect/:userId", authMiddleware, async (req, res, next) => {
   }
 });
 
-// Accept a connection request
 router.post("/connect/:userId/accept", authMiddleware, async (req, res, next) => {
   try {
     const senderId = req.params.userId;
@@ -125,7 +120,6 @@ router.post("/connect/:userId/accept", authMiddleware, async (req, res, next) =>
   }
 });
 
-// Reject a connection request
 router.post("/connect/:userId/reject", authMiddleware, async (req, res, next) => {
   try {
     const senderId = req.params.userId;
@@ -142,7 +136,6 @@ router.post("/connect/:userId/reject", authMiddleware, async (req, res, next) =>
   }
 });
 
-// Get incoming pending connection requests
 router.get("/connections/pending", authMiddleware, async (req, res, next) => {
   try {
     const pending = await Connection.find({ receiver: req.user.id, status: "pending" }).populate("sender", "fullName avatar role");
@@ -161,7 +154,6 @@ router.get("/connections/pending", authMiddleware, async (req, res, next) => {
   }
 });
 
-// Get accepted user connections
 router.get("/connections", authMiddleware, async (req, res, next) => {
   try {
     const conns = await Connection.find({

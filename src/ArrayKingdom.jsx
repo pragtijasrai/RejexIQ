@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Text, Float, Stars } from "@react-three/drei";
 import * as THREE from "three";
 
-// ── CAMERA FLY-IN ─────────────────────────────────────────────────────────────
 function CameraFlyIn() {
   const { camera } = useThree();
   const t = useRef(0);
@@ -23,7 +22,6 @@ function CameraFlyIn() {
   return null;
 }
 
-// ── PULSE WAVE FLOOR ──────────────────────────────────────────────────────────
 function PulseFloor({ color = "#00e5ff" }) {
   const rings = useRef([]);
   useFrame((state) => {
@@ -46,7 +44,6 @@ function PulseFloor({ color = "#00e5ff" }) {
   );
 }
 
-// ── ARRAY BLOCK ───────────────────────────────────────────────────────────────
 function ArrayBlock({ position, index, value, color }) {
   const ref = useRef();
   useFrame((s) => {
@@ -65,7 +62,6 @@ function ArrayBlock({ position, index, value, color }) {
   );
 }
 
-// ── ANSWER CUBE ───────────────────────────────────────────────────────────────
 function AnswerCube({ position, label, text, state, onClick }) {
   const meshRef = useRef();
   const ringRef = useRef();
@@ -76,16 +72,16 @@ function AnswerCube({ position, label, text, state, onClick }) {
 
   useFrame((s) => {
     if (!meshRef.current) return;
-    // Float
+    
     meshRef.current.position.y = position[1] + Math.sin(s.clock.elapsedTime * 1.1 + position[0]) * 0.12;
-    // Shake on wrong
+    
     meshRef.current.position.x = state === "wrong"
       ? position[0] + Math.sin(s.clock.elapsedTime * 22) * 0.09
       : position[0];
-    // Scale
+    
     const ts = hov ? 1.14 : 1.0;
     meshRef.current.scale.lerp(new THREE.Vector3(ts, ts, ts), 0.12);
-    // Spin ring on hover
+    
     if (ringRef.current) {
       ringRef.current.rotation.z += 0.03;
       ringRef.current.rotation.x = Math.sin(s.clock.elapsedTime) * 0.3;
@@ -109,14 +105,14 @@ function AnswerCube({ position, label, text, state, onClick }) {
         />
       </mesh>
 
-      {/* Spinning holographic ring on hover */}
+      {}
       {(hov || isActive) && (
         <mesh ref={ringRef} position={position}>
           <torusGeometry args={[1.18, 0.025, 8, 48]} />
           <meshBasicMaterial color={state === "correct" ? "#10b981" : state === "wrong" ? "#ef4444" : "#00e5ff"} transparent opacity={0.8} />
         </mesh>
       )}
-      {/* Second ring perpendicular */}
+      {}
       {hov && (
         <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[1.18, 0.015, 8, 48]} />
@@ -124,7 +120,7 @@ function AnswerCube({ position, label, text, state, onClick }) {
         </mesh>
       )}
 
-      {/* Edge glow on correct/wrong */}
+      {}
       {isActive && (
         <pointLight position={position} color={state === "correct" ? "#10b981" : "#ef4444"} intensity={2} distance={4} />
       )}
@@ -135,7 +131,6 @@ function AnswerCube({ position, label, text, state, onClick }) {
   );
 }
 
-// ── XP BURST ─────────────────────────────────────────────────────────────────
 function XPBurst({ active }) {
   const grp = useRef();
   const pts = useRef([...Array(28)].map(() => ({
@@ -167,7 +162,6 @@ function XPBurst({ active }) {
   );
 }
 
-// ── SCREEN FLASH ──────────────────────────────────────────────────────────────
 function ScreenFlash({ color, active }) {
   const ref = useRef();
   useFrame(() => {
@@ -185,7 +179,6 @@ function ScreenFlash({ color, active }) {
   );
 }
 
-// ── SCENE ─────────────────────────────────────────────────────────────────────
 function Scene({ mission, onAnswer, answerStates }) {
   const vals = [12, 7, 3, 9, 1, 5];
   const labels = ["A", "B", "C", "D"];
@@ -203,7 +196,7 @@ function Scene({ mission, onAnswer, answerStates }) {
 
       <Stars radius={80} depth={50} count={3000} factor={4} saturation={0} fade speed={0.4} />
 
-      {/* Ground */}
+      {}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]} receiveShadow>
         <planeGeometry args={[80, 80]} />
         <meshStandardMaterial color="#060e1c" metalness={0.1} roughness={0.9} />
@@ -211,7 +204,7 @@ function Scene({ mission, onAnswer, answerStates }) {
       <gridHelper args={[50, 50, "#0d1f3a", "#0d1f3a"]} position={[0, -2.99, 0]} />
       <PulseFloor color="#00e5ff" />
 
-      {/* Array visualization */}
+      {}
       <Float speed={1} rotationIntensity={0} floatIntensity={0.3}>
         <group position={[0, 3.5, -3]}>
           {vals.map((v, i) => (
@@ -230,7 +223,7 @@ function Scene({ mission, onAnswer, answerStates }) {
         </group>
       </Float>
 
-      {/* Answer cubes */}
+      {}
       {mission?.options.map((opt, i) => (
         <AnswerCube key={i} position={cubePos[i]} label={labels[i]} text={opt} state={answerStates[i]} onClick={() => onAnswer(opt, i)} />
       ))}
@@ -239,7 +232,7 @@ function Scene({ mission, onAnswer, answerStates }) {
       <ScreenFlash color="#10b981" active={correct} />
       <ScreenFlash color="#ef4444" active={wrong} />
 
-      {/* Decorative wireframes */}
+      {}
       <Float speed={2} rotationIntensity={1} floatIntensity={0.5}>
         <mesh position={[-10, 2, -6]}>
           <octahedronGeometry args={[0.7]} />
@@ -265,7 +258,6 @@ function Scene({ mission, onAnswer, answerStates }) {
   );
 }
 
-// ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function ArrayKingdom({ mission, onAnswer, answerStates, feedback }) {
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -275,7 +267,7 @@ export default function ArrayKingdom({ mission, onAnswer, answerStates, feedback
         </Suspense>
       </Canvas>
 
-      {/* Feedback card */}
+      {}
       {feedback && (
         <div style={{
           position: "absolute", bottom: 100, left: "50%", transform: "translateX(-50%)",

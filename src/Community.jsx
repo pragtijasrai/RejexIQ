@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-// Main Community Palette (Maroon/Cream)
 const G = {
   bg: "#fcf8f2",
   surface: "#ffffff",
@@ -14,7 +13,6 @@ const G = {
   highlight: "#f43f5e",
 };
 
-// Cute Pastel Palette for "My Friends" Tab
 const OCEAN = {
   bg: "#2b3544",
   surface: "rgba(15, 23, 42, 0.45)",
@@ -30,7 +28,7 @@ const OCEAN = {
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Community({ user }) {
-  const [activeTab, setActiveTab] = useState("discover"); // "discover" | "friends"
+  const [activeTab, setActiveTab] = useState("discover"); 
   const [users, setUsers] = useState([]);
   const [connections, setConnections] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -46,7 +44,7 @@ export default function Community({ user }) {
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Auto-scroll chat
+  
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
@@ -77,7 +75,7 @@ export default function Community({ user }) {
     if (user && user.id) fetchInitialData();
   }, [user]);
 
-  // Socket setup
+  
   useEffect(() => {
     if (!user || !user.id) return;
     
@@ -114,22 +112,22 @@ export default function Community({ user }) {
     });
 
     newSocket.on("userProfileUpdated", () => {
-      fetchInitialData(); // Refetch users to get new avatars/data
+      fetchInitialData(); 
     });
 
     newSocket.on("newConnectionRequest", () => {
-      fetchInitialData(); // Refetch pending requests
+      fetchInitialData(); 
     });
 
     newSocket.on("connectionAccepted", () => {
-      fetchInitialData(); // Refetch connections
+      fetchInitialData(); 
     });
 
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [user]);
 
-  // Fetch chat history when opening a chat
+  
   useEffect(() => {
     if (activeChat) {
       const token = localStorage.getItem("rejexiq_token") || "";
@@ -143,7 +141,7 @@ export default function Community({ user }) {
   }, [activeChat]);
 
   const handleConnect = async (targetId, currentStatus) => {
-    if (currentStatus === "pending") return; // Waiting for them to accept
+    if (currentStatus === "pending") return; 
     const token = localStorage.getItem("rejexiq_token") || "";
     try {
       const res = await fetch(`${API}/api/community/connect/${targetId}`, {
@@ -256,7 +254,7 @@ export default function Community({ user }) {
       alert("Failed to upload file");
     } finally {
       setUploading(false);
-      e.target.value = null; // reset input
+      e.target.value = null; 
     }
   };
 
@@ -275,7 +273,7 @@ export default function Community({ user }) {
   return (
     <div className="section-enter" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #7b8ea8 0%, #3a4b66 50%, #1e2638 100%)", transition: "background 0.4s ease" }}>
       
-      {/* Background patterns */}
+      {}
         <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
           <style>
             {`
@@ -312,7 +310,7 @@ export default function Community({ user }) {
       
       <div style={{ position: "relative", zIndex: 10, padding: "0 40px", paddingTop: 40, maxWidth: 1400, margin: "0 auto" }}>
         
-        {/* Header & Tabs */}
+        {}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
           <div>
             <h1 className="syne" style={{ fontSize: 32, fontWeight: 800, color: OCEAN.text, marginBottom: 8, transition: "color 0.4s" }}>Community & Networking</h1>
@@ -346,7 +344,7 @@ export default function Community({ user }) {
           </div>
         </div>
 
-        {/* ─── DISCOVER TAB ───────────────────────────────────────────────────────── */}
+        {}
         {activeTab === "discover" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 24, paddingBottom: 64 }}>
             {discoverableUsers.map(u => (
@@ -421,14 +419,14 @@ export default function Community({ user }) {
           </div>
         )}
 
-        {/* ─── MY FRIENDS TAB ─────────────────────────────────────────────────────── */}
+        {}
         {activeTab === "friends" && (
           <div style={{ display: "flex", gap: 24, height: "calc(100vh - 200px)", paddingBottom: 40 }}>
             
-            {/* Left Sidebar (Friends List & Requests) */}
+            {}
             <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 24 }}>
               
-              {/* Pending Requests */}
+              {}
               {pendingRequests.length > 0 && (
                 <div style={{ background: OCEAN.surface, borderRadius: 20, padding: 20, backdropFilter: "blur(12px)", boxShadow: "0 10px 30px rgba(14,165,233,0.15)", border: `2px dashed ${OCEAN.border}` }}>
                   <h3 style={{ fontSize: 15, fontWeight: 800, color: OCEAN.text, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
@@ -454,7 +452,7 @@ export default function Community({ user }) {
                 </div>
               )}
 
-              {/* Friends List */}
+              {}
               <div style={{ flex: 1, background: OCEAN.surface, borderRadius: 24, padding: 20, backdropFilter: "blur(12px)", boxShadow: "0 10px 40px rgba(14,165,233,0.1)", overflowY: "auto" }}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: OCEAN.text, marginBottom: 16 }}>My Besties ✨</h3>
                 {friends.length === 0 ? (
@@ -486,7 +484,7 @@ export default function Community({ user }) {
               </div>
             </div>
 
-            {/* Right Chat Area */}
+            {}
             <div style={{ flex: 1, background: OCEAN.surface, borderRadius: 24, boxShadow: "0 10px 40px rgba(0,0,0,0.2)", backdropFilter: "blur(12px)", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
               {activeChat ? (
                 <>
@@ -592,7 +590,7 @@ export default function Community({ user }) {
                         😊
                       </button>
 
-                      {/* Emoji Picker Popover */}
+                      {}
                       {showEmojis && (
                         <div style={{
                           position: "absolute", bottom: 80, left: 80, background: "rgba(15, 23, 42, 0.3)", backdropFilter: "blur(10px)",

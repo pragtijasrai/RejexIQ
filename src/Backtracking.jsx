@@ -44,7 +44,6 @@ const styles = `
 @media(max-width:500px){ .bt-2col{grid-template-columns:1fr;} }
 `;
 
-// ── Chapter 1: Intro ──
 function SecIntro() {
   return (
     <div className="bt-sec">
@@ -57,22 +56,21 @@ function SecIntro() {
       </div>
       <div className="bt-h3">Template — Every backtracking problem follows this pattern</div>
       <div className="bt-code">{`void backtrack(state, choices) {
-  // Base case: solution found
+  
   if (isSolution(state)) {
     addToResults(state);
     return;
   }
 
   for (choice : choices) {
-    if (isValid(state, choice)) {   // PRUNE invalid choices
-      makeChoice(state, choice);    // choose
-      backtrack(state, choices);    // explore
-      undoChoice(state, choice);    // UN-choose (backtrack!)
+    if (isValid(state, choice)) {   
+      makeChoice(state, choice);    
+      backtrack(state, choices);    
+      undoChoice(state, choice);    
     }
   }
 }
-// The "undo" step is what makes it backtracking.
-// Without undo, it's just recursion.`}</div>
+
       <div className="bt-info"><p>KEY INSIGHT: Backtracking = DFS + pruning + undo. The undo step restores state so the next branch starts fresh. This is why it's called "backtracking" — you literally go back.</p></div>
       <div className="bt-h3">Classic Problems</div>
       <div className="bt-2col">
@@ -85,7 +83,6 @@ function SecIntro() {
   );
 }
 
-// ── Chapter 2: N-Queens ──
 function SecNQueens() {
   const [n, setN] = useState(4);
   const [solutions, setSolutions] = useState([]);
@@ -111,7 +108,7 @@ function SecNQueens() {
         if (isSafe(row, col)) {
           board[row] = col;
           bt(row + 1);
-          board[row] = -1; // backtrack
+          board[row] = -1; 
         }
       }
     }
@@ -161,29 +158,29 @@ function SecNQueens() {
         <div className="bt-status">{status}</div>
       </div>
       <div className="bt-code">{`void solveNQueens(int n) {
-  int[] board = new int[n]; // board[row] = col of queen
+  int[] board = new int[n]; 
   Arrays.fill(board, -1);
   backtrack(board, 0, n);
 }
 
 void backtrack(int[] board, int row, int n) {
   if (row == n) {
-    printSolution(board); // found a valid placement!
+    printSolution(board); 
     return;
   }
   for (int col = 0; col < n; col++) {
     if (isSafe(board, row, col)) {
-      board[row] = col;          // place queen
-      backtrack(board, row+1, n); // recurse
-      board[row] = -1;           // remove queen (backtrack)
+      board[row] = col;          
+      backtrack(board, row+1, n); 
+      board[row] = -1;           
     }
   }
 }
 
 boolean isSafe(int[] board, int row, int col) {
   for (int r = 0; r < row; r++) {
-    if (board[r] == col) return false;           // same col
-    if (Math.abs(board[r]-col)==Math.abs(r-row)) // diagonal
+    if (board[r] == col) return false;           
+    if (Math.abs(board[r]-col)==Math.abs(r-row)) 
       return false;
   }
   return true;
@@ -192,7 +189,6 @@ boolean isSafe(int[] board, int row, int col) {
   );
 }
 
-// ── Chapter 3: Permutations & Subsets ──
 function SecPermSubsets() {
   const [permInput, setPermInput] = useState("1,2,3");
   const [permOut, setPermOut] = useState("");
@@ -248,15 +244,14 @@ function SecPermSubsets() {
     return;
   }
   for (int i = 0; i < nums.length; i++) {
-    if (used[i]) continue;       // skip already used
+    if (used[i]) continue;       
     used[i] = true;
-    current.add(nums[i]);        // choose
-    permutations(nums, current, used); // explore
-    current.remove(current.size()-1);  // un-choose
-    used[i] = false;             // backtrack
+    current.add(nums[i]);        
+    permutations(nums, current, used); 
+    current.remove(current.size()-1);  
+    used[i] = false;             
   }
 }
-// Time: O(n × n!)  |  n! permutations, each takes O(n) to copy`}</div>
 
       <div className="bt-h3">Subsets (Power Set) — all combinations</div>
       <div className="bt-viz">
@@ -267,14 +262,14 @@ function SecPermSubsets() {
         <div className="bt-out" style={{marginTop:10}}>{subOut || "Enter comma-separated values and click Generate"}</div>
       </div>
       <div className="bt-code">{`void subsets(int[] nums, int idx, List<Integer> current) {
-  results.add(new ArrayList<>(current)); // add current subset
+  results.add(new ArrayList<>(current)); 
   for (int i = idx; i < nums.length; i++) {
-    current.add(nums[i]);          // include nums[i]
-    subsets(nums, i+1, current);   // explore with nums[i]
-    current.remove(current.size()-1); // exclude nums[i]
+    current.add(nums[i]);          
+    subsets(nums, i+1, current);   
+    current.remove(current.size()-1); 
   }
 }
-// Time: O(n × 2^n)  |  2^n subsets, each takes O(n) to copy`}</div>
+
       <div className="bt-warn"><p>BACKTRACKING vs RECURSION: All backtracking is recursive, but not all recursion is backtracking. The key difference is the UNDO step — backtracking explicitly reverses the choice before trying the next option.</p></div>
     </div>
   );

@@ -64,7 +64,7 @@ export default function TimeEstimator({ user, selectedRole }) {
     <div style={{ fontFamily: "'Inter',sans-serif" }}>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
-      {/* Main display */}
+      {}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px", marginBottom: 16 }}>
         <div style={{ fontSize: 11, color: C.accent, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Time to Job-Ready</div>
         <MonthsDisplay months={data.months} />
@@ -73,7 +73,7 @@ export default function TimeEstimator({ user, selectedRole }) {
         </p>
       </div>
 
-      {/* Hours slider */}
+      {}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 16 }}>
         <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 10 }}>
           Daily Study Time: <span style={{ color: C.accent }}>{hoursPerDay} hour{hoursPerDay > 1 ? "s" : ""}/day</span>
@@ -85,7 +85,7 @@ export default function TimeEstimator({ user, selectedRole }) {
         </div>
       </div>
 
-      {/* Scenarios */}
+      {}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 16 }}>
         <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Study Pace Comparison</div>
         {data.scenarios?.map(s => (
@@ -93,7 +93,7 @@ export default function TimeEstimator({ user, selectedRole }) {
         ))}
       </div>
 
-      {/* Breakdown */}
+      {}
       {data.breakdown?.length > 0 && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px" }}>
           <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Time Breakdown</div>

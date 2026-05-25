@@ -8,7 +8,6 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-// ── Your Firebase project config ──────────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyDFPAHHTZX98eLm7MiV8Jd0B7otUHpolQQ",
   authDomain:        "rejxiq.firebaseapp.com",
@@ -19,18 +18,15 @@ const firebaseConfig = {
   measurementId:     "G-GFRCJRTJFH",
 };
 
-// ── Initialize ────────────────────────────────────────────────────────────────
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
 const analytics = getAnalytics(app);
 
-// ── Google provider ───────────────────────────────────────────────────────────
 const provider = new GoogleAuthProvider();
 provider.addScope("profile");
 provider.addScope("email");
 provider.setCustomParameters({ prompt: "select_account" });
 
-// ── signInWithGoogle — called from AuthPage ───────────────────────────────────
 export async function signInWithGoogle() {
   const result  = await signInWithPopup(auth, provider);
   const user    = result.user;
@@ -44,7 +40,6 @@ export async function signInWithGoogle() {
   };
 }
 
-// ── Sign out ──────────────────────────────────────────────────────────────────
 export async function signOutFirebase() {
   await firebaseSignOut(auth);
 }

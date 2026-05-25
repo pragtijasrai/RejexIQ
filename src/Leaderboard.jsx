@@ -47,11 +47,11 @@ export default function Leaderboard() {
       }
     };
     fetchLeaderboard();
-  }, [tab]); // refetch if tab changes (future implementation)
+  }, [tab]); 
 
-  // Top 3 for Pedestals
+  
   const top3 = leaderboardData.slice(0, 3);
-  // Reorder for UI rendering: 2nd on left, 1st in center, 3rd on right
+  
   const pedestals = [
     top3[1] ? { ...top3[1], position: 2 } : null,
     top3[0] ? { ...top3[0], position: 1 } : null,
@@ -90,14 +90,14 @@ export default function Leaderboard() {
         ))}
       </div>
 
-      {/* 3D Pedestals */}
+      {}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", height: 350, gap: 16, marginBottom: 64 }}>
         {pedestals.map((p, i) => (
           p && <Pedestal key={i} rank={p.position} player={p} height={p.position === 1 ? 260 : p.position === 2 ? 180 : 150} />
         ))}
       </div>
 
-      {/* Leaderboard Table */}
+      {}
       <div style={{ background: "#ffffff", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(128,0,0,0.1)", boxShadow: "0 10px 30px rgba(128,0,0,0.05)" }}>
         <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 100px 100px", padding: "16px 24px", fontSize: 12, fontWeight: 800, color: "#7f1d1d", textTransform: "uppercase", letterSpacing: 1, borderBottom: "1px solid rgba(128,0,0,0.1)" }}>
           <span>Place</span>
@@ -143,7 +143,7 @@ function Pedestal({ rank, player, height }) {
   const isWinner = rank === 1;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 260, position: "relative" }}>
-      {/* Player Info layout exactly like image */}
+      {}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: 20, zIndex: 10, position: "relative" }}>
         {isWinner && (
           <div style={{ position: "absolute", top: -55, zIndex: 11 }}>
@@ -151,7 +151,7 @@ function Pedestal({ rank, player, height }) {
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Avatar with rank pill inside */}
+          {}
           <div style={{ position: "relative" }}>
             <img src={player.avatar} onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${player.id}&backgroundColor=transparent`; }} style={{ width: isWinner ? 80 : 64, height: isWinner ? 80 : 64, borderRadius: "50%", border: `3px solid #fdfbf7`, background: "#fdfbf7", boxShadow: "0 10px 20px rgba(128,0,0,0.2)", objectFit: "cover" }} alt="" />
             <div style={{ position: "absolute", bottom: -2, right: -2, background: "#7f1d1d", color: "white", fontSize: 11, fontWeight: 800, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fdfbf7", boxShadow: "0 2px 5px rgba(128,0,0,0.3)" }}>
@@ -159,7 +159,7 @@ function Pedestal({ rank, player, height }) {
             </div>
           </div>
           
-          {/* Name and Points pill to the right */}
+          {}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: "#451a1a" }}>{player.name || getFunName(player.id)} {player.isYou && "(You)"}</div>
             <div style={{ background: "linear-gradient(135deg, #991b1b, #7f1d1d)", border: "1px solid rgba(128,0,0,0.2)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 10px rgba(128,0,0,0.2)" }}>
@@ -170,9 +170,9 @@ function Pedestal({ rank, player, height }) {
         </div>
       </div>
 
-      {/* 3D Box Simulation using perspective on top face */}
+      {}
       <div style={{ position: "relative", width: "100%", height: height }}>
-        {/* Top Face */}
+        {}
         <div style={{
            position: "absolute",
            top: -40, left: 0, width: "100%", height: 40,
@@ -183,7 +183,7 @@ function Pedestal({ rank, player, height }) {
            zIndex: 2,
            boxShadow: "inset 0 0 20px rgba(128,0,0,0.05)"
         }} />
-        {/* Front Face */}
+        {}
         <div style={{
            position: "absolute",
            top: 0, left: 0, width: "100%", height: "100%",

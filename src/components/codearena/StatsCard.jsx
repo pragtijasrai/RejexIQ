@@ -26,7 +26,7 @@ export default function StatsCard({ icon, label, value, sub, color, progress, ra
         overflow: "hidden",
       }}
     >
-      {/* Glow blob */}
+      {}
       <div style={{
         position: "absolute", top: -20, right: -20, width: 80, height: 80,
         background: color, borderRadius: "50%", opacity: hov ? 0.12 : 0.06,

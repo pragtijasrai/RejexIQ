@@ -159,7 +159,7 @@ const SignUpForm = ({ buttonClasses, buttonForGFT }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {/* Google */}
+          {}
           <button type="button" className={buttonForGFT}>
             <svg
               className="h-5 w-5"
@@ -171,7 +171,7 @@ const SignUpForm = ({ buttonClasses, buttonForGFT }) => {
             </svg>
           </button>
 
-          {/* Facebook */}
+          {}
           <button type="button" className={buttonForGFT}>
             <svg
               className="h-5 w-5"
@@ -187,7 +187,7 @@ const SignUpForm = ({ buttonClasses, buttonForGFT }) => {
             </svg>
           </button>
 
-          {/* Twitter/X */}
+          {}
           <button type="button" className={buttonForGFT}>
             <svg
               className="h-5 w-5"

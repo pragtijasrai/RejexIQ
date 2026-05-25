@@ -32,25 +32,25 @@ function RadarChart({ skills, required, size = 260 }) {
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {/* Grid rings */}
+      {}
       {gridLevels.map(lvl => {
         const pts = keys.map((_, i) => getPoint(i, lvl));
         return <polygon key={lvl} points={pts.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={1} />;
       })}
-      {/* Axis lines */}
+      {}
       {keys.map((_, i) => {
         const outer = getPoint(i, 100);
         return <line key={i} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />;
       })}
-      {/* Required area */}
+      {}
       <path d={toPath(reqPoints)} fill={`${C.danger}15`} stroke={C.danger} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} />
-      {/* User area */}
+      {}
       <path d={toPath(userPoints)} fill={`${C.accent}20`} stroke={C.accent} strokeWidth={2} />
-      {/* User dots */}
+      {}
       {userPoints.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={4} fill={C.accent} style={{ filter: `drop-shadow(0 0 4px ${C.accent})` }} />
       ))}
-      {/* Labels */}
+      {}
       {keys.map((k, i) => {
         const angle = i * angleStep - Math.PI / 2;
         const lx = cx + (r + 22) * Math.cos(angle);
@@ -81,7 +81,7 @@ function SkillBar({ skill, value, required, onChange }) {
       </div>
       <div style={{ position: "relative", height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
         <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${value}%`, background: `linear-gradient(90deg,${color},${color}cc)`, borderRadius: 3, transition: "width 0.5s ease", boxShadow: `0 0 6px ${color}50` }} />
-        {/* Required marker */}
+        {}
         <div style={{ position: "absolute", left: `${required}%`, top: 0, width: 2, height: "100%", background: C.danger, opacity: 0.6 }} />
       </div>
       {onChange && (
@@ -97,7 +97,7 @@ export default function SkillChart({ skills, requiredSkills, onSkillChange, show
 
   return (
     <div style={{ fontFamily: "'Inter',sans-serif" }}>
-      {/* View toggle */}
+      {}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {["bars", "radar"].map(v => (
           <button key={v} onClick={() => setView(v)}
@@ -119,7 +119,7 @@ export default function SkillChart({ skills, requiredSkills, onSkillChange, show
         </div>
       )}
 
-      {/* Legend */}
+      {}
       <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 11, color: C.muted }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 12, height: 3, background: C.accent, borderRadius: 2 }} /> Your score

@@ -1,13 +1,11 @@
-﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// PREMIUM AI RESUME BUILDER - Complete Rewrite
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+﻿
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ACCENT_PRESETS = [
   { name:"Indigo",  color:"#6366f1" }, { name:"Violet", color:"#8b5cf6" },
   { name:"Cyan",    color:"#06b6d4" }, { name:"Rose",   color:"#f43f5e" },
@@ -34,7 +32,6 @@ const RESUME_TIPS = [
   { icon:"âš¡", tip:"List your most relevant skills first" },
 ];
 
-// â”€â”€â”€ RESUME PARSING UTILITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function parseResumeFile(file) {
   try {
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
@@ -68,10 +65,10 @@ async function parseTXT(file) {
 }
 
 function extractResumeData(text) {
-  // Extract real resume content from parsed text
+  
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   
-  // Simple heuristic extraction
+  
   const data = {
     name: lines[0] || '',
     title: lines.find(l => l.match(/engineer|developer|analyst|manager|specialist/i)) || '',
@@ -87,7 +84,7 @@ function extractResumeData(text) {
     originalContent: text
   };
   
-  // Extract sections
+  
   let currentSection = '';
   let currentItem = { description: [] };
   
@@ -127,7 +124,6 @@ function extractResumeData(text) {
   return data;
 }
 
-// â”€â”€â”€ UTILITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function calcATS(data) {
   let s=0;
   const txt=[data.summary,...data.experience.map(e=>e.description),...data.projects.map(p=>p.description),data.skills.join(" ")].join(" ").toLowerCase();
@@ -168,7 +164,6 @@ async function aiFullResume(role) {
   return d[role]||d.default;
 }
 
-// â”€â”€â”€ PREVIEW COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ModernPreview({data,accent}){
   return(
     <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,lineHeight:1.6,color:"#1e1b4b",background:"#fff"}}>
@@ -324,7 +319,6 @@ function ElegantPreview({data,accent}){
   );
 }
 
-// â”€â”€â”€ SMALL ATOMS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SortSec({id,children}){
   const{attributes,listeners,setNodeRef,transform,transition,isDragging}=useSortable({id});
   return <div ref={setNodeRef} style={{transform:CSS.Transform.toString(transform),transition,opacity:isDragging?0.4:1,zIndex:isDragging?999:"auto"}} {...attributes}><div className="group relative"><button {...listeners} className="absolute -left-6 top-4 opacity-0 group-hover:opacity-60 cursor-grab active:cursor-grabbing text-slate-500 hover:text-indigo-400 transition-all text-xl select-none">â ¿</button>{children}</div></div>;
@@ -344,7 +338,6 @@ function ATSRing({score}){
   return <div className="relative inline-flex items-center justify-center"><svg width={88} height={88} style={{transform:"rotate(-90deg)"}}><circle cx={44} cy={44} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={8}/><motion.circle cx={44} cy={44} r={r} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round" initial={{strokeDasharray:"0 "+circ}} animate={{strokeDasharray:(score/100)*circ+" "+circ}} transition={{duration:1.4,ease:"easeOut"}} style={{filter:"drop-shadow(0 0 8px "+color+")"}}/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-lg font-black" style={{color}}>{score}</span><span className="text-[9px] text-white/30 font-bold tracking-wider">ATS</span></div></div>;
 }
 
-// â”€â”€â”€ MAIN COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[dark,setDark]=useState(true);
   const[tpl,setTpl]=useState(initTemplate||"modern");
@@ -368,7 +361,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const imgRef=useRef(null);
   const fileInputRef=useRef(null);
 
-  // SINGLE SOURCE OF TRUTH - updatedResumeData tracks ALL changes
+  
   const[updatedResumeData,setUpdatedResumeData]=useState({
     name:user.name||"",title:"Software Engineer",email:user.email||"",phone:"",location:"",summary:"",profileImage:null,
     skills:user.skills?Object.keys(user.skills).filter(k=>(user.skills[k]||0)>=50):[],
@@ -378,7 +371,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     certifications:[{id:"c1",name:"",issuer:"",year:""}],
   });
 
-  // Use updatedResumeData as the main data source
+  
   const data = updatedResumeData;
   const setData = setUpdatedResumeData;
   
@@ -399,7 +392,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   
   function onImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>upd("profileImage",ev.target.result);r.readAsDataURL(f);}
 
-  // âœ… FIX #1: UPLOAD AND PARSE REAL RESUME
+  
   async function handleResumeUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -408,7 +401,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     setUploadedFileName(file.name);
     
     try {
-      // Parse the uploaded file
+      
       const parsedData = await parseResumeFile(file);
       
       if (!parsedData) {
@@ -417,7 +410,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         return;
       }
       
-      // Merge parsed data with existing data - preserve custom changes
+      
       setData(prev => ({
         ...prev,
         name: parsedData.name || prev.name,
@@ -435,7 +428,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       
       showT("âœ… Resume uploaded and parsed successfully!", "ok");
       
-      // Trigger analysis after parsing
+      
       setTimeout(() => {
         analyzeResume();
       }, 500);
@@ -447,7 +440,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     }
   }
 
-  // âœ… FIX #2: ANALYZE RESUME BASED ON REAL CONTENT (Not fake data)
+  
   async function analyzeResume(){
     setFixingGrammar(true);
     setFixPanel(true);
@@ -455,7 +448,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     
     const issues=[];
     
-    // Check summary - based on ACTUAL content
+    
     if(data.summary&&data.summary.length>0){
       if(!data.summary.match(/\d+%|\d+x|\$\d+/)){
         const improved = data.summary.replace(/\./,".")+" Delivered measurable results with 30%+ improvement in key performance indicators.";
@@ -481,7 +474,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       }
     }
     
-    // Check experience - based on ACTUAL content from resume
+    
     data.experience.forEach((exp,i)=>{
       if(exp.description){
         if(!exp.description.includes("â€¢")&&exp.description.length>20){
@@ -511,7 +504,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       }
     });
     
-    // Check skills count
+    
     if(data.skills.length<5){
       const suggested = [...data.skills,...(sugg.filter(s=>!data.skills.includes(s)).slice(0,5))];
       issues.push({
@@ -535,9 +528,9 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     setFixingGrammar(false);
   }
 
-  // âœ… FIX #3: APPLY FIX - Update ONLY that specific line in updatedResumeData
+  
   function applyFix(fix){
-    if(!fix.field) return; // Skip info-only entries
+    if(!fix.field) return; 
     
     if(fix.field==="summary"){
       upd("summary",fix.fixed);
@@ -551,7 +544,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     
     setAppliedFixes(p=>({...p,[fix.id]:true}));
     
-    // Recalculate ATS score after applying fix
+    
     setTimeout(() => {
       showT("âœ… Fix applied and resume updated!", "ok");
     }, 100);
@@ -561,7 +554,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     grammarFixes.forEach(fix=>{if(!appliedFixes[fix.id]&&fix.field)applyFix(fix);});
     showT("âœ… All fixes applied to resume!", "ok");
   }
-  // âœ… FIX #4: DOWNLOAD FUNCTION - USE updatedResumeData (NOT blank/initial state)
+  
   async function doPDF(){
     setPdfL(true);
     try{
@@ -569,7 +562,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       const el=prvRef.current;
       if(!el){showT("Preview not ready","err");return;}
       
-      // Make sure we're exporting the LATEST data
+      
       const par=el.parentElement;
       const ot=par.style.transform,ow=par.style.width,om=par.style.marginBottom;
       
@@ -577,7 +570,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       par.style.width="210mm";
       par.style.marginBottom="0";
       
-      // Export with filename based on actual name from updatedResumeData
+      
       const filename = (updatedResumeData.name || "resume").replace(/[^a-z0-9]/gi, '_') + ".pdf";
       
       await h().set({
@@ -601,14 +594,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     }
   }
 
-  // AI Enhancement function for real data
+  
   async function doAI(type,id){
     const k=id||type;
     setAiL(p=>({...p,[k]:true}));
     try{
       if(type==="full"){
         const g=await aiFullResume(data.title||"Software Engineer");
-        // Update updatedResumeData with AI-generated content
+        
         setData(p=>({
           ...p,
           summary:g.summary,
@@ -666,18 +659,18 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
 
   return(
     <div className={"min-h-screen "+bg+" transition-colors duration-500"}>
-      {/* BG blobs */}
+      {}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div animate={{x:[0,30,0],y:[0,-20,0]}} transition={{duration:8,repeat:Infinity,ease:"easeInOut"}} className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{background:"radial-gradient(circle,"+accent+",transparent)"}}/>
         <motion.div animate={{x:[0,-20,0],y:[0,30,0]}} transition={{duration:10,repeat:Infinity,ease:"easeInOut",delay:2}} className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-10 blur-3xl" style={{background:"radial-gradient(circle,#6366f1,transparent)"}}/>
       </div>
-      {/* Toast */}
+      {}
       <AnimatePresence>{toast&&(<motion.div initial={{opacity:0,y:-50,x:"-50%"}} animate={{opacity:1,y:0,x:"-50%"}} exit={{opacity:0,y:-50,x:"-50%"}} className="fixed top-6 left-1/2 z-50 px-6 py-3 rounded-2xl text-sm font-semibold shadow-2xl backdrop-blur-xl text-white" style={{background:toast.t==="err"?"rgba(239,68,68,0.9)":accent+"ee",border:"1px solid "+accent}}>{toast.m}</motion.div>)}</AnimatePresence>
-      {/* â”€â”€ TOP BAR â”€â”€ */}
+      {}
       <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} className={"relative z-10 px-8 pt-8 pb-6 border-b "+(dark?"border-white/10":"border-gray-200")}>
         <div className="max-w-[1700px] mx-auto">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-            {/* Left: Back + Title */}
+            {}
             <div className="flex items-center gap-4">
               <motion.button whileHover={{scale:1.05,x:-2}} whileTap={{scale:0.95}}
                 onClick={onBack||(() => window.history.back())}
@@ -689,17 +682,17 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <p className={"text-xs "+tm+" mt-0.5"}>Live preview Â· AI-powered Â· ATS-optimized</p>
               </div>
             </div>
-            {/* Center: Stats */}
+            {}
             <div className="hidden md:flex items-center gap-3">
               {[{l:"ATS",v:ats+"%",c:ats>=75?"#10b981":ats>=50?"#f59e0b":"#f43f5e"},{l:"Done",v:done+"%",c:accent},{l:"Skills",v:data.skills.length,c:"#06b6d4"}].map(s=>(
                 <div key={s.l} className={"px-4 py-2 rounded-xl border "+card+" flex items-center gap-2"}><span className="text-xs font-medium" style={{color:s.c}}>{s.l}</span><span className="text-base font-black" style={{color:s.c}}>{s.v}</span></div>
               ))}
             </div>
-            {/* Right: Actions */}
+            {}
             <div className="flex items-center gap-3">
               <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setDark(d=>!d)} className={"p-2.5 rounded-xl border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white":"border-gray-200 text-gray-500")}>{dark?"â˜€ï¸":"ðŸŒ™"}</motion.button>
               
-              {/* âœ… NEW: UPLOAD RESUME BUTTON */}
+              {}
               <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px rgba(16,185,129,0.4)"}} whileTap={{scale:0.95}}
                 onClick={()=>fileInputRef.current?.click()} disabled={isParsingResume}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
@@ -709,7 +702,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </motion.button>
               <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleResumeUpload}/>
               
-              {/* Generate with AI - SEPARATE */}
+              {}
               <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px rgba(139,92,246,0.6)"}} whileTap={{scale:0.95}}
                 onClick={()=>doAI("full")} disabled={aiL.full}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
@@ -717,7 +710,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 {aiL.full?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">âœ¨</motion.span>:"ðŸ¤–"}
                 {aiL.full?"Generating...":"Generate with AI"}
               </motion.button>
-              {/* Download PDF - SEPARATE */}
+              {}
               <motion.button whileHover={{scale:1.05,boxShadow:"0 0 30px "+accent+"66"}} whileTap={{scale:0.95}}
                 onClick={doPDF} disabled={pdfL}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all"
@@ -727,7 +720,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </motion.button>
             </div>
           </div>
-          {/* Progress bar */}
+          {}
           <div>
             <div className="flex justify-between text-xs mb-2">
               <span className={tm}>Profile Completion</span>
@@ -739,12 +732,12 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
           </div>
         </div>
       </motion.div>
-      {/* â”€â”€ 3-COLUMN LAYOUT â”€â”€ */}
+      {}
       <div className="relative z-10 px-8 py-8 pb-20">
         <div className="max-w-[1700px] mx-auto flex gap-7">
-          {/* â”€â”€ LEFT FORM â”€â”€ */}
+          {}
           <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}} className="w-[440px] flex-shrink-0 space-y-5">
-            {/* Template + Color */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Template</p>
               <div className="flex gap-2 flex-wrap mb-5">
@@ -766,7 +759,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)} className="w-8 h-8 rounded-full cursor-pointer border-2 border-white/20" style={{padding:1}} title="Custom"/>
               </div>
             </div>
-            {/* Personal Info */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <SecHead icon="ðŸ‘¤" title="Personal Info" collapsed={col.personal} onToggle={()=>togC("personal")}/>
               <AnimatePresence>
@@ -777,19 +770,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                         {data.profileImage?<img src={data.profileImage} alt="" className="w-full h-full object-cover"/>:<span className="text-2xl">ðŸ“·</span>}
                       </div>
                       <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Profile Photo</div><button onClick={()=>imgRef.current?.click()} className={"text-xs px-3 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>{data.profileImage?"Change":"Upload Photo"}</button></div>
-                      <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={onImg}/>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-                      {[["Full Name","name","text","John Doe"],["Job Title","title","text","Software Engineer"],["Email","email","email","john@example.com"],["Phone","phone","text","+1 234 567 8900"]].map(([l,k,t,ph])=>(
-                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{l}</label><input type={t} className={iCls} value={data[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
-                      ))}
-                    </div>
-                    <div className="mt-4"><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>Location</label><input className={iCls} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="San Francisco, CA"/></div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            {/* Summary */}
+                      <input ref={imgRef} type="file" accept="image}
             <div className={"p-6 rounded-2xl border "+card}>
               <SecHead icon="ðŸ“" title="Professional Summary" collapsed={col.summary} onToggle={()=>togC("summary")}/>
               <AnimatePresence>
@@ -805,7 +786,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 )}
               </AnimatePresence>
             </div>
-            {/* Skills */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <SecHead icon="âš¡" title="Skills" collapsed={col.skills} onToggle={()=>togC("skills")}/>
               <AnimatePresence>
@@ -821,7 +802,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 )}
               </AnimatePresence>
             </div>
-            {/* Draggable sections */}
+            {}
             <DndContext sensors={sens} collisionDetection={closestCenter} onDragEnd={onDrag}>
               <SortableContext items={secOrd} strategy={verticalListSortingStrategy}>
                 {secOrd.map(sec=>(
@@ -895,7 +876,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </SortableContext>
             </DndContext>
           </motion.div>
-          {/* â”€â”€ CENTER PREVIEW â”€â”€ */}
+          {}
           <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}} className="flex-1 min-w-0">
             <div className="sticky top-6">
               <div className="flex items-center justify-between mb-3">
@@ -926,9 +907,9 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </motion.div>
             </div>
           </motion.div>
-          {/* â”€â”€ RIGHT SIDEBAR â”€â”€ */}
+          {}
           <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}} className="w-[260px] flex-shrink-0 space-y-5">
-            {/* ATS Score */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-4"}>ATS Score</p>
               <div className="flex items-center gap-4">
@@ -939,7 +920,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 </div>
               </div>
             </div>
-            {/* Missing keywords */}
+            {}
             {mkw.length>0&&(
               <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5">
                 <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-3">âš  Missing Keywords</p>
@@ -947,7 +928,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <p className={"text-xs "+tm+" mt-2"}>Add these to boost ATS score.</p>
               </div>
             )}
-            {/* Resume Tips */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>ðŸ’¡ Resume Tips</p>
               <AnimatePresence mode="wait">
@@ -957,14 +938,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </AnimatePresence>
               <div className="flex gap-1 mt-4">{RESUME_TIPS.map((_,i)=><button key={i} onClick={()=>setTipI(i)} className="h-1.5 rounded-full transition-all duration-300" style={{width:i===tipI?16:6,background:i===tipI?accent:"rgba(255,255,255,0.15)"}}/>)}</div>
             </div>
-            {/* Section Checklist */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>ðŸ“‹ Checklist</p>
               {[["Name & Email",!!(data.name&&data.email)],["Summary",data.summary.length>30],["5+ Skills",data.skills.length>=5],["Experience",data.experience.some(e=>e.role&&e.company)],["Projects",data.projects.some(p=>p.name)],["Education",data.education.some(e=>e.degree)],["Photo",!!data.profileImage]].map(([l,ok])=>(
                 <div key={l} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0"><span className="text-base">{ok?"âœ…":"â­•"}</span><span className={"text-sm "+(ok?tp:tm)}>{l}</span></div>
               ))}
             </div>
-ï»¿            {/* Quick Actions */}
+ï»¿            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>âš¡ Quick Actions</p>
               <div className="space-y-2">
@@ -974,7 +955,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* Analyze and Fix Resume */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>ðŸ” Fix My Resume</p>
               <motion.button whileHover={{scale:1.03,boxShadow:"0 0 20px rgba(99,102,241,0.4)"}} whileTap={{scale:0.97}}
@@ -1037,7 +1018,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </AnimatePresence>
             </div>
 
-            {/* How to Improve Guide */}
+            {}
             <div className={"p-6 rounded-2xl border "+card}>
               <button onClick={()=>setShowTipsPanel(p=>!p)} className="w-full flex items-center justify-between">
                 <p className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>ðŸ“– How to Improve</p>
@@ -1077,4 +1058,3 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     </div>
   );
 }
-

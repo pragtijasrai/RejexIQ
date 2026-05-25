@@ -32,7 +32,7 @@ const PROBLEMS = [
     ],
     hint:"Use a hash map. For each element check if (target - element) already exists.",
     starterCode:{
-      JavaScript:"/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[]}\n */\nvar twoSum = function(nums, target) {\n    \n};",
+      JavaScript:"\nvar twoSum = function(nums, target) {\n    \n};",
       Python:"class Solution:\n    def twoSum(self, nums, target):\n        pass",
       Java:"class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        \n    }\n}",
       "C++":"class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};",
@@ -144,7 +144,6 @@ const COMPANIES = [
   {name:"Airbnb",count:61,color:"#ff5a5f"},{name:"TikTok",count:360,color:"#69c9d0"},
 ];
 
-// --- EXECUTION ENGINE ---
 function parseTestInput(str) {
   const vars = {};
   str.trim().split("\n").forEach(line => {
@@ -259,7 +258,6 @@ function runJS(code, problem) {
   return { ok:true, passed:cases.every(c => c.passed), cases, avgMs:+(totalMs/cases.length).toFixed(2), logs, complexity };
 }
 
-// --- SYNTAX HIGHLIGHTER ---
 const KW = new Set(["function","return","const","let","var","if","else","for","while","do",
   "switch","case","break","continue","class","new","this","typeof","instanceof","import",
   "export","default","from","async","await","try","catch","finally","throw","void","delete",
@@ -271,12 +269,12 @@ const KW = new Set(["function","return","const","let","var","if","else","for","w
 function highlightLine(line) {
   if (!line.trim()) return <span>&nbsp;</span>;
   const t = line.trimStart();
-  if (t.startsWith("//") || t.startsWith("#") || t.startsWith("*") || t.startsWith("/*") || t.startsWith("*/"))
+  if (t.startsWith("
     return <span style={{ color:"#4a5568", fontStyle:"italic" }}>{line}</span>;
   const tokens = line.split(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\/\/.*|#.*|\b\w+\b|[^\w\s])/g);
   return tokens.map((tok, i) => {
     if (!tok) return null;
-    if (tok.startsWith("//") || tok.startsWith("#")) return <span key={i} style={{ color:"#4a5568", fontStyle:"italic" }}>{tok}</span>;
+    if (tok.startsWith("
     if (/^["'`]/.test(tok))  return <span key={i} style={{ color:"#34d399" }}>{tok}</span>;
     if (KW.has(tok))          return <span key={i} style={{ color:"#c084fc", fontWeight:600 }}>{tok}</span>;
     if (/^\d+(\.\d+)?$/.test(tok)) return <span key={i} style={{ color:"#fbbf24" }}>{tok}</span>;
@@ -287,7 +285,6 @@ function highlightLine(line) {
   });
 }
 
-// --- CODE EDITOR ---
 function CodeEditor({ code, onChange }) {
   const taRef = useRef();
   const hlRef = useRef();
@@ -350,7 +347,6 @@ function CodeEditor({ code, onChange }) {
   );
 }
 
-// --- SUB-COMPONENTS (all OUTSIDE SolveView -- prevents white screen) ---
 function ComplexityRow({ c }) {
   if (!c) return null;
   return (
@@ -488,8 +484,6 @@ function ResultsPanel({ result, problem, activeTC, setActiveTC }) {
   );
 }
 
-
-// --- SOLVE VIEW ---
 function SolveView({ problem, onBack }) {
   const diff = DIFF[problem.difficulty];
   const [descTab,  setDescTab]  = useState("description");
@@ -523,7 +517,7 @@ function SolveView({ problem, onBack }) {
 
   const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
 
-  // Real AI hint via Groq backend
+  
   async function fetchHint() {
     setShowHint(true);
     setHintLoading(true);
@@ -558,7 +552,7 @@ function SolveView({ problem, onBack }) {
     setResult(null);
     setRightTab("results");
 
-    // If custom input provided, add it as a test case
+    
     const problemToRun = showCustom && customInput.trim()
       ? { ...problem, testCases: [...problem.testCases, { input: customInput.trim(), expected: "custom" }] }
       : problem;
@@ -582,7 +576,7 @@ function SolveView({ problem, onBack }) {
   return (
     <div style={{ position:"absolute", inset:0, background:G.bg, zIndex:200, display:"flex", flexDirection:"column", fontFamily:"'Inter',sans-serif" }}>
 
-      {/* TOP BAR */}
+      {}
       <div style={{ height:46, background:G.surface, borderBottom:"1px solid " + G.border, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <button onClick={onBack} style={{ background:"none", border:"none", color:G.mutedBright, cursor:"pointer", fontSize:13, padding:"4px 8px", borderRadius:6, transition:"all 0.2s" }}
@@ -607,7 +601,7 @@ function SolveView({ problem, onBack }) {
         </div>
       </div>
 
-      {/* HINT BANNER */}
+      {}
       {showHint && (
         <div style={{ background:"rgba(192,132,252,0.08)", borderBottom:"1px solid " + G.purple + "25", padding:"10px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, flex:1 }}>
@@ -625,7 +619,7 @@ function SolveView({ problem, onBack }) {
         </div>
       )}
 
-      {/* SOLUTION BANNER */}
+      {}
       {showSol && (
         <div style={{ background:"rgba(34,211,238,0.06)", borderBottom:"1px solid " + G.cyan + "20", padding:"10px 20px", display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexShrink:0 }}>
           <div>
@@ -636,10 +630,10 @@ function SolveView({ problem, onBack }) {
         </div>
       )}
 
-      {/* SPLIT PANE */}
+      {}
       <div style={{ flex:1, display:"grid", gridTemplateColumns:"1fr 1fr", overflow:"hidden" }}>
 
-        {/* LEFT -- Description */}
+        {}
         <div style={{ borderRight:"1px solid " + G.border, display:"flex", flexDirection:"column", overflow:"hidden" }}>
           <div style={{ display:"flex", borderBottom:"1px solid " + G.border, background:"rgba(0,0,0,0.15)", flexShrink:0 }}>
             {["description","editorial","solutions","submissions"].map(t => (
@@ -728,7 +722,7 @@ function SolveView({ problem, onBack }) {
           </div>
         </div>
 
-        {/* RIGHT -- Editor + Results */}
+        {}
         <div style={{ display:"flex", flexDirection:"column", overflow:"hidden" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 14px", height:44, borderBottom:"1px solid " + G.border, background:"rgba(0,0,0,0.15)", flexShrink:0 }}>
             <div style={{ display:"flex", gap:2 }}>
@@ -767,9 +761,9 @@ function SolveView({ problem, onBack }) {
             </div>
           )}
 
-          {/* Bottom action bar */}
+          {}
           <div style={{ borderTop:"1px solid " + G.border, background:"rgba(0,0,0,0.2)", flexShrink:0 }}>
-            {/* Custom test case input */}
+            {}
             {showCustom && (
               <div style={{ padding:"10px 16px", borderBottom:"1px solid " + G.border }}>
                 <div style={{ fontSize:11, fontWeight:700, color:G.muted, marginBottom:6, textTransform:"uppercase", letterSpacing:0.5 }}>Custom Test Case</div>
@@ -811,8 +805,6 @@ function SolveView({ problem, onBack }) {
   );
 }
 
-
-// --- PROBLEMS LIST PAGE ---
 function StreakCalendar() {
   const firstDay = 2, daysInMonth = 31;
   const solved = new Set([1,3,5,7,8,9,12,14,15,16,17,18,19]);
@@ -901,7 +893,6 @@ function WeeklyPremium() {
   );
 }
 
-// --- MAIN EXPORT ---
 export default function CodeArena({ user }) {
   const [solving,     setSolving]     = useState(null);
   const [search,      setSearch]      = useState("");
@@ -950,7 +941,7 @@ export default function CodeArena({ user }) {
 
       <div style={{ display:"grid", gridTemplateColumns:"180px 1fr 280px", gap:16, alignItems:"start" }}>
 
-        {/* LEFT NAV */}
+        {}
         <div style={{ background:G.card, border:"1px solid " + G.border, borderRadius:16, padding:"12px 8px", position:"sticky", top:0 }}>
           {LEFT_NAV.map((item, i) => {
             const isA = leftNav === item.id;
@@ -975,10 +966,10 @@ export default function CodeArena({ user }) {
           ))}
         </div>
 
-        {/* CENTER — switches based on leftNav */}
+        {}
         <div>
 
-          {/* ── QUEST VIEW ── */}
+          {}
           {leftNav === "quest" && (
             <div>
               <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>
@@ -996,7 +987,7 @@ export default function CodeArena({ user }) {
                   <div key={i} style={{ background:G.card, border:`1px solid ${q.done ? G.success+"30" : G.border}`, borderRadius:14, padding:"16px 18px", display:"flex", alignItems:"center", gap:16, cursor:"pointer", transition:"all 0.2s" }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = q.done ? G.success+"60" : G.accent+"40"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = q.done ? G.success+"30" : G.border; }}
-                    onClick={() => { const p = PROBLEMS.find(x => x.title === q.title); if(p) { /* would set solving */ } }}>
+                    onClick={() => { const p = PROBLEMS.find(x => x.title === q.title); if(p) {  } }}>
                     <div style={{ width:40, height:40, borderRadius:10, background:q.done?"rgba(52,211,153,0.15)":"rgba(255,255,255,0.05)", border:`1px solid ${q.done?G.success+"40":G.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>
                       {q.done ? "✓" : "○"}
                     </div>
@@ -1024,7 +1015,7 @@ export default function CodeArena({ user }) {
             </div>
           )}
 
-          {/* ── EXPLORE VIEW ── */}
+          {}
           {leftNav === "explore" && (
             <div>
               <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>Explore Topics</div>
@@ -1055,7 +1046,7 @@ export default function CodeArena({ user }) {
             </div>
           )}
 
-          {/* ── STUDY PLAN VIEW ── */}
+          {}
           {leftNav === "study" && (
             <div>
               <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:"#1a0a0c", marginBottom:4 }}>Study Plans</div>
@@ -1102,7 +1093,7 @@ export default function CodeArena({ user }) {
             </div>
           )}
 
-          {/* ── FAVORITE VIEW ── */}
+          {}
           {leftNav === "favorite" && (
             <div>
               <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Favorite Problems</div>
@@ -1132,7 +1123,7 @@ export default function CodeArena({ user }) {
             </div>
           )}
 
-          {/* ── REWIND 2025 VIEW ── */}
+          {}
           {leftNav === "rewind" && (
             <div>
               <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:20, fontWeight:800, color:G.text, marginBottom:4 }}>Rewind 2025</div>
@@ -1170,7 +1161,7 @@ export default function CodeArena({ user }) {
             </div>
           )}
 
-          {/* ── PROBLEMS VIEW (default) ── */}
+          {}
           {(leftNav === "problems") && (<>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:20 }}>
             {PROMOS.map((c, i) => (
@@ -1185,7 +1176,7 @@ export default function CodeArena({ user }) {
             ))}
           </div>
 
-          {/* Topic tags */}
+          {}
           <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:12, alignItems:"center" }}>
             {visibleTopics.map(t => {
               const active = activeTopic === t.label;
@@ -1204,7 +1195,7 @@ export default function CodeArena({ user }) {
             </button>
           </div>
 
-          {/* Category pills */}
+          {}
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
             {CATS.map(p => {
               const isA = category === p.id;
@@ -1219,7 +1210,7 @@ export default function CodeArena({ user }) {
             })}
           </div>
 
-          {/* Search + filter row */}
+          {}
           <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12, flexWrap:"wrap" }}>
             <div style={{ position:"relative", flex:1, minWidth:160 }}>
               <input value={search} onChange={e => setSearch(e.target.value)} onFocus={() => setSearchFocus(true)} onBlur={() => setSearchFocus(false)} placeholder="Search questions"
@@ -1228,7 +1219,7 @@ export default function CodeArena({ user }) {
             <div style={{ fontSize:12, color:G.muted, whiteSpace:"nowrap" }}><span style={{ color:G.success, fontWeight:700 }}>{solvedCount}</span>/{PROBLEMS.length} Solved</div>
           </div>
 
-          {/* Difficulty filter */}
+          {}
           <div style={{ display:"flex", gap:6, marginBottom:12 }}>
             {[{ id:"all", label:"All" }, { id:"easy", label:"Easy", color:G.success }, { id:"medium", label:"Medium", color:G.warning }, { id:"hard", label:"Hard", color:G.danger }].map(d => (
               <button key={d.id} onClick={() => setDifficulty(d.id)}
@@ -1238,7 +1229,7 @@ export default function CodeArena({ user }) {
             ))}
           </div>
 
-          {/* Problem table */}
+          {}
           <div style={{ background:G.card, border:"1px solid " + G.border, borderRadius:16, overflow:"hidden" }}>
             <div style={{ display:"grid", gridTemplateColumns:"36px 1fr 90px 80px 36px", padding:"10px 16px", borderBottom:"1px solid " + G.border, background:"rgba(0,0,0,0.2)" }}>
               {["","Title","Acceptance","Difficulty",""].map((h, i) => <div key={i} style={{ fontSize:11, fontWeight:700, color:G.muted, textTransform:"uppercase", letterSpacing:0.5 }}>{h}</div>)}
@@ -1264,7 +1255,7 @@ export default function CodeArena({ user }) {
             }
           </div>
 
-          {/* Pagination */}
+          {}
           <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:6, marginTop:16 }}>
             {["<", 1, 2, 3, "...", 20, ">"].map((pg, i) => (
               <button key={i} style={{ width:32, height:32, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", background:pg === 1 ? G.accentDim : "rgba(255,255,255,0.04)", border:"1px solid " + (pg === 1 ? G.accent + "40" : G.border), color:pg === 1 ? G.accent : G.muted, fontSize:12, fontWeight:pg === 1 ? 700 : 400, cursor:"pointer", transition:"all 0.2s" }}
@@ -1277,7 +1268,7 @@ export default function CodeArena({ user }) {
         </>) }
         </div>
 
-        {/* RIGHT SIDEBAR */}
+        {}
         <div style={{ display:"flex", flexDirection:"column", gap:14, position:"sticky", top:0 }}>
           <StreakCalendar />
           <WeeklyPremium />
@@ -1287,4 +1278,3 @@ export default function CodeArena({ user }) {
     </div>
   );
 }
-

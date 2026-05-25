@@ -3,7 +3,6 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text, Stars, Float } from "@react-three/drei";
 import * as THREE from "three";
 
-// Graph node positions
 const NODE_POSITIONS = [
   [0, 3, -4], [-3, 1.5, -3], [3, 1.5, -3],
   [-4, -0.5, -2], [0, 0, -2], [4, -0.5, -2]
@@ -87,10 +86,10 @@ function MazeScene({ mission, onAnswer, answerStates }) {
         <meshStandardMaterial color="#050f0a" />
       </mesh>
       <gridHelper args={[40, 40, "#0d2e22", "#0d2e22"]} position={[0, -2.99, 0]} />
-      {/* Graph visualization */}
+      {}
       {NODE_POSITIONS.map((pos, i) => <GraphNode key={i} position={pos} index={i} active={i % 3 === 0} />)}
       {EDGES.map(([a, b], i) => <GraphEdge key={i} from={NODE_POSITIONS[a]} to={NODE_POSITIONS[b]} />)}
-      {/* Answer cubes */}
+      {}
       {mission?.options.map((opt, i) => (
         <AnswerCube key={i} position={cubePositions[i]} label={labels[i]} text={opt} state={answerStates[i]} onClick={() => onAnswer(opt, i)} />
       ))}

@@ -276,7 +276,6 @@ const dsaCss = `
   }
 `;
 
-// ── Complexity Section ──
 function ComplexitySection() {
   return (
     <div className="dsa-section" id="complexity">
@@ -326,7 +325,6 @@ function ComplexitySection() {
   );
 }
 
-// ── Time vs Space Section ──
 function TradeoffsSection() {
   return (
     <div className="dsa-section" id="tradoffs">
@@ -346,22 +344,20 @@ function TradeoffsSection() {
       </div>
       <div className="dsa-sub">
         <h4>Classic Example: Fibonacci</h4>
-        <pre className="dsa-pre">{`// Naive recursive — O(2^n) time, O(n) stack space
+        <pre className="dsa-pre">{`
 int fib(int n) {
   if (n <= 1) return n;
-  return fib(n-1) + fib(n-2);   // recomputes same subproblems MANY times
+  return fib(n-1) + fib(n-2);   
 }
 
-// Memoized — O(n) time, O(n) space (trade space for time)
 int[] memo = new int[n+1];
 int fibMemo(int n) {
   if (n <= 1) return n;
-  if (memo[n] != 0) return memo[n];  // O(1) lookup
+  if (memo[n] != 0) return memo[n];  
   memo[n] = fibMemo(n-1) + fibMemo(n-2);
   return memo[n];
 }
 
-// Iterative DP — O(n) time, O(1) space (best of both!)
 int fibDP(int n) {
   int a = 0, b = 1;
   for (int i = 2; i <= n; i++) {
@@ -375,7 +371,6 @@ int fibDP(int n) {
   );
 }
 
-// ── Asymptotic Notations Section ──
 function NotationsSection() {
   return (
     <div className="dsa-section" id="notations">
@@ -423,7 +418,6 @@ function NotationsSection() {
   );
 }
 
-// ── Operation Counting Section ──
 function OpCountingSection() {
   return (
     <div className="dsa-section" id="opcounting">
@@ -451,44 +445,42 @@ function OpCountingSection() {
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 1: Single Loop</h4>
-        <pre className="dsa-pre">{`int sum = 0;                         // 1 op (assignment)
-for (int i = 0; i < n; i++) {        // init:1, compare:n+1, increment:n → 2n+2 ops
-  sum = sum + a[i];                  // 3 ops × n iterations = 3n
+        <pre className="dsa-pre">{`int sum = 0;                         
+for (int i = 0; i < n; i++) {        
+  sum = sum + a[i];                  
 }
-// Total = 1 + (2n+2) + 3n = 5n+3 = O(n)`}</pre>
+
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 2: Nested Loops</h4>
-        <pre className="dsa-pre">{`for (int i = 0; i < n; i++) {         // outer: n iterations
-  for (int j = 0; j < n; j++) {       // inner: n iterations per outer
-    System.out.print(i*j);            // 1 op × n×n = n² times
+        <pre className="dsa-pre">{`for (int i = 0; i < n; i++) {         
+  for (int j = 0; j < n; j++) {       
+    System.out.print(i*j);            
   }
 }
-// Total ≈ n² operations = O(n²)`}</pre>
+
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 3: Logarithmic Loop</h4>
         <pre className="dsa-pre">{`int i = n;
 while (i > 1) {
-  i = i / 2;   // i halves each time: n → n/2 → n/4 → … → 1
+  i = i / 2;   
 }
-// How many iterations? i = n / 2^k, stops when 2^k = n → k = log₂(n)
-// Total = O(log n)`}</pre>
+
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 4: Triangular Nested Loops</h4>
         <pre className="dsa-pre">{`for (int i = 0; i < n; i++) {
-  for (int j = 0; j < i; j++) {   // j goes from 0 to i-1
-    // inner runs: 0+1+2+...+(n-1) = n(n-1)/2 times
+  for (int j = 0; j < i; j++) {   
+    
   }
 }
-// Sum = n(n-1)/2 = O(n²)  — triangular number`}</pre>
+
       </div>
     </div>
   );
 }
 
-// ── Iterative Approach Section ──
 function IterativeSection() {
   return (
     <div className="dsa-section" id="iterative">
@@ -524,7 +516,6 @@ function IterativeSection() {
   );
 }
 
-// ── Master Theorem Section ──
 function MasterTheoremSection() {
   return (
     <div className="dsa-section" id="master">
@@ -569,7 +560,6 @@ function MasterTheoremSection() {
   );
 }
 
-// ── Practice Problems (Algo) ──
 function PracticeAlgoSection() {
   const problems = [
     { n:"01", q:"What is the time complexity of: for(i=0;i<n;i++) for(j=i;j<n;j++) sum++;", sol:"Inner loop runs (n-i) times for each i. Total = Σᵢ₌₀ⁿ⁻¹ (n-i) = n(n+1)/2 = O(n²)" },
@@ -593,7 +583,6 @@ function PracticeAlgoSection() {
   );
 }
 
-// ── Java History Section ──
 function JavaHistorySection() {
   const features = [
     { icon:"🌍", title:"Platform Independent", desc:"Java compiles to bytecode (.class files) that runs on any JVM, regardless of OS or hardware. WORA principle." },
@@ -643,7 +632,6 @@ function JavaHistorySection() {
   );
 }
 
-// ── JVM Section ──
 function JVMSection() {
   return (
     <div className="dsa-section" id="jvm">
@@ -666,23 +654,17 @@ function JVMSection() {
       </div>
       <div className="dsa-sub">
         <h4>How Java Code Executes</h4>
-        <pre className="dsa-pre">{`// Step 1: You write source code
+        <pre className="dsa-pre">{`
 HelloWorld.java
 
-// Step 2: javac compiles it to platform-neutral bytecode
-javac HelloWorld.java → HelloWorld.class  // bytecode, not machine code
+javac HelloWorld.java → HelloWorld.class  
 
-// Step 3: JVM class loader loads HelloWorld.class
-// Step 4: Bytecode verifier checks for security violations
-// Step 5: Interpreter starts executing bytecode
-// Step 6: JIT compiler kicks in for hot methods → native code
-java HelloWorld  // runs on ANY OS with a JVM installed`}</pre>
+java HelloWorld  
       </div>
     </div>
   );
 }
 
-// ── Setup Section ──
 function SetupSection() {
   return (
     <div className="dsa-section" id="setup">
@@ -730,7 +712,6 @@ source ~/.bashrc`}</pre>
   );
 }
 
-// ── IDE Section ──
 function IDESection() {
   return (
     <div className="dsa-section" id="ide">
@@ -750,7 +731,6 @@ function IDESection() {
   );
 }
 
-// ── Compile Section ──
 function CompileSection() {
   return (
     <div className="dsa-section" id="compile">
@@ -788,24 +768,22 @@ java -Xms256m -Xmx1g HelloWorld`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>Bytecode — What's Inside a .class File</h4>
-        <pre className="dsa-pre">{`// Java source:
+        <pre className="dsa-pre">{`
 int a = 5, b = 3, c = a + b;
 
-// Bytecode (readable via: javap -c HelloWorld):
-0: bipush    5       // push 5 onto operand stack
-2: istore_1          // store into local var 1 (a)
-3: bipush    3       // push 3
-5: istore_2          // store into local var 2 (b)
-6: iload_1           // load a
-7: iload_2           // load b
-8: iadd              // integer add (pops 2, pushes result)
-9: istore_3          // store result into c`}</pre>
+0: bipush    5       
+2: istore_1          
+3: bipush    3       
+5: istore_2          
+6: iload_1           
+7: iload_2           
+8: iadd              
+9: istore_3          
       </div>
     </div>
   );
 }
 
-// ── Main Method Section ──
 function MainMethodSection() {
   return (
     <div className="dsa-section" id="main">
@@ -831,7 +809,7 @@ function MainMethodSection() {
     for (int i = 0; i < args.length; i++) {
       System.out.println("args[" + i + "] = " + args[i]);
     }
-    // Safe argument parsing
+    
     if (args.length >= 2) {
       int x = Integer.parseInt(args[0]);
       int y = Integer.parseInt(args[1]);
@@ -839,19 +817,13 @@ function MainMethodSection() {
     }
   }
 }
-// Compile: javac CmdArgs.java
-// Run:     java CmdArgs 10 20
-// Output:  Argument count: 2
-//          args[0] = 10
-//          args[1] = 20
-//          Sum = 30`}</pre>
+
       </div>
       <div className="dsa-box warn"><div className="dsa-box-title">⚠️ Common Pitfall</div><strong>All command-line arguments are Strings!</strong> "123" is not the integer 123. You must parse: Integer.parseInt(args[0]), Double.parseDouble(args[0]), etc.</div>
     </div>
   );
 }
 
-// ── Java Basics Section ──
 function JavaBasicsSection() {
   const keywords = ["abstract","assert","boolean","break","byte","case","catch","char","class","const*","continue","default","do","double","else","enum","extends","final","finally","float","for","goto*","if","implements","import","instanceof","int","interface","long","native","new","package","private","protected","public","return","short","static","strictfp","super","switch","synchronized","this","throw","throws","transient","try","void","volatile","while","var†","record†","sealed†"];
   return (
@@ -888,7 +860,6 @@ function JavaBasicsSection() {
   );
 }
 
-// ── Data Types Section ──
 function DataTypesSection() {
   const primitives = [
     { type:"byte",    size:"8 bits (1 byte)",    range:"-128 to 127\nDefault: 0\nUse: small integers, streams" },
@@ -918,21 +889,19 @@ function DataTypesSection() {
       </div>
       <div className="dsa-sub">
         <h4>Type Casting — Widening &amp; Narrowing</h4>
-        <pre className="dsa-pre">{`// WIDENING (automatic, safe — no data loss)
+        <pre className="dsa-pre">{`
 byte → short → int → long → float → double
 int x = 100;
-double d = x;   // automatic: 100 → 100.0
-long l = x;     // automatic: 100 → 100L
+double d = x;   
+long l = x;     
 
-// NARROWING (explicit cast required — potential data loss)
 double pi = 3.14159;
-int n = (int) pi;   // truncates decimal: n = 3 (not rounded!)
-byte b = (byte) 300; // overflow: 300 % 256 = 44 (wraps around)
+int n = (int) pi;   
+byte b = (byte) 300; 
 
-// char ↔ int conversions
 char c = 'A';
-int ascii = c;          // 65
-char back = (char)(ascii + 1); // 'B'`}</pre>
+int ascii = c;          
+char back = (char)(ascii + 1); 
       </div>
       <div className="dsa-sub">
         <h4>Wrapper Classes &amp; Autoboxing</h4>
@@ -947,19 +916,17 @@ char back = (char)(ascii + 1); // 'B'`}</pre>
             </tbody>
           </table>
         </div>
-        <pre className="dsa-pre">{`// Autoboxing: primitive → wrapper (automatic)
-Integer boxed = 42;     // auto-boxes: Integer.valueOf(42)
-int unboxed = boxed;    // auto-unboxes: boxed.intValue()
+        <pre className="dsa-pre">{`
+Integer boxed = 42;     
+int unboxed = boxed;    
 
-// Watch out for NullPointerException with unboxing!
 Integer i = null;
-int x = i;  // ← NullPointerException! null cannot be unboxed`}</pre>
+int x = i;  
       </div>
     </div>
   );
 }
 
-// ── Operators Section ──
 function OperatorsSection() {
   const precedenceRows = [
     { level:"1 (highest)", ops:"() [] . ++ -- (postfix)", assoc:"Left→Right" },
@@ -984,94 +951,89 @@ function OperatorsSection() {
       <div className="dsa-sub">
         <h4>1. Arithmetic Operators</h4>
         <pre className="dsa-pre">{`int a = 10, b = 3;
-System.out.println(a + b);   // 13  (addition)
-System.out.println(a - b);   // 7   (subtraction)
-System.out.println(a * b);   // 30  (multiplication)
-System.out.println(a / b);   // 3   (integer division — truncates!)
-System.out.println(a % b);   // 1   (modulo/remainder)
-System.out.println(10.0 / 3); // 3.333... (floating division)
-// Key: int/int = int. Cast one to double for real division.`}</pre>
+System.out.println(a + b);   
+System.out.println(a - b);   
+System.out.println(a * b);   
+System.out.println(a / b);   
+System.out.println(a % b);   
+System.out.println(10.0 / 3); 
+
       </div>
       <div className="dsa-sub">
         <h4>2. Unary Operators</h4>
         <pre className="dsa-pre">{`int x = 5;
-System.out.println(+x);    // 5  (unary plus)
-System.out.println(-x);    // -5 (unary minus/negation)
-System.out.println(++x);   // 6  (pre-increment: increment THEN return)
-System.out.println(x++);   // 6  (post-increment: return THEN increment; x is now 7)
-System.out.println(--x);   // 6  (pre-decrement)
-System.out.println(x--);   // 6  (post-decrement; x is now 5)
+System.out.println(+x);    
+System.out.println(-x);    
+System.out.println(++x);   
+System.out.println(x++);   
+System.out.println(--x);   
+System.out.println(x--);   
 boolean b = true;
-System.out.println(!b);    // false (logical NOT)`}</pre>
+System.out.println(!b);    
       </div>
       <div className="dsa-sub">
         <h4>3. Relational Operators — Always return boolean</h4>
         <pre className="dsa-pre">{`int a = 5, b = 10;
-a == b   // false (equal to) — for objects, compares references!
-a != b   // true  (not equal)
-a <  b   // true  (less than)
-a >  b   // false (greater than)
-a <= b   // true  (less than or equal)
-a >= b   // false (greater than or equal)
+a == b   
+a != b   
+a <  b   
+a >  b   
+a <= b   
+a >= b   
 
-// For String equality, ALWAYS use .equals(), not ==
 String s1 = new String("hello");
 String s2 = new String("hello");
-s1 == s2        // false! (different objects in heap)
-s1.equals(s2)   // true  (compares content)`}</pre>
+s1 == s2        
+s1.equals(s2)   
       </div>
       <div className="dsa-sub">
         <h4>4. Logical Operators</h4>
         <pre className="dsa-pre">{`boolean p = true, q = false;
-p && q   // false — Logical AND. Short-circuit: if p is false, q NOT evaluated
-p || q   // true  — Logical OR.  Short-circuit: if p is true, q NOT evaluated
-!p       // false — Logical NOT
-p &  q   // false — Bitwise AND on booleans (NO short-circuit)
-p |  q   // true  — Bitwise OR on booleans (no short-circuit)
-p ^  q   // true  — XOR: true if exactly one operand is true
+p && q   
+p || q   
+!p       
+p &  q   
+p |  q   
+p ^  q   
 
-// Short-circuit is CRITICAL for null safety:
 String s = null;
-if (s != null && s.length() > 0) { // Safe! Second part not evaluated if s==null
-  // ...
+if (s != null && s.length() > 0) { 
+  
 }`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>5. Bitwise &amp; Shift Operators</h4>
-        <pre className="dsa-pre">{`int a = 0b1010; // binary: 10 in decimal
-int b = 0b1100; // binary: 12 in decimal
-a & b   // AND:  1010 & 1100 = 1000 = 8
-a | b   // OR:   1010 | 1100 = 1110 = 14
-a ^ b   // XOR:  1010 ^ 1100 = 0110 = 6
-~a      // NOT:  ~1010 = ...11110101 = -11 (two's complement)
+        <pre className="dsa-pre">{`int a = 0b1010; 
+int b = 0b1100; 
+a & b   
+a | b   
+a ^ b   
+~a      
 
-// Shift operators:
-a << 2   // Left shift:  1010 → 101000 = 40 (multiply by 2²=4)
-a >> 1   // Signed right: 1010 → 0101 = 5 (divide by 2, preserves sign bit)
-a >>> 1  // Unsigned right: fills with 0
+a << 2   
+a >> 1   
+a >>> 1  
 
-// Bit tricks:
-n & 1       // check if n is odd (1=odd, 0=even)
-n & (n-1)   // clears lowest set bit (0 if n is power of 2)
-n | (1<<k)  // set bit k
-n & ~(1<<k) // clear bit k
-(n>>k) & 1  // read bit k`}</pre>
+n & 1       
+n & (n-1)   
+n | (1<<k)  
+n & ~(1<<k) 
+(n>>k) & 1  
       </div>
       <div className="dsa-sub">
         <h4>6. Ternary &amp; instanceof Operators</h4>
-        <pre className="dsa-pre">{`// Ternary: condition ? value_if_true : value_if_false
+        <pre className="dsa-pre">{`
 int a = 5, b = 10;
-int max = (a > b) ? a : b;         // max = 10
-String msg = (a % 2 == 0) ? "even" : "odd"; // "odd"
+int max = (a > b) ? a : b;         
+String msg = (a % 2 == 0) ? "even" : "odd"; 
 
-// instanceof
 Object obj = "Hello";
 if (obj instanceof String) {
-  String s = (String) obj;   // safe cast after instanceof check
+  String s = (String) obj;   
   System.out.println(s.length());
 }
-// Java 16+: Pattern matching instanceof (cleaner)
-if (obj instanceof String s) {   // binds to s automatically
+
+if (obj instanceof String s) {   
   System.out.println(s.toUpperCase());
 }`}</pre>
       </div>
@@ -1092,7 +1054,6 @@ if (obj instanceof String s) {   // binds to s automatically
   );
 }
 
-// ── Practice Java Section ──
 function PracticeJavaSection() {
   const problems = [
     { n:"01", q:'What is the output? int x=5; System.out.println(x++ + ++x);', sol:"x++ returns 5 THEN x becomes 6. ++x increments x to 7 THEN returns 7. 5 + 7 = 12. After statement: x = 7." },
@@ -1105,7 +1066,7 @@ if ((n & 1) == 0) {
 } else {
   System.out.println(n + " is odd");
 }
-// The last bit of any even number is 0, odd number is 1` },
+
     { n:"06", q:'What is the output? System.out.println(5 > 3 ? "yes" : 10 > 8 ? "maybe" : "no");', sol:'5>3 is true, so the result is the first branch: "yes". The nested ternary is never evaluated.' },
   ];
   return (
@@ -1126,11 +1087,10 @@ if ((n & 1) == 0) {
   );
 }
 
-// ── MAIN EXPORT ──
 export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
-  // DSATutorial is a single scrollable page — always on "last chapter"
+  
   useEffect(() => { onChapterChange?.(0, 1); }, [mode]);
-  // mode: "basics" = Java only, "complexity" = Algorithms only, "all" = everything
+  
 
   const basicsItems = [
     { href:"#java-history", label:"Java History" },
@@ -1174,7 +1134,7 @@ export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
     <div className="dsa-root">
       <style>{dsaCss}</style>
 
-      {/* HERO */}
+      {}
       <div className="dsa-hero">
         <div className="dsa-badge">
           {mode === "basics" ? "Programming Basics" : mode === "complexity" ? "Complexity Analysis" : "Complete DSA Curriculum"}
@@ -1189,7 +1149,7 @@ export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
       </div>
 
       <div className="dsa-container">
-        {/* Complexity sections — shown in "complexity" or "all" mode */}
+        {}
         {(mode === "complexity" || mode === "all") && (
           <>
             <div className="dsa-part algo">
@@ -1206,7 +1166,7 @@ export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
           </>
         )}
 
-        {/* Java sections — shown in "basics" or "all" mode */}
+        {}
         {(mode === "basics" || mode === "all") && (
           <>
             <div className="dsa-part java" style={{ marginTop: mode === "all" ? 80 : 0 }}>
@@ -1231,7 +1191,7 @@ export default function DSATutorial({ onNext, mode = "all", onChapterChange }) {
           <br /><span style={{ color: T.accent1 }}>∞</span> Keep learning. Keep coding.
         </div>
 
-        {/* Next chapter button */}
+        {}
         {onNext && (
           <div style={{ display:"flex", justifyContent:"flex-end", marginTop:32, paddingTop:24, borderTop:`1px solid ${T.border}` }}>
             <button

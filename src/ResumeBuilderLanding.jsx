@@ -1,11 +1,7 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// 🎨  ULTRA-PREMIUM AI RESUME BUILDER — SaaS Landing + Full Builder
-// ═══════════════════════════════════════════════════════════════════════════
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import OriginalBuilder from "./ResumeBuilder.jsx";
 
-// ── DATA ─────────────────────────────────────────────────────────────────
 const COMPANIES = ["Google","Amazon","Microsoft","Meta","Apple","Netflix","Spotify","Airbnb","Figma"];
 const FEATURES = [
   { icon: "✍️", title: "Pre-written Content", desc: "50+ expert-crafted bullet points and 5 stunning templates built by career professionals.", more: "Jumpstart your resume with ready-made, recruiter-friendly phrasing and polished section structure to make your experience shine.", color: "#0f0e0e", bg:"#f0e9e9" },
@@ -46,13 +42,11 @@ const SKILL_SETS = {
   "Data Scientist":    ["Python","TensorFlow","Pandas","SQL","Tableau","Machine Learning","Statistics","Spark"],
 };
 
-// ── ANIMATION VARIANTS ───────────────────────────────────────────────────
 const FU = {
   hidden:  { opacity:0, y:40 },
   visible: (i=0) => ({ opacity:1, y:0, transition:{ duration:0.65, delay:i*0.1, ease:[0.22,1,0.36,1] } }),
 };
 
-// ── 3D ANIMATED DIVIDER ───────────────────────────────────────────────────
 function AnimatedDivider({ variant = "orbs" }) {
   if (variant === "stats") {
     const stats = [["500K+","Resumes Built"],["92%","ATS Pass Rate"],["3x","More Interviews"],["4.9★","User Rating"]];
@@ -143,7 +137,7 @@ function AnimatedDivider({ variant = "orbs" }) {
     );
   }
 
-  // default: orbs
+  
   return (
     <div className="relative overflow-hidden" style={{height:60,background:"transparent"}}>
       {[
@@ -161,10 +155,8 @@ function AnimatedDivider({ variant = "orbs" }) {
   );
 }
 
-// ── HERO ─────────────────────────────────────────────────────────────────
-// Compute a lightweight ATS score from resume data stored in localStorage
 function computeHeroStats(user) {
-  // Try user-specific key first, then fall back to generic key
+  
   let resumeData = null;
   try {
     const userKey = user && (user.email || user.username || user.name)
@@ -173,27 +165,27 @@ function computeHeroStats(user) {
     const raw = (userKey && localStorage.getItem(userKey)) || localStorage.getItem("resume_builder_data");
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Only use if it has real content — not just empty placeholders
+      
       if (parsed && (parsed.name || parsed.email || (parsed.skills && parsed.skills.length > 0))) {
         resumeData = parsed;
       }
     }
   } catch (_) {}
 
-  // Prefer the parsed resume name over the login username
-  // (resume name = "Ruchika Aggarwal", login username = "ruchikaaggarwal31")
+  
+  
   const displayName = (resumeData && resumeData.name)
     || (user && user.displayName)
     || (user && user.name && !user.name.includes("@") && !/\d{4,}/.test(user.name) ? user.name : null)
     || null;
 
-  // Role: prefer resume title, then first 6 words of summary, then user role
+  
   const displayRole = (resumeData && resumeData.title)
     || (resumeData && resumeData.summary && resumeData.summary.split(" ").slice(0,6).join(" ") + "...")
     || (user && user.role)
     || null;
 
-  // ATS score — mirrors the calcATS logic from ResumeBuilder
+  
   let ats = 0;
   if (resumeData) {
     const ATS_KEYWORDS = ["led","managed","developed","built","designed","implemented","optimized","increased","reduced","improved","collaborated","delivered","launched","architected","scaled","automated","deployed","integrated","mentored","results","impact","metrics","performance","agile","scrum"];
@@ -221,7 +213,7 @@ function computeHeroStats(user) {
     ats = Math.min(100, ats);
   }
 
-  // AI suggestions count — count sections that could be improved
+  
   let suggestions = 0;
   if (resumeData) {
     if (!resumeData.summary || resumeData.summary.length < 80) suggestions++;
@@ -230,10 +222,10 @@ function computeHeroStats(user) {
     if (!(resumeData.linkedin || resumeData.github)) suggestions++;
     if ((resumeData.certifications || []).length === 0) suggestions++;
   } else {
-    suggestions = 3; // default hint for new users
+    suggestions = 3; 
   }
 
-  // Section fill widths — only count entries that have real content (not empty placeholders)
+  
   const realSkills  = (resumeData?.skills || []).filter(s => s && s.trim().length > 0);
   const realExp     = (resumeData?.experience || []).filter(e => e.role || e.company || e.description);
   const realProj    = (resumeData?.projects || []).filter(p => p.name || p.description);
@@ -256,29 +248,29 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
   const cr=useRef(0);
   const phrases=["Software Engineer","Product Manager","Data Scientist","UX Designer","DevOps Engineer"];
 
-  // Use prop when available (parent recomputes on view change), fall back to local state
+  
   const [localStats, setLocalStats] = useState(() => heroStatsProp || computeHeroStats(user));
   const stats = heroStatsProp || localStats;
 
   useEffect(() => {
-    // Sync local state when prop updates
+    
     if (heroStatsProp) setLocalStats(heroStatsProp);
   }, [heroStatsProp]);
 
   useEffect(() => {
-    // Cross-tab: recompute if another tab writes to localStorage
+    
     const handler = () => setLocalStats(computeHeroStats(user));
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
   }, [user]);
 
-  // Derived display values
+  
   const isLoggedIn = !!(user && (user.name || user.username || user.email));
 
-  // Clean display name: prefer resume name, then strip numbers/symbols from username
+  
   const rawUserName = user && (user.name || user.username || "");
   const cleanUserName = rawUserName
-    .replace(/[0-9@._+\-]+/g, " ")   // strip digits and special chars
+    .replace(/[0-9@._+\-]+/g, " ")   
     .replace(/\s+/g, " ")
     .trim()
     .split(" ")
@@ -313,15 +305,15 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Glow orbs */}
-      {/* Glow orbs */}
+      {}
+      {}
       <motion.div animate={{scale:[1,1.3,1],opacity:[0.15,0.3,0.15]}} transition={{duration:7,repeat:Infinity}} className="absolute top-1/4 left-1/5 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none" style={{background:"radial-gradient(circle,rgba(159,18,57,0.5),transparent)"}}/>
       <motion.div animate={{scale:[1,1.2,1],opacity:[0.1,0.25,0.1]}} transition={{duration:9,repeat:Infinity,delay:2}} className="absolute bottom-1/4 right-1/5 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none" style={{background:"radial-gradient(circle,rgba(190,18,60,0.5),transparent)"}}/>
       <motion.div animate={{scale:[1,1.15,1],opacity:[0.08,0.2,0.08]}} transition={{duration:11,repeat:Infinity,delay:4}} className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" style={{background:"radial-gradient(circle,rgba(225,29,72,0.4),transparent)"}}/>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-32 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 items-center">
-          {/* LEFT */}
+          {}
           <div className="lg:col-start-2 lg:col-span-6">
             <br></br>
             <div className="flex justify-start mb-6">
@@ -343,7 +335,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
             <motion.p initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6,delay:0.3}} className="text-lg text-slate-600 mb-4 max-w-xl" style={{lineHeight:"1.85"}}>
               Only <span className="text-rose-400 font-bold">2% of resumes</span> get selected. Our AI ensures yours is in that 2% — with ATS optimization, smart suggestions, and stunning templates.
             </motion.p>
-            {/* Stats */}
+            {}
             <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6,delay:0.35}} className="flex gap-12 mb-6">
               {[["500K+","Resumes Created"],["92%","ATS Pass Rate"],["3x","More Interviews"]].map(([v,l])=>(
                 <motion.div key={l} whileHover={{y:-4}} className="cursor-default">
@@ -352,7 +344,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
                 </motion.div>
               ))}
             </motion.div>
-            {/* CTA - Only Create New CV */}
+            {}
             <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6,delay:0.4}} className="mt-6 mb-6">
               <br></br><motion.button whileHover={{scale:1.05,boxShadow:"0 20px 50px rgba(159,18,57,0.6)"}} whileTap={{scale:0.97}} onClick={onBuild}
                 className="inline-flex items-center gap-2 rounded-2xl text-[#fdfbf7] font-bold text-lg transition-all"
@@ -361,7 +353,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
               </motion.button>
             </motion.div>
             <br></br>
-            {/* Company logos */}
+            {}
             <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.6,delay:0.5}} className="mt-6">
               <p className="text-xs text-slate-500 font-semibold uppercase tracking-widest mb-4">Trusted by candidates at</p>
               <div className="flex flex-nowrap gap-3 mt-1 overflow-x-auto pb-1" style={{scrollbarWidth:"none"}}>
@@ -377,10 +369,10 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
             </motion.div>
           </div>
 
-          {/* RIGHT — floating resume card */}
+          {}
           <div className="relative hidden lg:flex items-center justify-center lg:col-span-5">
             <motion.div initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} transition={{duration:0.9,delay:0.3}}>
-              {/* Main resume card */}
+              {}
               <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-80" style={{boxShadow:"0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(74,14,46,0.1)"}}>
                 <div className="h-24 flex items-center px-12 lg:px-16 gap-4" style={{background:"linear-gradient(135deg,#9f1239,#be123c)",color:"#fdfbf7"}}>
                   <div className="w-14 h-14 rounded-full bg-white/30 flex items-center justify-center text-[#4a0e2e] text-xl font-black flex-shrink-0"
@@ -415,7 +407,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
                 </div>
               </div>
 
-              {/* Floating ATS badge */}
+              {}
               <motion.div animate={{y:[0,-8,0]}} transition={{duration:3,repeat:Infinity,ease:"easeInOut"}}
                 className="absolute -top-8 -right-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-[#4a0e2e] font-black text-lg flex-shrink-0"
@@ -428,7 +420,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
                 </div>
               </motion.div>
 
-              {/* Floating AI suggestions badge */}
+              {}
               <motion.div animate={{y:[0,8,0]}} transition={{duration:3.5,repeat:Infinity,ease:"easeInOut",delay:0.5}}
                 className="absolute -bottom-6 -left-8 bg-white rounded-2xl px-5 py-4 shadow-2xl border border-gray-100 flex items-center gap-3">
                 <span className="text-2xl flex-shrink-0">🤖</span>
@@ -438,7 +430,7 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
                 </div>
               </motion.div>
 
-              {/* Floating skills / match badge */}
+              {}
               <motion.div animate={{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:"easeInOut",delay:1}}
                 className="absolute top-1/2 -right-14 bg-white rounded-2xl px-4 py-3 shadow-2xl border border-gray-100 text-center">
                 {stats.hasResume ? (
@@ -461,7 +453,6 @@ function Hero({ onBuild, user, heroStats: heroStatsProp }) {
   );
 }
 
-// ── FEATURES ─────────────────────────────────────────────────────────────
 function Features() {
   const ref=useRef(null); const iv=useInView(ref,{once:true,margin:"-80px"});
   const [activeFeature,setActiveFeature]=useState(null);
@@ -522,7 +513,6 @@ function Features() {
   );
 }
 
-// ── HOW IT WORKS ─────────────────────────────────────────────────────────
 function HowItWorks({ onBuild }) {
   const ref=useRef(null); const iv=useInView(ref,{once:true,margin:"-80px"});
   return (
@@ -561,7 +551,7 @@ function HowItWorks({ onBuild }) {
           </div>
           <motion.div initial={{opacity:0,x:40}} animate={iv?{opacity:1,x:0}:{}} transition={{duration:0.8,delay:0.3}} className="hidden lg:flex items-center justify-center">
             <div className="relative w-full h-96">
-              {/* Animated visualization */}
+              {}
               <div className="absolute inset-0 flex items-center justify-center">
                 <motion.div animate={{scale:[1,1.1,1],rotate:[0,5,-5,0]}} transition={{duration:4,repeat:Infinity,ease:"easeInOut"}} className="relative w-64 h-64 rounded-3xl border-2 border-rose-500/30 flex items-center justify-center" style={{background:"linear-gradient(135deg,rgba(159,18,57,0.1),rgba(190,18,60,0.05))"}}>
                   <div className="text-center">
@@ -569,14 +559,14 @@ function HowItWorks({ onBuild }) {
                     <div className="text-sm font-bold text-[#4a0e2e] mb-2">Smart Resume</div>
                     <div className="text-xs text-slate-600">Powered by AI</div>
                   </div><br></br>
-                  {/* Floating particles */}
+                  {}
                   {[0,1,2,3,4].map(i=>(
                     <motion.div key={i} animate={{x:[0,Math.cos(i*Math.PI/2.5)*60,0],y:[0,Math.sin(i*Math.PI/2.5)*60,0]}} transition={{duration:3+i*0.5,repeat:Infinity,ease:"easeInOut"}} className="absolute w-3 h-3 rounded-full" style={{background:"rgba(159,18,57,0.6)",left:"50%",top:"50%",marginLeft:"-6px",marginTop:"-6px"}}/>
                   ))}
                 </motion.div>
               </div>
               <br></br>
-              {/* Floating badges showing progress */}
+              {}
               <motion.div animate={{y:[0,-20,0]}} transition={{duration:3,repeat:Infinity}} className="absolute top-0 left-0 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-sm font-bold text-amber-300">
                 ✓ Step 1: Template
               </motion.div>
@@ -596,9 +586,6 @@ function HowItWorks({ onBuild }) {
   );
 }
 
-// ── TEMPLATES ─────────────────────────────────────────────────────────────
-
-// ── TEMPLATE DATA ─────────────────────────────────────────────────────────────
 <br></br>
 const TEMPLATE_DESIGNS = [
   { id:"modern-pro",    name:"Modern Pro",    cat:"Professional", badge:"🔥 Popular",  accent:"#9f1239", dark:"#4f46e5", layout:"sidebar"   },
@@ -627,7 +614,7 @@ const TEMPLATE_DESIGNS = [
 
 const TMPL_CATS = ["All","Professional","Corporate","Design","Technology","Clean","Traditional","Luxury","Marketing","Healthcare","Education","Futuristic"];
 <br></br>
-// Mini resume preview renderer
+
 function MiniResume({ t }) {
   const { accent, dark, layout } = t;
   const Line = ({ w="100%", h=5, color, mt=0, mb=3, r=3 }) => (
@@ -769,7 +756,7 @@ function MiniResume({ t }) {
       </div>
     );
   }
-  // elegant / retro / newspaper
+  
   return (
     <div style={{ height:"100%", background:"#fffbeb", borderRadius:6, overflow:"hidden", padding:"10px" }}>
       <div style={{ textAlign:"center", borderBottom:"2px solid "+accent, paddingBottom:7, marginBottom:7 }}>
@@ -787,7 +774,6 @@ function MiniResume({ t }) {
   );
 }
 
-// ── TEMPLATES SECTION ─────────────────────────────────────────────────────────
 function TemplatesSection({ onSelect }) {
   const ref = useRef(null);
   const iv = useInView(ref, { once:true, margin:"-80px" });
@@ -809,11 +795,11 @@ function TemplatesSection({ onSelect }) {
 
   return (
     <section ref={ref} className="relative py-16 overflow-hidden" style={{ background:"transparent" }}>
-      {/* Grid bg */}
+      {}
       <div className="absolute top-1/3 left-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-10 pointer-events-none -translate-x-1/2" style={{ background:"radial-gradient(ellipse,#f43f5e,transparent)" }}/>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
-        {/* Header */}
+        {}
         <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="text-center mb-10">
           <br></br><br></br> <br></br><br></br><div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-800 text-sm font-semibold whitespace-nowrap" style={{padding:"6px 20px",width:"fit-content",maxWidth:"100%",margin:"0 20px"}}>🎨 Professional Templates</div>
@@ -825,7 +811,7 @@ function TemplatesSection({ onSelect }) {
          <br></br> <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{lineHeight:"1.85"}}>22+ professionally designed templates for every industry and style.</p>
         </motion.div><br></br>
 
-        {/* Category filter */}
+        {}
         <motion.div initial={{ opacity:0, y:20 }} animate={iv?{ opacity:1, y:0 }:{}} transition={{ delay:0.2 }} className="flex flex-wrap justify-center gap-2 mb-10">
           {TMPL_CATS.map(cat => (
             <motion.button key={cat} whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
@@ -843,7 +829,7 @@ function TemplatesSection({ onSelect }) {
           ))}
         </motion.div>
 <br></br>
-        {/* Template grid */}
+        {}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-10">
           <AnimatePresence mode="popLayout">
             {visible.map((t, i) => (
@@ -865,22 +851,22 @@ function TemplatesSection({ onSelect }) {
                 className="group cursor-pointer"
                 onClick={() => onSelect(t.id)}>
 
-                {/* Card */}
+                {}
                 <div className="relative rounded-2xl overflow-hidden border border-[#4a0e2e]/15 hover:border-white/25 transition-all duration-300"
                   style={{
                     background:"rgba(74,14,46,0.6)",
                     boxShadow: hovered === t.id ? `0 30px 60px ${t.accent}44, 0 0 0 1px ${t.accent}33` : "0 4px 20px rgba(0,0,0,0.3)",
                   }}>
 
-                  {/* Badge */}
+                  {}
                   <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full text-xs font-bold text-[#4a0e2e]"
                     style={{ background:`${t.accent}ee`, boxShadow:`0 4px 12px ${t.accent}66` }}>
                     {t.badge}
                   </div>
 
-                  {/* 3D Preview */}
+                  {}
                   <div className="relative overflow-hidden" style={{ height:200, padding:8 }}>
-                    {/* Glow on hover */}
+                    {}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                       style={{ background:`radial-gradient(circle at center, ${t.accent}22, transparent)` }}/>
                     <div style={{ height:"100%", borderRadius:6, overflow:"hidden", boxShadow: hovered===t.id ? `0 8px 30px ${t.accent}44` : "0 2px 10px rgba(0,0,0,0.3)", transition:"box-shadow 0.3s" }}>
@@ -888,7 +874,7 @@ function TemplatesSection({ onSelect }) {
                     </div>
                   </div>
 
-                  {/* Footer */}
+                  {}
                   <div style={{ background:"rgba(0,0,0,0.3)", padding:"8px 16px 16px 16px" }}>
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="text-sm font-bold text-[#4a0e2e]">&nbsp;{t.name}</h3>
@@ -908,7 +894,7 @@ function TemplatesSection({ onSelect }) {
           </AnimatePresence>
         </div>
             <br></br>
-        {/* Show More / Show Less */}
+        {}
         {filtered.length > 8 && (
           <motion.div initial={{ opacity:0 }} animate={iv?{ opacity:1 }:{}} transition={{ delay:0.5 }} className="text-center">
             <motion.button
@@ -937,7 +923,7 @@ function TemplatesSection({ onSelect }) {
   const iv=useInView(ref,{once:true,margin:"-80px"});
   const fr=useRef(null);
 
-  // ── SINGLE SOURCE OF TRUTH ──────────────────────────────────────────────
+  
   const[resumeData,setResumeData]=useState({
     name:"",title:"",email:"",phone:"",location:"",
     summary:"",
@@ -948,25 +934,25 @@ function TemplatesSection({ onSelect }) {
     certifications:[],
   });
 
-  // ── UI STATE ─────────────────────────────────────────────────────────────
+  
   const[file,setFile]=useState(null);
   const[checking,setChecking]=useState(false);
   const[atsScore,setAtsScore]=useState(null);
   const[improvements,setImprovements]=useState([]);
-  const[lineStates,setLineStates]=useState({});   // {lineId: "idle"|"loading"|"done"|"undone"}
-  const[history,setHistory]=useState({});          // {lineId: originalText}
+  const[lineStates,setLineStates]=useState({});   
+  const[history,setHistory]=useState({});          
   const[downloadingPDF,setDownloadingPDF]=useState(false);
   const[showPreview,setShowPreview]=useState(false);
   const[fixingAll,setFixingAll]=useState(false);
 
-  // ── ATS SCORE CALCULATION ────────────────────────────────────────────────
+  
   function calcScore(rd){
     let s=0;
     const txt=[rd.summary,...rd.experience,...rd.projects,...rd.skills].join(" ").toLowerCase();
     const strongKw=["led","architected","optimized","increased","reduced","delivered","launched","scaled","automated","deployed","mentored"];
     const weakKw=["developed","built","designed","implemented","improved","collaborated","results","impact","metrics","performance","agile","managed"];
     const weakPhrases=["responsible for","worked on","helped with","participated in","assisted with","was involved"];
-    // Base score from completeness
+    
     if(rd.name)s+=8; if(rd.title)s+=6; if(rd.email)s+=4; if(rd.phone)s+=3; if(rd.location)s+=2;
     if(rd.summary&&rd.summary.length>50)s+=8;
     if(rd.skills.length>=3)s+=5; if(rd.skills.length>=6)s+=5;
@@ -974,18 +960,18 @@ function TemplatesSection({ onSelect }) {
     if(rd.projects.length>=1)s+=5;
     if(rd.education.length>=1)s+=5;
     if(rd.certifications&&rd.certifications.length>=1)s+=4;
-    // Keyword score
+    
     s+=Math.min(15,strongKw.filter(k=>txt.includes(k)).length*3);
     s+=Math.min(10,weakKw.filter(k=>txt.includes(k)).length*2);
-    // Metrics bonus
+    
     if(rd.experience.some(e=>/\d+%|\d+x|\$\d+|\d+ (team|users|projects)/.test(e)))s+=8;
-    // Penalty for weak phrases
+    
     const weakCount=weakPhrases.filter(w=>txt.includes(w)).length;
     s=Math.max(0,s-weakCount*3);
     return Math.min(100,Math.max(10,s));
   }
 
-  // ── PARSE UPLOADED FILE TEXT INTO RESUME JSON ────────────────────────────
+  
   function parseResumeText(text){
     const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
     const rd={name:"",title:"",email:"",phone:"",location:"",summary:"",experience:[],projects:[],skills:[],education:[],certifications:[]};
@@ -1008,14 +994,14 @@ function TemplatesSection({ onSelect }) {
       else if(section==="education"&&line.length>5)    rd.education.push(line);
       else if(section==="certifications"&&line.length>5) rd.certifications.push(line);
     });
-    // Fallback: if no sections found, treat all lines as experience
+    
     if(rd.experience.length===0&&rd.summary===""&&lines.length>3){
       lines.slice(3).forEach(l=>{if(l.length>15)rd.experience.push(l);});
     }
     return rd;
   }
 
-  // ── GENERATE IMPROVEMENTS FOR EACH LINE ─────────────────────────────────
+  
   function generateImprovements(rd){
     const issues=[];
     const WEAK=["responsible for","worked on","helped with","was involved in","assisted with","participated in","did","made","did work on"];
@@ -1081,7 +1067,7 @@ function TemplatesSection({ onSelect }) {
     return issues;
   }
 
-  // ── CHECK RESUME ─────────────────────────────────────────────────────────
+  
   async function check(){
     if(!file)return;
     setChecking(true);
@@ -1091,12 +1077,12 @@ function TemplatesSection({ onSelect }) {
     setHistory({});
     setShowPreview(false);
     await new Promise(r=>setTimeout(r,1200));
-    // Detect if PDF (binary) - PDFs cannot be read as plain text
+    
     const isPDF=file.name.toLowerCase().endsWith(".pdf")||file.type==="application/pdf";
     const isDOC=file.name.toLowerCase().endsWith(".doc")||file.name.toLowerCase().endsWith(".docx");
     let rd=null;
     if(!isPDF&&!isDOC){
-      // TXT file - read as text
+      
       const text=await new Promise((res,rej)=>{
         const reader=new FileReader();
         reader.onload=e=>res(e.target.result);
@@ -1105,9 +1091,9 @@ function TemplatesSection({ onSelect }) {
       });
       rd=parseResumeText(text);
     }
-    // For PDF/DOC or if parsing failed, use realistic demo data based on filename
+    
     const isDemoNeeded=!rd||rd.experience.length===0;
-    // Extract name from filename (e.g. RESUME_RUCHIKA_AGGARWAL_2410991623.pdf -> Ruchika Aggarwal)
+    
     const rawName=file.name.replace(/\.(pdf|doc|docx|txt)$/i,"").replace(/RESUME_?/i,"").replace(/_\d+$/,"").replace(/_/g," ").trim();
     const extractedName=rawName.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ")||"Your Name";
     const finalRd=isDemoNeeded?{
@@ -1140,13 +1126,13 @@ function TemplatesSection({ onSelect }) {
     setChecking(false);
   }
 
-  // ── IMPROVE ONE LINE (updates single source of truth) ────────────────────
+  
   async function improveLine(issue){
     setLineStates(p=>({...p,[issue.id]:"loading"}));
     await new Promise(r=>setTimeout(r,900));
-    // Save original for undo
+    
     setHistory(p=>({...p,[issue.id]:issue.original}));
-    // Update the single source of truth
+    
     setResumeData(prev=>{
       const updated={...prev};
       if(issue.field==="experience"){
@@ -1158,10 +1144,10 @@ function TemplatesSection({ onSelect }) {
       }
       return updated;
     });
-    // Update the improvement to show new original
+    
     setImprovements(prev=>prev.map(imp=>imp.id===issue.id?{...imp,original:issue.improved}:imp));
     setLineStates(p=>({...p,[issue.id]:"done"}));
-    // Recalculate ATS score
+    
     setResumeData(prev=>{
       const newScore=calcScore(prev);
       setAtsScore(newScore);
@@ -1169,7 +1155,7 @@ function TemplatesSection({ onSelect }) {
     });
   }
 
-  // ── UNDO A FIX ───────────────────────────────────────────────────────────
+  
   function undoFix(issue){
     const orig=history[issue.id];
     if(!orig)return;
@@ -1190,7 +1176,7 @@ function TemplatesSection({ onSelect }) {
     setAtsScore(calcScore(resumeData));
   }
 
-  // ── FIX ALL ──────────────────────────────────────────────────────────────
+  
   async function fixAll(){
     setFixingAll(true);
     for(const issue of improvements){
@@ -1202,7 +1188,7 @@ function TemplatesSection({ onSelect }) {
     setFixingAll(false);
   }
 
-  // ── GENERATE RESUME HTML FROM UPDATED DATA ───────────────────────────────
+  
 ﻿  function buildResumeHTML(rd){
     const accent="#9f1239";
     const headerBg="background:linear-gradient(135deg,#9f1239,#be123c);";
@@ -1213,7 +1199,7 @@ function TemplatesSection({ onSelect }) {
     let html="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Resume - "+rd.name+"</title></head>";
     html+="<body style='font-family:Arial,sans-serif;font-size:11pt;line-height:1.6;color:#1a1a1a;background:#fff;margin:0;padding:0;'>";
 
-    // Header
+    
     html+="<div style='"+headerBg+"padding:28px 32px;'>";
     html+="<h1 style='font-size:22pt;font-weight:800;color:#fff;margin:0 0 4px;'>"+rd.name+"</h1>";
     html+="<div style='font-size:13pt;color:rgba(74,14,46,0.85);margin-bottom:6px;'>"+rd.title+"</div>";
@@ -1224,13 +1210,13 @@ function TemplatesSection({ onSelect }) {
     html+="</div></div>";
     html+="<div style='padding:8px 32px 32px;'>";
 
-    // Summary - NO AI badge
+    
     if(rd.summary){
       html+="<div style='"+sectionTitle+"'>Summary</div>";
       html+="<p style='"+bullet+"font-style:italic;'>"+rd.summary+"</p>";
     }
 
-    // Skills
+    
     if(rd.skills.length>0){
       html+="<div style='"+sectionTitle+"'>Skills</div>";
       html+="<div style='margin-top:4px;'>";
@@ -1238,7 +1224,7 @@ function TemplatesSection({ onSelect }) {
       html+="</div>";
     }
 
-    // Experience - NO AI badge, NO green highlight
+    
     if(rd.experience.length>0){
       html+="<div style='"+sectionTitle+"'>Experience</div>";
       rd.experience.forEach(function(line){
@@ -1248,19 +1234,19 @@ function TemplatesSection({ onSelect }) {
       });
     }
 
-    // Projects
+    
     if(rd.projects.length>0){
       html+="<div style='"+sectionTitle+"'>Projects</div>";
       rd.projects.forEach(function(p){html+="<p style='"+bullet+"'>"+p+"</p>";});
     }
 
-    // Education
+    
     if(rd.education.length>0){
       html+="<div style='"+sectionTitle+"'>Education</div>";
       rd.education.forEach(function(e){html+="<p style='"+bullet+"'>"+e+"</p>";});
     }
 
-    // Certifications
+    
     if(rd.certifications.length>0){
       html+="<div style='"+sectionTitle+"'>Certifications</div>";
       rd.certifications.forEach(function(cert){html+="<p style='"+bullet+"'>"+cert+"</p>";});
@@ -1275,7 +1261,7 @@ function TemplatesSection({ onSelect }) {
     try{
       const html=buildResumeHTML(resumeData);
 
-      // Create a full-page overlay div that IS visible to html2canvas
+      
       const overlay=document.createElement("div");
       overlay.style.cssText="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999998;display:flex;align-items:flex-start;justify-content:center;overflow:auto;";
 
@@ -1285,12 +1271,12 @@ function TemplatesSection({ onSelect }) {
       overlay.appendChild(page);
       document.body.appendChild(overlay);
 
-      // Wait for browser to fully paint
+      
       await new Promise(r=>setTimeout(r,500));
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
       await new Promise(r=>setTimeout(r,300));
 
-      // Capture with html2canvas
+      
       const html2canvas=(await import("html2canvas")).default;
       const canvas=await html2canvas(page,{
         scale:2,
@@ -1306,10 +1292,10 @@ function TemplatesSection({ onSelect }) {
         ignoreElements:(el)=>el===overlay,
       });
 
-      // Remove overlay
+      
       document.body.removeChild(overlay);
 
-      // Convert to PDF with jsPDF
+      
       const{jsPDF}=await import("jspdf");
       const pdf=new jsPDF({unit:"px",format:"a4",orientation:"portrait"});
       const pdfW=pdf.internal.pageSize.getWidth();
@@ -1323,7 +1309,7 @@ function TemplatesSection({ onSelect }) {
       if(scaledH<=pdfH){
         pdf.addImage(imgData,"JPEG",0,0,pdfW,scaledH);
       }else{
-        // Multi-page
+        
         const pageHpx=pdfH/ratio;
         let yOffset=0;
         let pageNum=0;
@@ -1348,7 +1334,7 @@ function TemplatesSection({ onSelect }) {
 
     }catch(err){
       console.error("PDF error:",err);
-      // Fallback: open in new window for print
+      
       const html=buildResumeHTML(resumeData);
       const w=window.open("","_blank");
       if(w){
@@ -1381,9 +1367,9 @@ function TemplatesSection({ onSelect }) {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
-          {/* LEFT: Upload + Score */}
+          {}
           <motion.div initial="hidden" animate={iv?"visible":"hidden"} variants={FU} className="space-y-6 flex flex-col">
-            {/* Upload */}
+            {}
             <div onClick={()=>fr.current?.click()} className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center border-2 border-dashed rounded-2xl card-surface cursor-pointer transition-all duration-300 group" style={{borderColor:file?"#e11d48":"rgba(74,14,46,0.15)",background:file?"rgba(225,29,72,0.08)":"rgba(74,14,46,0.03)"}}>
               <input ref={fr} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e=>setFile(e.target.files[0])}/>
               <div className="text-5xl mb-5 group-hover:scale-110 transition-transform">{file?"📄":"📤"}</div>
@@ -1396,7 +1382,7 @@ function TemplatesSection({ onSelect }) {
               {checking?<span className="flex items-center justify-center gap-3"><motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>Analyzing resume...</span>:"Check ATS Score →"}
             </motion.button>
 
-            {/* ATS Score Card */}
+            {}
             {atsScore!=null&&(
               <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="card-surface">
                 <div className="flex items-center gap-7 mb-6">
@@ -1415,7 +1401,7 @@ function TemplatesSection({ onSelect }) {
                   <div className="flex-1">
                     <h3 className="text-xl font-black text-[#4a0e2e] mb-1">{atsScore>=80?"🟢 Excellent!":atsScore>=60?"🟡 Good — needs work":"🔴 Needs major improvements"}</h3>
                     <p className="text-slate-600 text-sm mb-4 leading-relaxed">{appliedCount>0?"✨ "+appliedCount+" improvement"+(appliedCount>1?"s":"")+" applied — score updated!":"Apply AI improvements to boost your score."}</p>
-        ﻿            {/* AI Decision Panel - What to add to make resume more professional */}
+        ﻿            {}
             {atsScore!=null&&(
               <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.3}}
                 className="improvement-card overflow-hidden"
@@ -1539,7 +1525,7 @@ function TemplatesSection({ onSelect }) {
                     )}
                   </div>
                 </div>
-                {/* Progress */}
+                {}
                 {improvements.length>0&&(
                   <div>
                     <div className="flex justify-between text-xs mb-2">
@@ -1554,7 +1540,7 @@ function TemplatesSection({ onSelect }) {
               </motion.div>
             )}
 
-            {/* Download button - appears after at least 1 fix */}
+            {}
             {appliedCount>0&&(
               <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-4">
                 <motion.button whileHover={{scale:1.03,boxShadow:"0 20px 40px rgba(16,185,129,0.5)"}} whileTap={{scale:0.97}}
@@ -1577,9 +1563,9 @@ function TemplatesSection({ onSelect }) {
             )}
           </motion.div>
 
-          {/* RIGHT: Issues + Preview */}
+          {}
           <motion.div initial={{opacity:0,x:40}} animate={iv?{opacity:1,x:0}:{}} transition={{duration:0.7,delay:0.2}} className="space-y-6 flex flex-col h-full">
-            {/* Live Preview */}
+            {}
             <AnimatePresence>
               {showPreview&&resumeData.name&&(
                 <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}
@@ -1604,7 +1590,7 @@ function TemplatesSection({ onSelect }) {
               )}
             </AnimatePresence>
 
-            {/* Grammar Issues */}
+            {}
             {improvements.length>0&&(
               <div className="flex-1 flex flex-col">
                 <h4 className="font-bold text-[#4a0e2e] mb-6 flex items-center gap-2 text-lg">
@@ -1787,7 +1773,6 @@ function AITools({ onBuild }) {
   );
 }
 
-// ── FOOTER CTA ────────────────────────────────────────────────────────────
 ﻿﻿function Pricing({ onBuild }) {
   const ref=useRef(null); const iv=useInView(ref,{once:true,margin:"-80px"});
   const[billing,setBilling]=useState("monthly");
@@ -1828,7 +1813,7 @@ function AITools({ onBuild }) {
     <section ref={ref} className="relative py-16 overflow-hidden" style={{background:"transparent"}}>
       <div className="absolute top-1/2 left-1/2 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none -translate-x-1/2 -translate-y-1/2" style={{background:"radial-gradient(circle,#be123c,transparent)"}}/>
 
-      {/* Payment Modal */}
+      {}
       <AnimatePresence>
         {modal&&(
           <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(0,0,0,0.8)",backdropFilter:"blur(8px)"}}>
@@ -1962,20 +1947,19 @@ function FooterCTA({ onBuild }) {
   );
 }
 
-// ── MAIN EXPORT ───────────────────────────────────────────────────────────
 export default function ResumeBuilderLanding({ user = {} }) {
   const [view, setView] = useState("landing");
   const [selTpl, setSelTpl] = useState("modern");
   const [selAccent, setSelAccent] = useState("#9f1239");
 
-  // Recompute hero stats every time we return to the landing view
-  // (builder writes to localStorage, so reading on view change picks up fresh data)
+  
+  
   const [heroStats, setHeroStats] = useState(() => computeHeroStats(user));
   useEffect(() => {
     if (view === "landing") setHeroStats(computeHeroStats(user));
   }, [view, user]);
 
-  // Map 22 template IDs -> { tpl: "modern"|"classic"|"minimal", accent }
+  
   const TPL_MAP = {
     "modern-pro":    { tpl:"sidebar",   accent:"#9f1239" },
     "executive":     { tpl:"classic",   accent:"#0f172a" },
@@ -2011,7 +1995,7 @@ export default function ResumeBuilderLanding({ user = {} }) {
   if (view === "builder") {
     return (
       <div>
-        {/* Back button */}
+        {}
         <div className="fixed top-4 left-4 z-50">
           <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setView("landing")}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-white/20 text-[#4a0e2e]/70 hover:text-[#4a0e2e] hover:border-white/40 transition-all backdrop-blur-xl"

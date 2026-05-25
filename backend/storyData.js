@@ -1,8 +1,3 @@
-/**
- * Story Mode — in-memory data store
- * Worlds, missions, and user progress
- */
-
 const worlds = [
   { id: "arrays",    name: "Array Kingdom",       theme: "linear",    description: "Master the land of indexed elements",          icon: "🏰", color: "#00e5ff" },
   { id: "linkedlist",name: "Linked List Labyrinth",theme: "chain",     description: "Traverse the chains of connected nodes",        icon: "🔗", color: "#f59e0b" },
@@ -366,7 +361,6 @@ const missions = {
   ]
 };
 
-// In-memory user progress store: { [userId]: { xp, level, completedMissions: Set } }
 const userProgress = {};
 
 const LEVELS = [

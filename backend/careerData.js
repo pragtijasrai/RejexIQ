@@ -1,8 +1,3 @@
-/**
- * Career Match System — static data & rule-based logic
- */
-
-// ── ROLE DEFINITIONS ──────────────────────────────────────────────────────────
 const ROLES = {
   frontend: {
     label: "Frontend Developer", icon: "🎨", color: "#00e5ff",
@@ -31,7 +26,6 @@ const ROLES = {
   }
 };
 
-// ── JOB SIMULATIONS ───────────────────────────────────────────────────────────
 const SIMULATIONS = {
   frontend: {
     title: "Frontend Developer @ TechStartup",
@@ -179,7 +173,6 @@ const SIMULATIONS = {
   }
 };
 
-// ── REJECTION LOGIC ───────────────────────────────────────────────────────────
 function calculateRejection(skills, projects, roleKey) {
   const role = ROLES[roleKey];
   if (!role) return { probability: 50, factors: [] };
@@ -187,7 +180,7 @@ function calculateRejection(skills, projects, roleKey) {
   let penalty = 0;
   const factors = [];
 
-  // Core skill gaps
+  
   for (const [skill, required] of Object.entries(role.requiredSkills)) {
     const userVal = skills[skill] || 0;
     if (userVal < required) {
@@ -198,14 +191,14 @@ function calculateRejection(skills, projects, roleKey) {
     }
   }
 
-  // Projects penalty
+  
   if (!projects || projects < 2) {
     const p = projects === 0 ? 20 : 10;
     penalty += p;
     factors.push({ label: projects === 0 ? "No portfolio projects" : "Only 1 project", impact: p, type: "project" });
   }
 
-  // Communication penalty
+  
   const comm = skills.Communication || 0;
   if (comm < 60) {
     const p = Math.round((60 - comm) * 0.3);
@@ -215,7 +208,7 @@ function calculateRejection(skills, projects, roleKey) {
 
   const probability = Math.min(95, Math.max(5, penalty));
 
-  // Improvement scenario
+  
   const improvements = [];
   const topGaps = Object.entries(role.requiredSkills)
     .map(([s, r]) => ({ skill: s, gap: Math.max(0, r - (skills[s] || 0)) }))
@@ -236,7 +229,6 @@ function calculateRejection(skills, projects, roleKey) {
   return { probability, improvedProbability, factors, improvements };
 }
 
-// ── TIME TO JOB LOGIC ─────────────────────────────────────────────────────────
 function calculateTimeToJob(skills, projects, roleKey, hoursPerDay) {
   const role = ROLES[roleKey];
   if (!role) return { months: 6, breakdown: [] };
@@ -247,14 +239,14 @@ function calculateTimeToJob(skills, projects, roleKey, hoursPerDay) {
   for (const [skill, required] of Object.entries(role.requiredSkills)) {
     const gap = Math.max(0, required - (skills[skill] || 0));
     if (gap > 0) {
-      // Each skill point requires ~2 hours of focused study
+      
       const hoursNeeded = gap * 2;
       totalGapPoints += hoursNeeded;
       breakdown.push({ skill, gap, hoursNeeded });
     }
   }
 
-  // Projects: each project ~40 hours
+  
   const projectsNeeded = Math.max(0, 2 - (projects || 0));
   const projectHours = projectsNeeded * 40;
   if (projectsNeeded > 0) {
@@ -266,7 +258,7 @@ function calculateTimeToJob(skills, projects, roleKey, hoursPerDay) {
   const daysNeeded = totalHours / hoursPerDay;
   const months = daysNeeded / 30;
 
-  // Simulate different study paces
+  
   const scenarios = [1, 2, 3, 4].map(h => ({
     hoursPerDay: h,
     months: parseFloat((totalHours / (h * 30)).toFixed(1))
@@ -280,7 +272,6 @@ function calculateTimeToJob(skills, projects, roleKey, hoursPerDay) {
   };
 }
 
-// ── ROI LOGIC ─────────────────────────────────────────────────────────────────
 function calculateROI(skills, roleKey) {
   const role = ROLES[roleKey];
   if (!role) return [];
@@ -312,7 +303,6 @@ function calcReadiness(skills, requiredSkills) {
   return count > 0 ? Math.round(total / count) : 0;
 }
 
-// ── SIMULATION EVALUATOR ──────────────────────────────────────────────────────
 function evaluateSimulation(roleKey, answers) {
   const sim = SIMULATIONS[roleKey];
   if (!sim) return null;

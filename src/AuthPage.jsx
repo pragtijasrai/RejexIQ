@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import log from "./signin.svg";
 import register from "./signup.svg";
-// redesigned
 
 const TOKEN_KEY = "rejexiq_token";
 const USER_KEY = "rejexiq_user";
@@ -186,7 +185,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                 : "lg:left-3/4 "
               } `}
           >
-            {/* SignIn Form Container */}
+            {}
             <div
               className={` flex items-center justify-center flex-col transition-all duration-[500ms] delay-[400ms] 
                 overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 px-6 max-lg:mt-60  z-20 max-md:px-4 
@@ -195,7 +194,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                   : "opacity-100 pointer-events-auto translate-x-0 scale-100"
                 }`}
             >
-              {/* --- SIGN IN FORM CONTENT --- */}
+              {}
               <div className="w-full md:mt-0 sm:max-w-md relative">
                 <div className="py-8 px-8 flex flex-col gap-6 md:gap-7 sm:py-10 sm:px-10">
                   <div className="text-center">
@@ -284,7 +283,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
               </div>
             </div>
 
-            {/* SignUp Form Container */}
+            {}
             <div
               className={`flex items-center justify-center flex-col px-6 transition-all duration-[500ms]
                  delay-[400ms] overflow-hidden col-start-1 col-end-2 row-start-1 row-end-2 py-0 z-10 max-md:px-4 
@@ -293,7 +292,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
                   : "opacity-0 pointer-events-none translate-x-12 scale-95"
                 }`}
             >
-              {/* --- SIGN UP FORM CONTENT --- */}
+              {}
               <div className="w-full md:mt-0 sm:max-w-md relative">
                 <div className="py-8 px-10 flex flex-col gap-6 md:gap-7 sm:py-10 sm:px-14">
                   <div className="text-center">
@@ -422,10 +421,10 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
           </div>
         </div>
 
-        {/* Text/Images panels container */}
+        {}
         <div className="absolute h-full w-full top-0 left-0 grid grid-cols-1   max-lg:grid-rows-[1fr_2fr_1fr]  
         lg:grid-cols-2">
-          {/* Sign Up side (Right visually, but logic-wise left panel) */}
+          {}
           <div
             className={`flex flex-row justify-around lg:flex-col items-center  max-lg:col-start-1 max-lg:col-end-2  
               max-lg:px-[8%]   max-lg:py-10 lg:items-center  text-center z-[6]   max-lg:row-start-1 max-lg:row-end-2    
@@ -466,7 +465,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
             />
           </div>
 
-          {/* Sign In side (Left visually, but logic-wise right panel) */}
+          {}
           <div
             className={`flex flex-row   max-lg:row-start-3 max-lg:row-end-4 lg:flex-col items-center lg:items-center 
               justify-around text-center z-[6]   max-lg:col-start-1 max-lg:col-end-2  max-lg:px-[8%]   max-lg:py-10 
@@ -508,7 +507,7 @@ export default function AuthPage({ onLogin, onNav, type, initialMode }) {
           </div>
         </div>
 
-        {/* Toast */}
+        {}
         {toast && (
           <div className={`fixed bottom-7 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full text-[13px] font-medium shadow-xl whitespace-nowrap max-w-[90vw] animate-[fadeUp_0.3s_ease] ${toast.type === "success" ? "bg-[#34d399]/15 border border-[#10b981]/40 text-[#10b981]" :
             toast.type === "info" ? "bg-[#22d3ee]/15 border border-[#06b6d4]/40 text-[#06b6d4]" :
