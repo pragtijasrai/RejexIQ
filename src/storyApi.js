@@ -1,8 +1,3 @@
-/**
- * Story Mode API client
- * All calls go through Vite's proxy → http://localhost:5000
- */
-
 const BASE = "/api";
 
 export async function fetchWorlds() {

@@ -9,7 +9,6 @@ const connectionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Ensure a user can only send one request to another user
 connectionSchema.index({ sender: 1, receiver: 1 }, { unique: true });
 
 module.exports = mongoose.model("Connection", connectionSchema);

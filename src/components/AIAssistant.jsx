@@ -10,7 +10,7 @@ export default function AIAssistant({ user }) {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
   const msgRef = useRef(null);
 
-  // Suggestions for the user
+  
   const suggestions = [
     "How do I improve my backend skills?",
     "What skills should I learn for frontend?",
@@ -18,8 +18,6 @@ export default function AIAssistant({ user }) {
     "Tell me a relaxing fact",
     "Can you help me design my portfolio?"
   ];
-
-
 
   async function callGeminiAPI(userMessage) {
     if (!apiKey) {
@@ -62,8 +60,6 @@ Please respond in a friendly, encouraging, and soothing tone. Provide helpful an
     }
   }
 
-
-
   async function send(text) {
     const q = text || input;
     if (!q.trim()) return;
@@ -83,18 +79,16 @@ Please respond in a friendly, encouraging, and soothing tone. Provide helpful an
     setLoading(false);
   }
 
-  // --- UI COMPONENTS ---
-
-
+  
 
   return (
     <div className="soothing-container">
       <style>{soothingStyles}</style>
 
       <div className="chat-layout">
-        {/* Main Chat Area */}
+        {}
         <div className="chat-window">
-          {/* Header */}
+          {}
           <div className="chat-header">
             <div className="header-info">
               <img src="https://img.icons8.com/3d-fluency/94/chatbot.png" alt="AI" style={{ width: 48, height: 48 }} className="float-anim" />
@@ -108,7 +102,7 @@ Please respond in a friendly, encouraging, and soothing tone. Provide helpful an
 
           </div>
 
-          {/* Messages */}
+          {}
           <div className="chat-messages" ref={msgRef}>
             {messages.map((m, i) => (
               <div key={i} className={`message-wrapper ${m.role}`}>
@@ -129,7 +123,7 @@ Please respond in a friendly, encouraging, and soothing tone. Provide helpful an
             )}
           </div>
 
-          {/* Input Area */}
+          {}
           <div className="chat-input-area">
             <input 
               className="soothing-input" 
@@ -144,7 +138,7 @@ Please respond in a friendly, encouraging, and soothing tone. Provide helpful an
           </div>
         </div>
 
-        {/* Sidebar */}
+        {}
         <div className="chat-sidebar">
           <div className="sidebar-card">
             <h3 style={{ fontSize: 14, fontWeight: 700, color: "#64748b", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>Suggestions</h3>

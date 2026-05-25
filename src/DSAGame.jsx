@@ -279,14 +279,13 @@ const CERT_CSS = `
     transition:all .2s;
   }
   .cert-share:hover { background:#f0f0ff; }
-  /* Confetti */
+  
   .confetti-piece {
     position:fixed; width:10px; height:10px; border-radius:2px;
     animation:confettiFall linear forwards; pointer-events:none; z-index:10000;
   }
 `;
 
-// ── Confetti ──
 function Confetti() {
   const pieces = Array.from({ length: 60 }, (_, i) => ({
     id: i,
@@ -309,7 +308,6 @@ function Confetti() {
   );
 }
 
-// ── Certificate ──
 function Certificate({ xp, completed, onClose }) {
   const totalTopics = completed.length;
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -472,7 +470,7 @@ export default function DSAGame() {
     <div className="game-root">
       <style>{GAME_CSS}{GAME_CSS2}{CERT_CSS}</style>
 
-      {/* HUD */}
+      {}
       <div className="game-hud">
         <div className="game-avatar">🧑‍💻</div>
         <div className="game-level-badge" style={{ color: level.color, borderColor: level.color }}>
@@ -498,7 +496,7 @@ export default function DSAGame() {
         )}
       </div>
 
-      {/* Tabs */}
+      {}
       <div className="game-tabs">
         {tabs.map(t => (
           <button key={t.id} className={`game-tab${tab === t.id ? " active" : ""}`} onClick={() => setTab(t.id)}>
@@ -507,7 +505,7 @@ export default function DSAGame() {
         ))}
       </div>
 
-      {/* Learn Tab */}
+      {}
       {tab === "learn" && (
         <div className="game-section">
           <DSAHub
@@ -517,7 +515,7 @@ export default function DSAGame() {
         </div>
       )}
 
-      {/* Daily Challenge Tab */}
+      {}
       {tab === "challenge" && (
         <div className="game-section">
           <div style={{ textAlign: "center", padding: "60px 20px", color: "#9090a8" }}>
@@ -528,7 +526,7 @@ export default function DSAGame() {
         </div>
       )}
 
-      {/* Achievements Tab */}
+      {}
       {tab === "achievements" && (
         <div className="game-section">
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>🏆 Achievements</div>
@@ -550,7 +548,7 @@ export default function DSAGame() {
         </div>
       )}
 
-      {/* Leaderboard Tab */}
+      {}
       {tab === "leaderboard" && (
         <div className="game-section">
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>🥇 Leaderboard</div>
@@ -565,15 +563,15 @@ export default function DSAGame() {
         </div>
       )}
 
-      {/* Certificate */}
+      {}
       {showCert && <Certificate xp={xp} completed={completed} onClose={() => setShowCert(false)} />}
 
-      {/* XP Popup */}
+      {}
       {xpPopup !== null && (
         <div className="xp-popup">+{xpPopup} XP ⚡</div>
       )}
 
-      {/* Achievement Toast */}
+      {}
       {achToast && (
         <div className="ach-toast">
           <div className="ach-toast-icon">{achToast.icon}</div>

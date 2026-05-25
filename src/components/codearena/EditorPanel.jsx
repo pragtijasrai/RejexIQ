@@ -16,13 +16,9 @@ const DIFF_CONFIG = {
 const LANGUAGES = ["JavaScript", "Python", "Java", "C++", "TypeScript"];
 
 const DEFAULT_STARTERS = {
-  JavaScript: `/**
- * @param {number[]} nums
- * @param {number} target
- * @return {number[]}
- */
+  JavaScript: `
 function solve(nums, target) {
-  // Your solution here
+  
   
 }`,
   Python: `class Solution:
@@ -31,43 +27,42 @@ function solve(nums, target) {
         pass`,
   Java: `class Solution {
     public int[] solve(int[] nums, int target) {
-        // Your solution here
+        
         return new int[]{};
     }
 }`,
   "C++": `class Solution {
 public:
     vector<int> solve(vector<int>& nums, int target) {
-        // Your solution here
+        
         return {};
     }
 };`,
   TypeScript: `function solve(nums: number[], target: number): number[] {
-    // Your solution here
+    
     return [];
 }`,
 };
 
-// Syntax-highlighted code display (Monaco-style placeholder)
 function CodeDisplay({ code, language }) {
   const keywords = ["function", "return", "const", "let", "var", "if", "else", "for", "while", "class", "def", "int", "void", "public", "vector", "new"];
   const lines = code.split("\n");
 
   function colorize(line) {
-    // Simple tokenizer for visual effect
+    
     let result = [];
     let remaining = line;
     let key = 0;
 
-    // Comments
-    if (remaining.trimStart().startsWith("//") || remaining.trimStart().startsWith("#")) {
+    
+    if (remaining.trimStart().startsWith("
       return [<span key={0} style={{ color: "#64748b", fontStyle: "italic" }}>{line}</span>];
     }
-    if (remaining.trimStart().startsWith("*") || remaining.trimStart().startsWith("/**") || remaining.trimStart().startsWith("*/")) {
+    if (remaining.trimStart().startsWith("*") || remaining.trimStart().startsWith("")) {
       return [<span key={0} style={{ color: "#64748b", fontStyle: "italic" }}>{line}</span>];
     }
 
-    // Tokenize
+    
     const tokens = remaining.split(/(\b\w+\b|[{}()\[\];,.]|"[^"]*"|'[^']*')/g);
     return tokens.map((tok, i) => {
       if (!tok) return null;
@@ -82,7 +77,7 @@ function CodeDisplay({ code, language }) {
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      {/* Line numbers */}
+      {}
       <div style={{
         padding: "16px 0", minWidth: 44, textAlign: "right",
         borderRight: `1px solid ${G.border}`, userSelect: "none",
@@ -98,7 +93,7 @@ function CodeDisplay({ code, language }) {
           </div>
         ))}
       </div>
-      {/* Code */}
+      {}
       <div style={{ flex: 1, padding: "16px 20px", overflowX: "auto" }}>
         {lines.map((line, i) => (
           <div key={i} style={{
@@ -189,7 +184,7 @@ export default function EditorPanel({ problem }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Header */}
+      {}
       <div style={{
         background: G.surface, border: `1px solid ${G.border}`,
         borderRadius: 16, padding: "14px 18px", marginBottom: 12,
@@ -212,7 +207,7 @@ export default function EditorPanel({ problem }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Timer */}
+          {}
           <div style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "rgba(0,0,0,0.3)", border: `1px solid ${G.border}`,
@@ -227,7 +222,7 @@ export default function EditorPanel({ problem }) {
             </span>
           </div>
 
-          {/* Language selector */}
+          {}
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
@@ -243,7 +238,7 @@ export default function EditorPanel({ problem }) {
         </div>
       </div>
 
-      {/* Editor */}
+      {}
       <div style={{
         flex: 1, background: "#0d1117",
         border: `1px solid ${G.border}`,
@@ -252,13 +247,13 @@ export default function EditorPanel({ problem }) {
         minHeight: 280,
         position: "relative",
       }}>
-        {/* Editor glow */}
+        {}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: 1,
           background: `linear-gradient(90deg, transparent, ${G.accent}40, transparent)`,
         }} />
 
-        {/* Editable textarea overlay */}
+        {}
         <div style={{ position: "relative", height: "100%", minHeight: 280 }}>
           <textarea
             value={code}
@@ -279,7 +274,7 @@ export default function EditorPanel({ problem }) {
         </div>
       </div>
 
-      {/* Action buttons */}
+      {}
       <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
         <button
           onClick={handleRun}
@@ -336,7 +331,7 @@ export default function EditorPanel({ problem }) {
         </button>
       </div>
 
-      {/* AI Hint panel */}
+      {}
       {showHint && (
         <div style={{
           marginTop: 10, background: "rgba(192,132,252,0.08)",
@@ -363,7 +358,7 @@ export default function EditorPanel({ problem }) {
         </div>
       )}
 
-      {/* Test cases */}
+      {}
       <TestCasePanel problem={problem} runResult={runResult} />
     </div>
   );

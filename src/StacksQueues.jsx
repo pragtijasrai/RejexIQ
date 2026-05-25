@@ -50,7 +50,6 @@ const styles = `
 @media(max-width:500px){ .sq-2col,.sq-3col{grid-template-columns:1fr;} }
 `;
 
-// ── Stack Visualizer ──
 function StackViz({ items, topLabel = "TOP" }) {
   if (!items.length) return (
     <div style={{textAlign:"center",padding:"20px 0",color:"var(--color-text-tertiary)",fontSize:13,fontStyle:"italic"}}>
@@ -80,7 +79,6 @@ function StackViz({ items, topLabel = "TOP" }) {
   );
 }
 
-// ── Queue Visualizer ──
 function QueueViz({ items }) {
   if (!items.length) return (
     <div style={{textAlign:"center",padding:"20px 0",color:"var(--color-text-tertiary)",fontSize:13,fontStyle:"italic"}}>
@@ -109,7 +107,6 @@ function QueueViz({ items }) {
   );
 }
 
-// ── Chapter 1: Stack Introduction ──
 function SecStackIntro() {
   const [stack, setStack] = useState([10, 20, 30]);
   const [val, setVal] = useState(40);
@@ -166,24 +163,24 @@ function SecStackIntro() {
   Stack(int size) {
     arr = new int[size];
     capacity = size;
-    top = -1;          // -1 means empty
+    top = -1;          
   }
 
   void push(int x) {
     if (top == capacity - 1)
       throw new RuntimeException("Stack Overflow");
-    arr[++top] = x;    // increment top, then insert
+    arr[++top] = x;    
   }
 
   int pop() {
     if (top == -1)
       throw new RuntimeException("Stack Underflow");
-    return arr[top--]; // return top, then decrement
+    return arr[top--]; 
   }
 
   int peek() {
     if (top == -1) throw new RuntimeException("Empty");
-    return arr[top];   // just read, don't remove
+    return arr[top];   
   }
 
   boolean isEmpty() { return top == -1; }
@@ -196,28 +193,26 @@ function SecStackIntro() {
 
   void push(int x) {
     Node node = new Node(x);
-    node.next = top;   // new node points to old top
-    top = node;        // top moves to new node
+    node.next = top;   
+    top = node;        
   }
 
   int pop() {
     if (top == null) throw new RuntimeException("Underflow");
     int val = top.data;
-    top = top.next;    // move top down
+    top = top.next;    
     return val;
   }
 
   int peek() { return top.data; }
   boolean isEmpty() { return top == null; }
 }
-// Advantage: no fixed size — grows dynamically`}</div>
-
+`}</div>
       <div className="sq-info"><p>KEY: Stack overflow occurs when you push onto a full array-based stack. Stack underflow occurs when you pop from an empty stack. Always check isEmpty() before pop/peek.</p></div>
     </div>
   );
 }
 
-// ── Chapter 2: Stack Applications ──
 function SecStackApps() {
   const [expr, setExpr] = useState("({[()]})");
   const [balResult, setBalResult] = useState("");
@@ -288,10 +283,9 @@ function SecStackApps() {
           (ch==']' && top!='[')) return false;
     }
   }
-  return stack.isEmpty(); // true if all matched
+  return stack.isEmpty(); 
 }
-// Time: O(n)  |  Space: O(n)`}</div>
-
+`}</div>
       <div className="sq-h3">Application 2 — Infix to Postfix Conversion</div>
       <p className="sq-p">Operators are pushed onto a stack. Higher-precedence operators are applied first.</p>
       <div className="sq-viz">
@@ -301,24 +295,11 @@ function SecStackApps() {
         </div>
         <div className="sq-status" style={{marginTop:10,fontSize:14}}>{postfixResult}</div>
       </div>
-      <div className="sq-code">{`// Operator precedence: ^ > * / > + -
-// Infix:   A + B * C     → Postfix: A B C * +
-// Infix:   (A + B) * C   → Postfix: A B + C *
-// Infix:   A * B + C / D → Postfix: A B * C D / +`}</div>
-
+      <div className="sq-code">{`
+`}</div>
       <div className="sq-h3">Application 3 — Function Call Stack</div>
-      <div className="sq-code">{`// When main() calls foo(), which calls bar():
-// Call stack grows:
-//   [main]
-//   [main][foo]
-//   [main][foo][bar]  ← TOP (currently executing)
-// When bar() returns:
-//   [main][foo]       ← control returns to foo
-// When foo() returns:
-//   [main]            ← control returns to main
-// This is exactly LIFO — last called, first to return!
-// StackOverflowError = call stack exceeded its limit (deep recursion)`}</div>
-
+      <div className="sq-code">{`
+`}</div>
       <div className="sq-h3">Application 4 — Reverse a String</div>
       <div className="sq-code">{`String reverse(String s) {
   Stack<Character> stack = new Stack<>();
@@ -327,8 +308,7 @@ function SecStackApps() {
   while (!stack.isEmpty()) sb.append(stack.pop());
   return sb.toString();
 }
-// "hello" → push h,e,l,l,o → pop o,l,l,e,h → "olleh"`}</div>
-
+`}</div>
       <div className="sq-3col" style={{marginTop:12}}>
         <div className="sq-card"><h4>Undo/Redo</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>Two stacks: undo stack and redo stack. Each action pushes to undo. Ctrl+Z pops from undo, pushes to redo.</p></div>
         <div className="sq-card"><h4>Browser History</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>Back button = pop from history stack. Each new page visited = push to stack.</p></div>
@@ -338,7 +318,6 @@ function SecStackApps() {
   );
 }
 
-// ── Chapter 3: Queue Introduction ──
 function SecQueueIntro() {
   const [queue, setQueue] = useState([10, 20, 30]);
   const [val, setVal] = useState(40);
@@ -404,7 +383,7 @@ function SecQueueIntro() {
 
   void enqueue(int x) {
     if (size == capacity) throw new RuntimeException("Queue Full");
-    rear = (rear + 1) % capacity; // circular indexing
+    rear = (rear + 1) % capacity; 
     arr[rear] = x;
     size++;
   }
@@ -420,14 +399,12 @@ function SecQueueIntro() {
   int front() { return arr[front]; }
   boolean isEmpty() { return size == 0; }
 }
-// Using % (modulo) makes it a CIRCULAR queue — no wasted space!`}</div>
-
+`}</div>
       <div className="sq-warn"><p>LINEAR QUEUE PROBLEM: In a simple array queue, after many enqueue/dequeue operations, front moves right and space at the beginning is wasted. Solution: use a circular queue with modulo arithmetic.</p></div>
     </div>
   );
 }
 
-// ── Chapter 4: Circular Queue ──
 function SecCircularQueue() {
   const SIZE = 6;
   const [arr, setArr] = useState(Array(SIZE).fill(null));
@@ -516,23 +493,13 @@ function SecCircularQueue() {
       </div>
 
       <div className="sq-h3">Why Circular Queue?</div>
-      <div className="sq-code">{`// Linear queue problem:
-// After enqueue/dequeue cycles, front moves right:
-// [_, _, _, 40, 50, 60]  ← front=3, rear=5
-// Even though indices 0,1,2 are free, we can't use them!
-
-// Circular queue solution — wrap around with %:
-// rear = (rear + 1) % capacity
-// front = (front + 1) % capacity
-// Full condition:  (rear + 1) % capacity == front
-// Empty condition: front == -1  (or size == 0)`}</div>
-
+      <div className="sq-code">{`
+`}</div>
       <div className="sq-info"><p>GREEN = FRONT (dequeue from here) | AMBER = REAR (enqueue here) | BLUE = filled slots. The circular structure reuses freed slots automatically.</p></div>
     </div>
   );
 }
 
-// ── Chapter 5: Deque & Priority Queue ──
 function SecDeque() {
   const [deque, setDeque] = useState([20, 30, 40]);
   const [val, setVal] = useState(10);
@@ -577,32 +544,26 @@ function SecDeque() {
       <div className="sq-code">{`import java.util.ArrayDeque;
 Deque<Integer> dq = new ArrayDeque<>();
 
-dq.addFirst(10);   // insert at front
-dq.addLast(20);    // insert at rear
-dq.peekFirst();    // view front
-dq.peekLast();     // view rear
-dq.pollFirst();    // remove from front
-dq.pollLast();     // remove from rear
-
-// Deque as Stack: use addFirst() + pollFirst()
-// Deque as Queue: use addLast() + pollFirst()`}</div>
-
+dq.addFirst(10);   
+dq.addLast(20);    
+dq.peekFirst();    
+dq.peekLast();     
+dq.pollFirst();    
+dq.pollLast();     
+`}</div>
       <div className="sq-h3">Priority Queue</div>
       <p className="sq-p">Elements are served based on <strong>priority</strong>, not insertion order. Internally implemented using a <strong>heap</strong>.</p>
       <div className="sq-code">{`import java.util.PriorityQueue;
 
-// Min-heap (default) — smallest element served first
 PriorityQueue<Integer> minPQ = new PriorityQueue<>();
 minPQ.add(30); minPQ.add(10); minPQ.add(20);
-System.out.println(minPQ.poll()); // 10 (smallest!)
+System.out.println(minPQ.poll()); 
 
-// Max-heap — largest element served first
 PriorityQueue<Integer> maxPQ = new PriorityQueue<>(
     Collections.reverseOrder());
 maxPQ.add(30); maxPQ.add(10); maxPQ.add(20);
-System.out.println(maxPQ.poll()); // 30 (largest!)
+System.out.println(maxPQ.poll()); 
 
-// Custom priority (by string length)
 PriorityQueue<String> pq = new PriorityQueue<>(
     Comparator.comparingInt(String::length));`}</div>
 
@@ -614,7 +575,6 @@ PriorityQueue<String> pq = new PriorityQueue<>(
   );
 }
 
-// ── Chapter 6: Comparison & Complexity ──
 function SecComparison() {
   return (
     <div className="sq-sec">
@@ -635,31 +595,25 @@ function SecComparison() {
       </table>
 
       <div className="sq-h3">Java Collections Hierarchy</div>
-      <div className="sq-code">{`// Stack (legacy — prefer Deque)
+      <div className="sq-code">{`
 Stack<Integer> stack = new Stack<>();
 stack.push(1); stack.pop(); stack.peek();
 
-// Queue interface (use LinkedList or ArrayDeque)
 Queue<Integer> queue = new LinkedList<>();
-queue.offer(1);  // enqueue (prefer over add())
-queue.poll();    // dequeue (returns null if empty)
-queue.peek();    // front (returns null if empty)
+queue.offer(1);  
+queue.poll();    
+queue.peek();    
 
-// Deque as Stack (recommended over Stack class)
 Deque<Integer> stack2 = new ArrayDeque<>();
-stack2.push(1);  // addFirst
-stack2.pop();    // removeFirst
-stack2.peek();   // peekFirst
+stack2.push(1);  
+stack2.pop();    
+stack2.peek();   
 
-// Deque as Queue
 Deque<Integer> queue2 = new ArrayDeque<>();
-queue2.offer(1); // addLast
-queue2.poll();   // removeFirst
-queue2.peek();   // peekFirst
-
-// NOTE: ArrayDeque is faster than LinkedList for both
-// Stack and Queue operations in most cases`}</div>
-
+queue2.offer(1); 
+queue2.poll();   
+queue2.peek();   
+`}</div>
       <div className="sq-h3">Implementation Comparison</div>
       <table className="sq-tbl">
         <thead><tr><th>Implementation</th><th>Push/Enqueue</th><th>Pop/Dequeue</th><th>Space</th><th>Notes</th></tr></thead>
@@ -671,19 +625,17 @@ queue2.peek();   // peekFirst
       </table>
 
       <div className="sq-h3">Common Interview Problems</div>
-      <div className="sq-code">{`// 1. Implement Queue using 2 Stacks
+      <div className="sq-code">{`
 class QueueUsing2Stacks {
   Stack<Integer> s1 = new Stack<>(), s2 = new Stack<>();
   void enqueue(int x) { s1.push(x); }
   int dequeue() {
     if (s2.isEmpty())
-      while (!s1.isEmpty()) s2.push(s1.pop()); // transfer
+      while (!s1.isEmpty()) s2.push(s1.pop()); 
     return s2.pop();
   }
 }
 
-// 2. Implement Stack using 2 Queues
-// 3. Min Stack — getMin() in O(1)
 class MinStack {
   Stack<Integer> stack = new Stack<>(), minStack = new Stack<>();
   void push(int x) {
@@ -696,7 +648,7 @@ class MinStack {
     if (val == minStack.peek()) minStack.pop();
     return val;
   }
-  int getMin() { return minStack.peek(); } // O(1)!
+  int getMin() { return minStack.peek(); } 
 }`}</div>
 
       <div className="sq-info"><p>EXAM TIP: "Implement Queue using 2 Stacks" and "Min Stack" are among the most frequently asked stack/queue interview questions. Master both.</p></div>
@@ -704,7 +656,6 @@ class MinStack {
   );
 }
 
-// ── Chapter 7: Quiz ──
 const QUESTIONS = [
   { q:"What does LIFO stand for?", opts:["Last In First Out","Last Index First Out","Linear In First Out","Last In Final Out"], ans:0 },
   { q:"Which operation adds an element to a stack?", opts:["enqueue","insert","push","append"], ans:2 },
@@ -765,7 +716,6 @@ function SecQuiz() {
   );
 }
 
-// ── Main Export ──
 const CHAPTERS = [
   { id:"stack",    label:"1. Stack" },
   { id:"stackapp", label:"2. Stack Apps" },

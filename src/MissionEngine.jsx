@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { fetchMissions, submitAnswer } from "./storyApi";
 
-// ── STATIC MISSIONS (fallback when backend is offline) ────────────────────────
 const STATIC_MISSIONS = {
   arrays:[
     {id:"arr_m1",worldId:"arrays",question:"What is the time complexity of accessing an element by index in an array?",options:["O(n)","O(1)","O(log n)","O(n²)"],correctAnswer:"O(1)",explanation:"Array access is O(1) — elements are stored contiguously in memory so the CPU computes the address directly.",xp:10},
@@ -66,7 +65,6 @@ const ArrayKingdom     = lazy(() => import("./ArrayKingdom"));
 const RecursionDungeon = lazy(() => import("./RecursionDungeon"));
 const GraphMaze        = lazy(() => import("./GraphMaze"));
 
-// Generic quiz component for new worlds (LinkedList, Stack, Queue, Trees, Sorting)
 function GenericQuiz({ mission, onAnswer, answerStates, feedback, accentColor }) {
   if (!mission) return null;
   return (
@@ -74,7 +72,7 @@ function GenericQuiz({ mission, onAnswer, answerStates, feedback, accentColor })
       display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
       height:"100%", padding:"24px 32px", gap:20,
     }}>
-      {/* Options grid */}
+      {}
       <div style={{
         display:"grid", gridTemplateColumns:"1fr 1fr", gap:16,
         width:"100%", maxWidth:640,
@@ -123,7 +121,7 @@ function GenericQuiz({ mission, onAnswer, answerStates, feedback, accentColor })
         })}
       </div>
 
-      {/* Feedback explanation */}
+      {}
       {feedback && (
         <div style={{
           maxWidth:600, background: feedback.correct ? "rgba(52,211,153,0.08)" : "rgba(248,113,113,0.08)",
@@ -145,7 +143,7 @@ const WORLD_COMPONENTS = {
   arrays:     ArrayKingdom,
   recursion:  RecursionDungeon,
   graphs:     GraphMaze,
-  // New worlds use the generic quiz component
+  
   linkedlist: null,
   stacks:     null,
   queues:     null,
@@ -164,7 +162,6 @@ const WORLD_COLORS = {
 };
 const TIMER_SECONDS    = 30;
 
-// ── FIREWORKS ─────────────────────────────────────────────────────────────────
 function FireworksCanvas() {
   const ref = useRef();
   useEffect(() => {
@@ -203,7 +200,6 @@ function FireworksCanvas() {
   return <canvas ref={ref} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}/>;
 }
 
-// ── STREAK BADGE ──────────────────────────────────────────────────────────────
 function StreakBadge({streak}) {
   if (streak<2) return null;
   const labels={2:"2× Combo!",3:"3× ULTRA!",4:"4× INSANE!",5:"5× GODLIKE!"};
@@ -219,7 +215,6 @@ function StreakBadge({streak}) {
   );
 }
 
-// ── XP TICKER ─────────────────────────────────────────────────────────────────
 function XpTicker({value}) {
   const [disp,setDisp]=useState(0);
   const prev=useRef(0);
@@ -235,7 +230,6 @@ function XpTicker({value}) {
   return <span>{disp}</span>;
 }
 
-// ── COUNTDOWN RING ────────────────────────────────────────────────────────────
 function CountdownRing({seconds,total,color}) {
   const r=20,circ=2*Math.PI*r,dash=(seconds/total)*circ,urgent=seconds<=8;
   return (
@@ -253,7 +247,6 @@ function CountdownRing({seconds,total,color}) {
   );
 }
 
-// ── WORLD COMPLETE ────────────────────────────────────────────────────────────
 function WorldCompleteScreen({world,totalXp,accuracy,onExit,accentColor}) {
   const stars=accuracy>=80?3:accuracy>=50?2:1;
   return (
@@ -288,7 +281,6 @@ function WorldCompleteScreen({world,totalXp,accuracy,onExit,accentColor}) {
   );
 }
 
-// ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function MissionEngine({world,userId,onExit,onXpUpdate}) {
   const [missions,setMissions]         = useState([]);
   const [currentIdx,setCurrentIdx]     = useState(0);
@@ -312,15 +304,15 @@ export default function MissionEngine({world,userId,onExit,onXpUpdate}) {
     fetchMissions(world.id)
       .then(d => setMissions(d.missions))
       .catch(()=>{
-        // Backend offline — use static missions
+        
         const staticMs = STATIC_MISSIONS[world.id] || [];
-        // Strip correctAnswer for display (same as backend does)
+        
         setMissions(staticMs.map(({correctAnswer,...rest})=>rest));
       })
       .finally(()=>setLoading(false));
   },[world.id]);
 
-  // Timer
+  
   useEffect(()=>{
     if (answered||loading) return;
     setTimeLeft(TIMER_SECONDS);
@@ -349,7 +341,7 @@ export default function MissionEngine({world,userId,onExit,onXpUpdate}) {
       try {
         result = await submitAnswer(userId, mission.id, selectedOption);
       } catch(fetchErr) {
-        // Backend offline — evaluate answer locally using static data
+        
         const staticMission = (STATIC_MISSIONS[world.id]||[]).find(m=>m.id===mission.id);
         const correct = staticMission ? selectedOption === staticMission.correctAnswer : false;
         result = {
@@ -397,7 +389,7 @@ export default function MissionEngine({world,userId,onExit,onXpUpdate}) {
     <div style={S.container}>
       <style>{KF}</style>
 
-      {/* HUD */}
+      {}
       <div style={S.hud}>
         <div style={S.hudLeft}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -426,7 +418,7 @@ export default function MissionEngine({world,userId,onExit,onXpUpdate}) {
 
       {showStreak&&<StreakBadge streak={streak}/>}
 
-      {/* Game Canvas — 3D for arrays/recursion/graphs, card quiz for new worlds */}
+      {}
       <div style={S.canvas}>
         {isGeneric ? (
           <GenericQuiz

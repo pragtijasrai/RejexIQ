@@ -35,7 +35,7 @@ export default function ProblemCard({ problem, isActive, onSelect }) {
         overflow: "hidden",
       }}
     >
-      {/* Active indicator bar */}
+      {}
       {isActive && (
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0, width: 3,

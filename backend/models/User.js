@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
     fullName:  { type: String, required: true, trim: true },
     username:  { type: String, trim: true, lowercase: true, sparse: true },
     email:     { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password:  { type: String, select: false },   // not returned by default
+    password:  { type: String, select: false },   
     avatar:    { type: String, default: "" },
     provider:  { type: String, enum: ["local", "google"], default: "local" },
     googleUid: { type: String, sparse: true },
@@ -33,18 +33,15 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before save (only for local accounts)
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
 
-// Compare password helper
 userSchema.methods.comparePassword = async function (plain) {
   return bcrypt.compare(plain, this.password);
 };
 
-// Safe public object (no password)
 userSchema.methods.toPublic = function () {
   return {
     id:             this._id.toString(),

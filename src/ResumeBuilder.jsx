@@ -1,13 +1,9 @@
-// ═══════════════════════════════════════════════════════════════
-// PREMIUM AI RESUME BUILDER - Complete Rewrite
-// ═══════════════════════════════════════════════════════════════
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// ─── CONSTANTS ───────────────────────────────────────────────────
 const ACCENT_PRESETS = [
   { name:"Indigo",  color:"#6366f1" }, { name:"Violet", color:"#8b5cf6" },
   { name:"Cyan",    color:"#06b6d4" }, { name:"Rose",   color:"#f43f5e" },
@@ -87,14 +83,13 @@ async function parseDOCX(file) {
   }
 }
 
-
 async function parseTXT(file) {
   const text = await file.text();
   return extractResumeData(text);
 }
 
 function extractResumeData(text) {
-  // ── helpers ──────────────────────────────────────────────────
+  
   const uid = (pfx) => pfx + Math.random().toString(36).slice(2, 8);
 
   // Normalise line endings, collapse runs of spaces but keep newlines.
@@ -117,27 +112,27 @@ function extractResumeData(text) {
     return result;
   })();
 
-  // ── 1. CONTACT INFO (scan whole text) ────────────────────────
+  
   const fullText = rawLines.join(' ');
 
   const emailMatch   = fullText.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
   const phoneMatch   = fullText.match(/(\+?\d[\d\s\-().]{7,}\d)/);
 
-  // Extract full LinkedIn URL or build from username
+  
   const linkedinFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-_%]+)/i);
   const linkedinLabelMatch = !linkedinFullMatch && fullText.match(/linkedin[:\s]+([^\s,|<>]+)/i);
 
-  // Extract full GitHub URL or build from username
+  
   const githubFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9\-_%]+)/i);
   const githubLabelMatch = !githubFullMatch && fullText.match(/github[:\s]+([^\s,|<>]+)/i);
 
-  // Extract full LeetCode URL or build from username
+  
   const leetcodeFullMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?leetcode\.com\/(?:u\/)?([a-zA-Z0-9\-_%]+)/i);
   const leetcodeLabelMatch = !leetcodeFullMatch && fullText.match(/leetcode[:\s]+([^\s,|<>]+)/i);
 
-  // ── 2. SECTION DETECTION ─────────────────────────────────────
-  // A section header is a SHORT line (≤ 60 chars) that matches a known heading keyword.
-  // It may have trailing punctuation like ":" but nothing else substantial after it.
+  
+  
+  
   const SECTION_PATTERNS = [
     { key: 'summary',        re: /^(about\s*me|professional\s*summary|summary|profile|objective|career\s*objective)\s*:?\s*$/i },
     { key: 'skills',         re: /^(technical\s*skills?|skills?|core\s*competencies|technologies)\s*:?\s*$/i },
@@ -149,19 +144,19 @@ function extractResumeData(text) {
     { key: 'links',          re: /^(links?|profiles?|social)\s*:?\s*$/i },
   ];
 
-  // Build section map: { sectionName: [lines...] }
+  
   const sections = {};
   let currentSec = null;
 
-  // First non-empty lines before any section header = header block (name, title, contact)
+  
   const headerLines = [];
 
   for (let i = 0; i < rawLines.length; i++) {
     const line = rawLines[i];
     if (!line) continue;
 
-    // Only treat as a section header if the line is short enough to be a heading
-    // (prevents long sentences that happen to start with "Summary" from being misclassified)
+    
+    
     const isShortEnough = line.length <= 60;
     const matched = isShortEnough && SECTION_PATTERNS.find(p => p.re.test(line));
     if (matched) {
@@ -200,8 +195,8 @@ function extractResumeData(text) {
     }
   }
 
-  // ── 3. NAME & TITLE from header block ────────────────────────
-  // Name is usually the first prominent line (all caps or title case, no @ or digits)
+  
+  
   let name = '';
   let title = '';
   let location = '';
@@ -216,13 +211,13 @@ function extractResumeData(text) {
     }
   }
 
-  // Fallback: first line is name
+  
   if (!name && headerLines.length > 0) name = headerLines[0];
 
-  // ── 4. SUMMARY ───────────────────────────────────────────────
+  
   let summary = '';
   if (sections.summary && sections.summary.length > 0) {
-    // Join all lines under the summary section into one paragraph
+    
     summary = sections.summary
       .map(l => l.trim())
       .filter(Boolean)
@@ -230,8 +225,8 @@ function extractResumeData(text) {
       .trim();
   }
 
-  // Fallback: scan header lines for an inline "ABOUT ME: ..." or "Objective: ..." pattern
-  // (some PDFs put the heading and content on the same line)
+  
+  
   if (!summary) {
     for (const hl of headerLines) {
       const inlineM = hl.match(/^(?:about\s*me|professional\s*summary|summary|objective|profile)\s*[:\-]\s*(.+)/i);
@@ -242,15 +237,15 @@ function extractResumeData(text) {
     }
   }
 
-  // Second fallback: if there is a long paragraph in headerLines that looks like a summary
-  // (no email/phone/URL, longer than 80 chars, starts with a capital letter)
+  
+  
   if (!summary) {
     for (const hl of headerLines) {
       if (
         hl.length > 80 &&
         /^[A-Z]/.test(hl) &&
         !hl.includes('@') &&
-        !/^https?:\/\//i.test(hl) &&
+        !/^https?:\/\//.test(hl) &&
         !/\b(linkedin|github|leetcode)\b/i.test(hl)
       ) {
         summary = hl;
@@ -259,22 +254,22 @@ function extractResumeData(text) {
     }
   }
 
-  // ── 5. SKILLS ────────────────────────────────────────────────
-  // Preserve grouped format: "Category: skill1, skill2" → { category, items }
+  
+  
   let skills = [];
-  let skillGroups = []; // [{category, items}]
+  let skillGroups = []; 
   if (sections.skills) {
     for (const line of sections.skills) {
-      // Detect "Category Label: skill1, skill2, skill3" pattern
+      
       const groupMatch = line.match(/^([^:]{3,40}):\s*(.+)$/);
       if (groupMatch) {
         const category = groupMatch[1].trim();
         const items = groupMatch[2].split(/[,|]/).map(s => s.trim()).filter(Boolean);
         skillGroups.push({ category, items });
-        // Also add to flat skills list
+        
         items.forEach(s => { if (!skills.includes(s)) skills.push(s); });
       } else {
-        // Comma/pipe/bullet separated on one line, or one per line
+        
         const parts = line.split(/[,|•·\t]/).map(s => s.trim()).filter(s => s.length > 0 && s.length < 60);
         if (parts.length > 1) {
           parts.forEach(p => { if (!skills.includes(p)) skills.push(p); });
@@ -285,7 +280,7 @@ function extractResumeData(text) {
     }
   }
 
-  // ── 6. EXPERIENCE ────────────────────────────────────────────
+  
   const experience = [];
   if (sections.experience) {
     const expLines = sections.experience;
@@ -298,18 +293,18 @@ function extractResumeData(text) {
       if (isBullet(line)) {
         if (curExp) curExp.description += (curExp.description ? '\n' : '') + line;
       } else if (isDuration(line) && curExp) {
-        // Duration line belonging to current entry
+        
         if (!curExp.duration) curExp.duration = line;
         else curExp.company = curExp.company || line;
       } else {
-        // New entry heading — could be "Role | Company | Duration" or separate lines
+        
         if (curExp) experience.push({ ...curExp, id: uid('e') });
-        // Try to split "Role | Company" or "Role at Company"
+        
         const pipeparts = line.split(/\s*[|–—]\s*/);
         let role = line, company = '', duration = '';
         if (pipeparts.length >= 2) {
           role = pipeparts[0].trim();
-          // Check if last part looks like a duration
+          
           const last = pipeparts[pipeparts.length - 1];
           if (isDuration(last)) {
             duration = last;
@@ -327,40 +322,40 @@ function extractResumeData(text) {
     if (curExp && curExp.role) experience.push({ ...curExp, id: uid('e') });
   }
 
-  // ── 7. PROJECTS ──────────────────────────────────────────────
-  // BLOCK-BASED: one title + following bullets/description lines until next title
+  
+  
   const projects = [];
   if (sections.projects) {
-    // ── PRE-PROCESS: split lines that have a project title embedded mid-line ──
-    // PDFs often join the last bullet of one project with the title of the next onto
-    // a single line, e.g.:
-    //   "Enhanced water efficiency... Smart Notes – Academic Resource Platform | React.js"
-    // We detect this by looking for a " | " that is preceded by a title-like segment
-    // (starts with an uppercase word, not a verb) somewhere after the first word.
+    
+    
+    
+    
+    
+    
     const splitEmbeddedTitles = (lines) => {
       const result = [];
       for (const line of lines) {
-        // Only try to split if the line contains " | " and is long enough to have two parts
+        
         if (!line.includes('|') || line.length < 20) { result.push(line); continue; }
 
-        // Find all " | " positions and check if the text before any of them looks like
-        // a project title start (uppercase word, not a description verb)
+        
+        
         const TITLE_START = /(?:^|[.!?…]\s+)([A-Z][A-Za-z0-9\s\-–—]+\s*\|)/g;
         let match;
         let splitAt = -1;
         while ((match = TITLE_START.exec(line)) !== null) {
-          // match.index is where the sentence boundary (or start) is
-          // match[0] starts with the boundary char or is at position 0
+          
+          
           const titleStart = match.index + match[0].indexOf(match[1]);
           if (titleStart > 0) {
-            // Check the word right before this position isn't a section header
+            
             const before = line.slice(0, titleStart).trim();
             const after  = line.slice(titleStart).trim();
-            // "after" must look like a real project title: has | and the part before | is a noun phrase
+            
             const afterPipe = after.indexOf('|');
             if (afterPipe > 2) {
               const titlePart = after.slice(0, afterPipe).trim();
-              // Title part must start with uppercase and not be a description verb
+              
               if (/^[A-Z]/.test(titlePart) && !/^(Engineered|Built|Implemented|Designed|Leveraged|Developed|Created|Integrated|Deployed|Automated|Optimized|Architected|Launched|Delivered|Led|Managed|Collaborated|Configured|Utilized|Used|Applied|Established|Improved|Reduced|Increased|Achieved|Enabled|Supported|Maintained|Tested|Analyzed|Researched|Contributed|Worked|Helped|Assisted|Performed|Executed|Handled|Processed|Generated|Produced|Provided|Ensured|Monitored|Tracked|Reviewed|Evaluated|Assessed|Identified|Resolved|Fixed|Debugged|Refactored|Migrated|Upgraded|Extended|Enhanced|Customized|Adapted|Transformed|Converted|Extracted|Parsed|Validated|Verified|Documented|Wrote|Presented|Communicated|Coordinated|Organized|Planned|Scheduled|Facilitated|Trained|Mentored|Guided|Supervised|Oversaw|Directed|Spearheaded|Pioneered|Initiated|Founded|Scaled|Grew|Expanded|Streamlined|Simplified|Standardized|Consolidated|Centralized|Accelerated|Boosted|Maximized|Minimized|Eliminated|Removed|Replaced|Updated|Patched|Secured|Protected|Encrypted|Authenticated|Authorized|Sanitized|Cleaned|Formatted|Structured|Categorized|Classified|Sorted|Filtered|Searched|Queried|Retrieved|Fetched|Loaded|Saved|Stored|Cached|Indexed|Mapped|Serialized|Deserialized|Encoded|Decoded|Compressed|Decompressed|Minified|Bundled|Compiled|Transpiled|Linted|Mocked|Stubbed|Simulated|Emulated|Profiled|Benchmarked|Measured|Logged|Traced|Inspected|Audited|Reported|Visualized|Rendered|Displayed|Showed|Exported|Imported|Synced|Replicated|Backed|Restored|Recovered|Announced|Promoted|Marketed|Sold|Pitched|Demonstrated|Showcased|Exhibited|Shared|Distributed|Broadcast|Streamed|Transmitted|Sent|Received|Controlled|Regulated|Enforced|Ran|Started|Stopped|Paused|Resumed|Restarted|Initialized|Reset|Cleared|Flushed|Purged|Deleted|Inserted|Appended|Prepended|Merged|Split|Joined|Concatenated|Combined|Aggregated|Grouped|Partitioned|Sharded|Balanced|Replicated|Synchronized|Orchestrated|Queued|Prioritized|Throttled|Memoized|Tuned|Alerted|Notified|Triggered|Fired|Emitted|Subscribed|Consumed|Batched|Chunked|Paginated|Programmed|Interfaced|Wired|Soldered|Calibrated|Flashed|Assembled|Prototyped|Modeled|Fabricated|Characterized|Diagnosed|Repaired|Replaced|Installed|Mounted|Connected|Powered|Sensed|Actuated|Transmitted|Filtered|Amplified|Converted|Stabilized|Deployed|Launched|Released|Published|Shipped|Delivered)\b/i.test(titlePart)) {
                 splitAt = titleStart;
                 break;
@@ -386,14 +381,14 @@ function extractResumeData(text) {
 
     const isBullet = l => /^[•\-\*▸►→✓✔]/.test(l);
 
-    // Action verbs that start DESCRIPTION lines — these are NEVER project titles.
+    
     const DESCRIPTION_VERBS = /^(Engineered|Built|Implemented|Designed|Leveraged|Developed|Created|Integrated|Deployed|Automated|Optimized|Architected|Launched|Delivered|Led|Managed|Collaborated|Configured|Utilized|Used|Applied|Established|Improved|Reduced|Increased|Achieved|Enabled|Supported|Maintained|Tested|Analyzed|Researched|Contributed|Worked|Helped|Assisted|Performed|Executed|Handled|Processed|Generated|Produced|Provided|Ensured|Monitored|Tracked|Reviewed|Evaluated|Assessed|Identified|Resolved|Fixed|Debugged|Refactored|Migrated|Upgraded|Extended|Enhanced|Customized|Adapted|Transformed|Converted|Extracted|Parsed|Validated|Verified|Documented|Wrote|Presented|Communicated|Coordinated|Organized|Planned|Scheduled|Facilitated|Trained|Mentored|Guided|Supervised|Oversaw|Directed|Spearheaded|Pioneered|Initiated|Founded|Scaled|Grew|Expanded|Streamlined|Simplified|Standardized|Consolidated|Centralized|Accelerated|Boosted|Maximized|Minimized|Eliminated|Removed|Replaced|Updated|Patched|Secured|Protected|Encrypted|Authenticated|Authorized|Sanitized|Cleaned|Formatted|Structured|Categorized|Classified|Sorted|Filtered|Searched|Queried|Retrieved|Fetched|Loaded|Saved|Stored|Cached|Indexed|Mapped|Serialized|Deserialized|Encoded|Decoded|Compressed|Decompressed|Minified|Bundled|Compiled|Transpiled|Linted|Mocked|Stubbed|Simulated|Emulated|Profiled|Benchmarked|Measured|Logged|Traced|Inspected|Audited|Reported|Visualized|Rendered|Displayed|Showed|Exported|Imported|Synced|Replicated|Backed|Restored|Recovered|Announced|Promoted|Marketed|Sold|Pitched|Demonstrated|Showcased|Exhibited|Shared|Distributed|Broadcast|Streamed|Transmitted|Sent|Received|Controlled|Regulated|Enforced|Ran|Started|Stopped|Paused|Resumed|Restarted|Initialized|Reset|Cleared|Flushed|Purged|Deleted|Inserted|Appended|Prepended|Merged|Split|Joined|Concatenated|Combined|Aggregated|Grouped|Partitioned|Sharded|Balanced|Replicated|Synchronized|Orchestrated|Queued|Prioritized|Throttled|Memoized|Tuned|Alerted|Notified|Triggered|Fired|Emitted|Subscribed|Consumed|Batched|Chunked|Paginated|Programmed|Interfaced|Wired|Soldered|Calibrated|Flashed|Assembled|Prototyped|Modeled|Fabricated|Characterized|Diagnosed|Repaired|Replaced|Installed|Mounted|Connected|Powered|Sensed|Actuated|Transmitted|Filtered|Amplified|Converted|Stabilized|Deployed|Launched|Released|Published|Shipped|Delivered)\b/i;
 
     const isDescriptionLine = l => DESCRIPTION_VERBS.test(l.trim());
 
-    // A project title:
-    // STRONG signal  → line contains " | " (tech stack separator): always a title regardless of starting word
-    // WEAK  signal   → starts with uppercase, no verb, no bullet, no digit-start
+    
+    
+    
     const isProjectTitle = l => {
       const t = l.trim();
       if (!t || t.length < 3) return false;
@@ -401,12 +396,12 @@ function extractResumeData(text) {
       if (/^[a-z]/.test(t)) return false;
       if (/^\d{4}/.test(t)) return false;
 
-      // STRONG: contains " | " → treat as project title unconditionally
-      // (project titles like "Automated Plant Watering System | IoT" start with a verb word
-      //  but the pipe makes it unambiguous — no description sentence uses " | ")
+      
+      
+      
       if (t.includes('|')) return true;
 
-      // WEAK: starts with uppercase, not a description verb
+      
       if (/^[A-Z]/.test(t) && !isDescriptionLine(t)) return true;
 
       return false;
@@ -414,35 +409,35 @@ function extractResumeData(text) {
 
     for (const line of projLines) {
       if (isBullet(line)) {
-        // Bullet → always description of current project
+        
         if (curProj) curProj.description += (curProj.description ? '\n' : '') + line;
       } else if (isProjectTitle(line)) {
-        // New project title — save previous and start fresh
+        
         if (curProj && curProj.name) projects.push({ ...curProj, id: uid('p') });
 
-        // Keep FULL title intact.
-        // "Project Name | Tech Stack" → name = "Project Name", tech = "Tech Stack"
-        // "Project Name – Subtitle | Tech" → name = "Project Name – Subtitle", tech = "Tech"
+        
+        
+        
         let projName = line, tech = '', link = '';
 
-        // Extract embedded URL first
+        
         const linkMatch = line.match(/https?:\/\/[^\s|,]+/i);
         if (linkMatch) { link = linkMatch[0]; projName = projName.replace(linkMatch[0], '').trim(); }
 
-        // Split on the LAST pipe to separate tech stack
+        
         const lastPipe = projName.lastIndexOf('|');
         if (lastPipe !== -1) {
           tech = projName.slice(lastPipe + 1).trim();
           projName = projName.slice(0, lastPipe).trim();
         } else {
-          // Try parentheses: "Project Name (Tech)"
+          
           const parenMatch = projName.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
           if (parenMatch) { projName = parenMatch[1].trim(); tech = parenMatch[2].trim(); }
         }
 
         curProj = { name: projName, tech, link, description: '' };
       } else {
-        // Description verb line or lowercase → append to current project as bullet
+        
         if (curProj) {
           const formatted = '• ' + line.replace(/^[•\-\*▸►→✓✔]\s*/, '');
           curProj.description += (curProj.description ? '\n' : '') + formatted;
@@ -452,8 +447,8 @@ function extractResumeData(text) {
     if (curProj && curProj.name) projects.push({ ...curProj, id: uid('p') });
   }
 
-  // ── 8. EDUCATION ─────────────────────────────────────────────
-  // BLOCK-BASED: each institution creates a new card; all related lines stay in same card
+  
+  
   const education = [];
   if (sections.education) {
     const eduLines = sections.education;
@@ -465,21 +460,21 @@ function extractResumeData(text) {
     const hasBoard = l => /\b(cbse|icse|state\s*board|igcse|ib\b|matriculation)\b/i.test(l);
     const hasClass = l => /\b(10th|12th|class\s*(x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i.test(l);
 
-    // A line starts a NEW education entry if it contains a degree/institution keyword
-    // AND is not a detail line (GPA, year, board, coursework)
+    
+    
     const isNewEntry = l => {
       if (isBullet(l)) return false;
       const lo = l.toLowerCase();
-      // Degree keywords
+      
       if (/\b(b\.?tech|b\.?e\b|b\.?sc|b\.?com|b\.?a\b|m\.?tech|m\.?sc|m\.?e\b|m\.?com|m\.?a\b|mba|phd|ph\.d|bachelor|master|diploma|associate)\b/i.test(lo)) return true;
-      // School/college/university as standalone institution name
+      
       if (/\b(university|college|institute|school|academy|polytechnic)\b/i.test(lo) && l.length > 8) return true;
-      // Class 10/12 lines that also contain school name
+      
       if (hasClass(l) && l.length > 15) return true;
       return false;
     };
 
-    // Extract GPA/score value from a line
+    
     const extractGPA = l => {
       const m = l.match(/(?:gpa|cgpa|score|percentage)\s*[:\-]?\s*([\d.]+\s*%?)/i)
              || l.match(/([\d.]+)\s*(?:cgpa|gpa|%)/i)
@@ -487,7 +482,7 @@ function extractResumeData(text) {
       return m ? m[1].trim() : '';
     };
 
-    // Extract year range from a line
+    
     const extractYear = l => {
       const m = l.match(/\b((?:19|20)\d{2})\s*[-–—to]+\s*((?:19|20)?\d{2,4}|\bpresent\b|\bcurrent\b)/i)
              || l.match(/\b((?:19|20)\d{2})\b/);
@@ -496,7 +491,7 @@ function extractResumeData(text) {
 
     for (const line of eduLines) {
       if (isBullet(line)) {
-        // Bullet = coursework or detail for current entry
+        
         if (curEdu) {
           const text = line.replace(/^[•\-\*▸►→]\s*/, '');
           curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + text;
@@ -505,18 +500,18 @@ function extractResumeData(text) {
       }
 
       if (isNewEntry(line)) {
-        // Save previous entry
+        
         if (curEdu) education.push({ ...curEdu, id: uid('d') });
 
-        // Parse the heading line — could be:
-        // "B.E. in Computer Science Engineering" (degree only)
-        // "B.E. in CSE | Chitkara University | Aug 2028" (pipe-separated)
-        // "S B SINGH PUBLIC HIGH SCHOOL SANGRUR PUNJAB" (school name)
+        
+        
+        
+        
         const pipeparts = line.split(/\s*[|–—]\s*/);
         let degree = '', institution = '', year = '', gpa = '', board = '', classLevel = '';
 
         if (pipeparts.length >= 3) {
-          // "Degree | Institution | Year" format
+          
           degree = pipeparts[0].trim();
           institution = pipeparts[1].trim();
           const rest = pipeparts.slice(2).join(' ');
@@ -528,67 +523,67 @@ function extractResumeData(text) {
           if (hasYear(second)) { year = extractYear(second); }
           else { institution = second; }
         } else {
-          // Single line — could be degree or institution name
-          // If it has a degree keyword, treat as degree
+          
+          
           if (/\b(b\.?tech|b\.?e\b|b\.?sc|b\.?com|b\.?a\b|m\.?tech|m\.?sc|m\.?e\b|mba|phd|bachelor|master|diploma)\b/i.test(line)) {
             degree = line;
           } else {
-            // It's an institution name (school/college)
+            
             institution = line;
           }
         }
 
-        // Extract class level (10th/12th) from degree or institution line
+        
         const classM = line.match(/\b(10th|12th|class\s*(?:x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i);
         if (classM) classLevel = classM[0];
 
-        // Extract board
+        
         const boardM = line.match(/\b(cbse|icse|state\s*board|igcse|ib\b)\b/i);
         if (boardM) board = boardM[0].toUpperCase();
 
-        // Extract GPA from degree line if present
+        
         if (!gpa) gpa = extractGPA(line);
-        // Extract year from degree line if present
+        
         if (!year) year = extractYear(line);
 
         curEdu = { degree, institution, year, gpa, board, classLevel, coursework: '' };
       } else if (curEdu) {
-        // Detail line belonging to current entry — do NOT start a new entry
-        // Try to fill in missing fields
+        
+        
 
-        // Institution name (if not yet set and line looks like an org name)
+        
         if (!curEdu.institution && !hasYear(line) && !hasGPA(line) && !hasBoard(line) && line.length > 5 && !/^\d/.test(line)) {
           curEdu.institution = line;
         }
-        // Year
+        
         else if (!curEdu.year && hasYear(line)) {
           curEdu.year = extractYear(line) || line;
         }
-        // GPA / score
+        
         else if (!curEdu.gpa && hasGPA(line)) {
           curEdu.gpa = extractGPA(line) || line;
         }
-        // Board
+        
         else if (!curEdu.board && hasBoard(line)) {
           const bm = line.match(/\b(cbse|icse|state\s*board|igcse|ib\b)\b/i);
           if (bm) curEdu.board = bm[0].toUpperCase();
         }
-        // Class level
+        
         else if (!curEdu.classLevel) {
           const cm = line.match(/\b(10th|12th|class\s*(?:x|xii|10|12)|ssc|hsc|secondary|higher\s*secondary|matriculation|intermediate)\b/i);
           if (cm) curEdu.classLevel = cm[0];
         }
-        // Coursework / relevant courses
+        
         else if (/relevant\s*coursework|courses?:/i.test(line)) {
           const cw = line.replace(/relevant\s*coursework[:\s]*/i, '').replace(/courses?[:\s]*/i, '').trim();
           if (cw) curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + cw;
         }
-        // Anything else — append to coursework if it looks like a list
+        
         else if (line.includes(',') && line.length < 200) {
           curEdu.coursework = (curEdu.coursework ? curEdu.coursework + ', ' : '') + line;
         }
       } else {
-        // Line before any recognised entry — start a new entry
+        
         curEdu = { degree: '', institution: line, year: '', gpa: '', board: '', classLevel: '', coursework: '' };
       }
     }
@@ -788,8 +783,8 @@ function extractResumeData(text) {
     }
   }
 
-  // ── 10. LINKS (LinkedIn, GitHub, LeetCode) ───────────────────
-  // Use full URLs extracted from text; fall back to label-based extraction
+  
+  
   let linkedin = '';
   let github   = '';
   let leetcode = '';
@@ -798,7 +793,7 @@ function extractResumeData(text) {
     linkedin = 'linkedin.com/in/' + linkedinFullMatch[1];
   } else if (linkedinLabelMatch) {
     const val = linkedinLabelMatch[1].trim();
-    // If it already looks like a URL fragment, use as-is; otherwise treat as username
+    
     linkedin = val.includes('linkedin.com') ? val : 'linkedin.com/in/' + val;
   }
 
@@ -816,7 +811,7 @@ function extractResumeData(text) {
     leetcode = val.includes('leetcode.com') ? val : 'leetcode.com/u/' + val;
   }
 
-  // Also scan a dedicated links section if present
+  
   if (sections.links) {
     for (const line of sections.links) {
       if (!linkedin && /linkedin/i.test(line)) {
@@ -834,7 +829,7 @@ function extractResumeData(text) {
     }
   }
 
-  // ── 11. ASSEMBLE ─────────────────────────────────────────────
+  
   return {
     name,
     title,
@@ -855,7 +850,6 @@ function extractResumeData(text) {
   };
 }
 
-// ─── UTILITIES ───────────────────────────────────────────────────
 function calcATS(data) {
   let s=0;
   const txt=[data.summary,...data.experience.map(e=>e.description),...data.projects.map(p=>p.description),data.skills.join(" ")].join(" ").toLowerCase();
@@ -896,7 +890,6 @@ async function aiFullResume(role) {
   return d[role]||d.default;
 }
 
-// ─── PREVIEW COMPONENTS ──────────────────────────────────────────
 function ModernPreview({data,accent}){
   return(
     <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,lineHeight:1.6,color:"#1e1b4b",background:"#fff"}}>
@@ -1111,7 +1104,6 @@ function ElegantPreview({data,accent}){
   );
 }
 
-// ─── SMALL ATOMS ─────────────────────────────────────────────────
 function SortSec({id,children}){
   const{attributes,listeners,setNodeRef,transform,transition,isDragging}=useSortable({id});
   return <div ref={setNodeRef} style={{transform:CSS.Transform.toString(transform),transition,opacity:isDragging?0.4:1,zIndex:isDragging?999:"auto"}} {...attributes}><div className="group relative"><button {...listeners} className="absolute -left-6 top-4 opacity-0 group-hover:opacity-60 cursor-grab active:cursor-grabbing text-slate-500 hover:text-indigo-400 transition-all text-xl select-none">⠿</button>{children}</div></div>;
@@ -1131,7 +1123,6 @@ function ATSRing({score}){
   return <div className="relative inline-flex items-center justify-center"><svg width={88} height={88} style={{transform:"rotate(-90deg)"}}><circle cx={44} cy={44} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={8}/><motion.circle cx={44} cy={44} r={r} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round" initial={{strokeDasharray:"0 "+circ}} animate={{strokeDasharray:(score/100)*circ+" "+circ}} transition={{duration:1.4,ease:"easeOut"}} style={{filter:"drop-shadow(0 0 8px "+color+")"}}/></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-lg font-black" style={{color}}>{score}</span><span className="text-[9px] text-white/30 font-bold tracking-wider">ATS</span></div></div>;
 }
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────
 export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const[dark,setDark]=useState(true);
   const[tpl,setTpl]=useState(initTemplate||"modern");
@@ -1156,7 +1147,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   const imgRef=useRef(null);
   const fileInputRef=useRef(null);
 
-  // SINGLE SOURCE OF TRUTH - updatedResumeData tracks ALL changes
+  
   const[updatedResumeData,setUpdatedResumeData]=useState({
     name:user.name||"",title:"Software Engineer",email:user.email||"",phone:"",location:"",linkedin:"",github:"",leetcode:"",summary:"",profileImage:null,
     skills:user.skills?Object.keys(user.skills).filter(k=>(user.skills[k]||0)>=50):[],
@@ -1167,33 +1158,33 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     certifications:[{id:"c1",name:"",issuer:"",year:""}],
   });
 
-  // Use updatedResumeData as the main data source
+  
   const data = updatedResumeData;
   const setData = setUpdatedResumeData;
 
-  // ── PERSIST to localStorage so the hero section can read real data ──
-  // Key is user-specific so different accounts never share data
+  
+  
   const storageKey = `resume_builder_data_${(user && (user.email || user.username || user.name || "guest")).replace(/\s+/g,"_").toLowerCase()}`;
 
-  // On mount: restore last saved session for this user
+  
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Only restore if it has meaningful content (not just empty placeholders)
+        
         if (parsed && (parsed.name || parsed.email || (parsed.skills && parsed.skills.length > 0))) {
           setData(prev => ({ ...prev, ...parsed }));
         }
       }
     } catch (_) {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [storageKey]);
 
-  // On every data change: save to localStorage (debounced via useEffect)
+  
   useEffect(() => {
     try {
-      // Also write to the generic key so computeHeroStats can find it
+      
       localStorage.setItem("resume_builder_data", JSON.stringify(data));
       localStorage.setItem(storageKey, JSON.stringify(data));
     } catch (_) {}
@@ -1216,7 +1207,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
   
   function onImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>upd("profileImage",ev.target.result);r.readAsDataURL(f);}
 
-  // ✅ FIX #1: UPLOAD AND PARSE REAL RESUME
+  
   async function handleResumeUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1225,7 +1216,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     setUploadedFileName(file.name);
     
     try {
-      // Parse the uploaded file
+      
       const parsedData = await parseResumeFile(file);
       
       if (!parsedData) {
@@ -1234,7 +1225,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         return;
       }
       
-      // Merge parsed data with existing data - preserve custom changes
+      
       setData(prev => ({
         ...prev,
         name: parsedData.name || prev.name,
@@ -1256,7 +1247,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       
       showT("✅ Resume uploaded and parsed successfully!", "ok");
       
-      // Trigger analysis after parsing
+      
       setTimeout(() => {
         analyzeResume();
       }, 500);
@@ -1268,7 +1259,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     }
   }
 
-  // ✅ FIX #2: ANALYZE RESUME BASED ON REAL CONTENT (Not fake data)
+  
   async function analyzeResume(){
     setFixingGrammar(true);
     setFixPanel(true);
@@ -1276,7 +1267,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     
     const issues=[];
     
-    // Check summary - based on ACTUAL content
+    
     if(data.summary&&data.summary.length>0){
       if(!data.summary.match(/\d+%|\d+x|\$\d+/)){
         const improved = data.summary.replace(/\./,".")+" Delivered measurable results with 30%+ improvement in key performance indicators.";
@@ -1302,7 +1293,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       }
     }
     
-    // Check experience - based on ACTUAL content from resume
+    
     data.experience.forEach((exp,i)=>{
       if(exp.description){
         if(!exp.description.includes("•")&&exp.description.length>20){
@@ -1332,7 +1323,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       }
     });
     
-    // Check skills count
+    
     if(data.skills.length<5){
       const suggested = [...data.skills,...(sugg.filter(s=>!data.skills.includes(s)).slice(0,5))];
       issues.push({
@@ -1356,9 +1347,9 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     setFixingGrammar(false);
   }
 
-  // ✅ FIX #3: APPLY FIX - Update ONLY that specific line in updatedResumeData
+  
   function applyFix(fix){
-    if(!fix.field) return; // Skip info-only entries
+    if(!fix.field) return; 
     
     if(fix.field==="summary"){
       upd("summary",fix.fixed);
@@ -1372,7 +1363,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     
     setAppliedFixes(p=>({...p,[fix.id]:true}));
     
-    // Recalculate ATS score after applying fix
+    
     setTimeout(() => {
       showT("✅ Fix applied and resume updated!", "ok");
     }, 100);
@@ -1382,14 +1373,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     grammarFixes.forEach(fix=>{if(!appliedFixes[fix.id]&&fix.field)applyFix(fix);});
     showT("✅ All fixes applied to resume!", "ok");
   }
-  // ✅ FIX #4: DOWNLOAD FUNCTION - USE updatedResumeData (NOT blank/initial state)
+  
   async function doPDF(){
     setPdfL(true);
     try{
       const el = pdfRef.current;
       if(!el){showT("Preview not ready","err");setPdfL(false);return;}
 
-      // Wait for any pending renders
+      
       await new Promise(r=>setTimeout(r,300));
 
       const html2canvas = (await import("html2canvas")).default;
@@ -1400,7 +1391,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         useCORS:true,
         logging:false,
         backgroundColor:"#ffffff",
-        width:794, // A4 at 96dpi
+        width:794, 
         windowWidth:794,
       });
 
@@ -1409,7 +1400,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = (canvas.height * pdfW) / canvas.width;
 
-      // If content is taller than one page, add multiple pages
+      
       const pageH = pdf.internal.pageSize.getHeight();
       if(pdfH <= pageH){
         pdf.addImage(imgData,"PNG",0,0,pdfW,pdfH);
@@ -1436,14 +1427,14 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     }
   }
 
-  // AI Enhancement function for real data
+  
   async function doAI(type,id){
     const k=id||type;
     setAiL(p=>({...p,[k]:true}));
     try{
       if(type==="full"){
         const g=await aiFullResume(data.title||"Software Engineer");
-        // Update updatedResumeData with AI-generated content
+        
         setData(p=>({
           ...p,
           summary:g.summary,
@@ -1502,18 +1493,18 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
 
   return(
     <div className={"min-h-screen "+bg+" transition-colors duration-500"}>
-      {/* BG blobs */}
+      {}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div animate={{x:[0,30,0],y:[0,-20,0]}} transition={{duration:8,repeat:Infinity,ease:"easeInOut"}} className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{background:"radial-gradient(circle,"+accent+",transparent)"}}/>
         <motion.div animate={{x:[0,-20,0],y:[0,30,0]}} transition={{duration:10,repeat:Infinity,ease:"easeInOut",delay:2}} className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-10 blur-3xl" style={{background:"radial-gradient(circle,#6366f1,transparent)"}}/>
       </div>
-      {/* Toast */}
+      {}
       <AnimatePresence>{toast&&(<motion.div initial={{opacity:0,y:-50,x:"-50%"}} animate={{opacity:1,y:0,x:"-50%"}} exit={{opacity:0,y:-50,x:"-50%"}} className="fixed top-6 left-1/2 z-50 px-6 py-3 rounded-2xl text-sm font-semibold shadow-2xl backdrop-blur-xl text-white" style={{background:toast.t==="err"?"rgba(239,68,68,0.9)":accent+"ee",border:"1px solid "+accent}}>{toast.m}</motion.div>)}</AnimatePresence>
-      {/* ── TOP BAR ── */}
+      {}
       <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} className={"relative z-10 px-8 py-4 border-b "+(dark?"border-white/10":"border-gray-200")}>
         <div className="max-w-[1700px] mx-auto">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Back + Title */}
+            {}
             <div className="flex items-center gap-4 flex-shrink-0">
               <motion.button whileHover={{scale:1.05,x:-2}} whileTap={{scale:0.95}}
                 onClick={onBack||(() => window.history.back())}
@@ -1525,13 +1516,13 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <p className={"text-xs "+tm}>Live preview · AI-powered · ATS-optimized</p>
               </div>
             </div>
-            {/* Center: Stats */}
+            {}
             <div className="flex items-center gap-2">
               {[{l:"ATS",v:ats+"%",c:ats>=75?"#10b981":ats>=50?"#f59e0b":"#f43f5e"},{l:"Done",v:done+"%",c:accent},{l:"Skills",v:data.skills.length,c:"#06b6d4"}].map(s=>(
                 <div key={s.l} className={"rounded-xl border "+card+" flex items-center gap-2"} style={{padding:"7px 14px"}}><span className="text-xs font-medium" style={{color:s.c}}>{s.l}</span><span className="text-sm font-black" style={{color:s.c}}>{s.v}</span></div>
               ))}
             </div>
-            {/* Right: Actions */}
+            {}
             <div className="flex items-center gap-2 flex-shrink-0">
               <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setDark(d=>!d)} className={"p-2 rounded-xl border transition-all "+(dark?"border-white/10 text-white/60 hover:text-white":"border-gray-200 text-gray-500")}>{dark?"☀️":"🌙"}</motion.button>
               <motion.button whileHover={{scale:1.05,boxShadow:"0 0 20px rgba(16,185,129,0.4)"}} whileTap={{scale:0.95}}
@@ -1560,17 +1551,17 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
           </div>
         </div>
       </motion.div>
-      {/* ── 3-COLUMN LAYOUT — Canva/Figma style ── */}
-      {/* The row is viewport-height. Left scrolls internally. Center + Right are fixed. */}
+      {}
+      {}
       <div className="relative z-10 resume-builder-layout" style={{height:"calc(100vh - 73px)"}}>
         <div className="max-w-[1700px] mx-auto h-full flex gap-7 px-8 resume-three-col">
 
-          {/* ── LEFT FORM — scrolls independently ── */}
+          {}
           <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.1}}
             className="w-[440px] flex-shrink-0"
             style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
             <div className="space-y-5">
-            {/* Template + Color */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>Template</p>
               <div className="flex gap-2 flex-wrap mb-5">
@@ -1592,7 +1583,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <input type="color" value={accent} onChange={e=>setAccent(e.target.value)} className="w-8 h-8 rounded-full cursor-pointer border-2 border-white/20" style={{padding:1}} title="Custom"/>
               <br></br></div>
             </div><br></br>
-            {/* Personal Info */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <br></br><SecHead icon="👤" title="Personal Info" collapsed={col.personal} onToggle={()=>togC("personal")}/>
               <AnimatePresence>
@@ -1603,26 +1594,22 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                         {data.profileImage?<img src={data.profileImage} alt="" className="w-full h-full object-cover"/>:<span className="text-2xl">📷</span>}
                       </div>
                       <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Profile Photo</div><button onClick={()=>imgRef.current?.click()} className={"text-xs rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")} style={{padding:"6px 14px"}}>{data.profileImage?"Change":"Upload Photo"}</button></div>
-                      <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={onImg}/>
+                      <input ref={imgRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=()=>upd("profileImage",r.result);r.readAsDataURL(f);}}} />
                     </div>
-                    <br />
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-                      {[["Full Name","name","text","John Doe"],["Job Title","title","text","Software Engineer"],["Email","email","email","john@example.com"],["Phone","phone","text","+1 234 567 8900"]].map(([l,k,t,ph])=>(
-                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{l}</label><input type={t} className={iCls} style={iStyle} value={data[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
-                      ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Full Name</div><input className={tCls} style={iStyle} value={data.name} onChange={e=>upd("name",e.target.value)} placeholder="e.g. John Doe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Job Title</div><input className={tCls} style={iStyle} value={data.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Software Engineer"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Email</div><input className={tCls} style={iStyle} value={data.email} onChange={e=>upd("email",e.target.value)} placeholder="e.g. john@example.com"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Phone</div><input className={tCls} style={iStyle} value={data.phone} onChange={e=>upd("phone",e.target.value)} placeholder="e.g. +1 234 567 890"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Location</div><input className={tCls} style={iStyle} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="e.g. New York, USA"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>LinkedIn</div><input className={tCls} style={iStyle} value={data.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="e.g. linkedin.com/in/johndoe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>GitHub</div><input className={tCls} style={iStyle} value={data.github} onChange={e=>upd("github",e.target.value)} placeholder="e.g. github.com/johndoe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Portfolio / Website</div><input className={tCls} style={iStyle} value={data.leetcode} onChange={e=>upd("leetcode",e.target.value)} placeholder="e.g. johndoe.com"/></div>
                     </div>
-                    <br />
-                    <div className="mt-4"><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>Location</label><input className={iCls} style={iStyle} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="San Francisco, CA"/></div><br></br>
-                    <div className="grid grid-cols-1 gap-y-4 mt-2">
-                      {[["LinkedIn","linkedin","🔗","linkedin.com/in/username"],["GitHub","github","🐙","github.com/username"],["LeetCode","leetcode","💻","leetcode.com/u/username"]].map(([l,k,ic,ph])=>(
-                        <div key={k}><label className={"block text-xs font-semibold "+tm+" mb-2 uppercase tracking-widest"}>{ic} {l}</label><input className={iCls} style={iStyle} value={data[k]||""} onChange={e=>upd(k,e.target.value)} placeholder={ph}/></div>
-                      ))}
-                    </div><br></br>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div><br></br>
-            {/* Summary */}
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <br></br><SecHead icon="📝" title="Professional Summary" collapsed={col.summary} onToggle={()=>togC("summary")}/>
               <AnimatePresence>
@@ -1639,7 +1626,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 )}
               </AnimatePresence>
             </div><br></br>
-            {/* Skills */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <br></br><SecHead icon="⚡" title="Skills" collapsed={col.skills} onToggle={()=>togC("skills")}/>
               <AnimatePresence>
@@ -1655,7 +1642,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 )}
               </AnimatePresence>
             </div><br></br>
-            {/* Draggable sections */}
+            {}
             <DndContext sensors={sens} collisionDetection={closestCenter} onDragEnd={onDrag}>
               <SortableContext items={secOrd} strategy={verticalListSortingStrategy}>
                 <div className="flex flex-col gap-8">
@@ -1673,7 +1660,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                               background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
                               padding:"20px 20px 16px 20px",
                             }}>
-                            {/* Card header */}
+                            {}
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
                                 <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
@@ -1726,7 +1713,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                               background: dark ? "rgba(255,255,255,0.03)" : "rgba(99,102,241,0.03)",
                               padding:"20px 20px 16px 20px",
                             }}>
-                            {/* Card header */}
+                            {}
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
                                 <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
@@ -1779,7 +1766,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                               padding:"20px 20px 16px 20px",
                               position:"relative",
                             }}>
-                            {/* Card header row */}
+                            {}
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
                                 <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
@@ -1796,7 +1783,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                                 </motion.button>
                               )}
                             </div>
-                            {/* Row 1: Degree + Institution */}
+                            {}
                             <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
                               <div>
                                 <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Degree / Course</label>
@@ -1807,7 +1794,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                                 <input className={iCls} style={iStyle} value={edu.institution||""} onChange={e=>updI("education",edu.id,"institution",e.target.value)} placeholder="University / School name"/>
                               </div>
                             </div>
-                            {/* Row 2: Year + GPA */}
+                            {}
                             <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
                               <div>
                                 <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Year</label>
@@ -1818,7 +1805,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                                 <input className={iCls} style={iStyle} value={edu.gpa||""} onChange={e=>updI("education",edu.id,"gpa",e.target.value)} placeholder="9.12 / 90%"/>
                               </div>
                             </div>
-                            {/* Row 3: Board + Class */}
+                            {}
                             <div className="grid grid-cols-2 gap-3" style={{marginBottom:10}}>
                               <div>
                                 <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Board</label>
@@ -1829,7 +1816,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                                 <input className={iCls} style={iStyle} value={edu.classLevel||""} onChange={e=>updI("education",edu.id,"classLevel",e.target.value)} placeholder="12th Grade"/>
                               </div>
                             </div>
-                            {/* Row 4: Coursework full width */}
+                            {}
                             <div>
                               <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Relevant Coursework</label>
                               <input className={iCls} style={iStyle} value={edu.coursework||""} onChange={e=>updI("education",edu.id,"coursework",e.target.value)} placeholder="Data Structures, Algorithms, OS... (optional)"/>
@@ -1849,7 +1836,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                               padding:"20px 20px 16px 20px",
                               position:"relative",
                             }}>
-                            {/* Card header row */}
+                            {}
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
                                 <span style={{width:24,height:24,borderRadius:8,background:accent+"22",border:"1px solid "+accent+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:accent,flexShrink:0}}>{idx+1}</span>
@@ -1866,17 +1853,17 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                                 </motion.button>
                               )}
                             </div>
-                            {/* Row 1: Name full width */}
+                            {}
                             <div style={{marginBottom:10}}>
                               <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Certificate Name</label>
                               <input className={iCls} style={iStyle} value={cert.name} onChange={e=>updI("certifications",cert.id,"name",e.target.value)} placeholder="e.g. Python Game Development – Advanced | CERTIFICATE"/>
                             </div>
-                            {/* Row 2: Issuer full width */}
+                            {}
                             <div style={{marginBottom:10}}>
                               <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Issuer</label>
                               <input className={iCls} style={iStyle} value={cert.issuer} onChange={e=>updI("certifications",cert.id,"issuer",e.target.value)} placeholder="e.g. Infosys Springboard / Coursera"/>
                             </div>
-                            {/* Row 3: Year + URL side by side */}
+                            {}
                             <div className="grid grid-cols-2 gap-3" style={{marginBottom:0}}>
                               <div>
                                 <label style={{display:"block",fontSize:9,fontWeight:700,color:dark?"rgba(255,255,255,0.3)":"#9ca3af",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5}}>Year</label>
@@ -1896,10 +1883,10 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 </div>
               </SortableContext>
             </DndContext>
-            </div>{/* end space-y-5 */}
+            </div>{}
           </motion.div>
 
-          {/* ── CENTER PREVIEW — fixed, never moves ── */}
+          {}
           <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.2}}
             className="flex-1 min-w-0 resume-center-sticky"
             style={{height:"100%",display:"flex",flexDirection:"column",paddingTop:"24px",paddingBottom:"24px",minWidth:0}}>
@@ -1912,12 +1899,12 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                   <button onClick={()=>setScale(s=>Math.min(1,s+0.05))} className={"text-xs px-2.5 py-1.5 rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")}>+</button>
                 </div>
               </div>
-              {/* Preview card — square corners, fills column height, scrollable when zoomed in */}
+              {}
               <motion.div whileHover={{boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}
                 className={"border shadow-2xl transition-all duration-300 flex-1 "+(dark?"border-white/10":"border-gray-200")}
                 style={{background:"#111827",overflow:"hidden",position:"relative",borderRadius:"4px"}}>
                 <div style={{position:"absolute",inset:0,overflow:"auto",background:"#111827",padding:"16px 0 16px 0"}}>
-                  {/* Full-width centering row — A4 scales from center, never clips */}
+                  {}
                   <div style={{
                     width:"100%",
                     minHeight:"calc(297mm * "+scale+")",
@@ -1957,11 +1944,11 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
             </div>
           </motion.div>
 
-          {/* ── RIGHT SIDEBAR — scrolls independently ── */}
+          {}
           <motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{duration:0.5,delay:0.3}}
             className="w-[260px] flex-shrink-0 resume-right-sticky resume-sidebar"
             style={{height:"100%",overflowY:"auto",paddingTop:"32px",paddingBottom:"80px",display:"flex",flexDirection:"column",gap:"20px",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
-            {/* ATS Score */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-4"}>ATS Score</p>
               <div className="flex items-center gap-4">
@@ -1972,7 +1959,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 </div>
               </div>
             </div>
-            {/* Missing keywords */}
+            {}
             {mkw.length>0&&(
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5" style={{padding:"20px 20px"}}>
               <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-3">⚠ Missing Keywords</p>
@@ -1981,7 +1968,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <p className={"text-xs "+tm+" mt-2"}>Add these to boost ATS score.</p>
               </div>
             )}
-            {/* Resume Tips */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💡 Resume Tips</p>
               <AnimatePresence mode="wait">
@@ -1991,7 +1978,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </AnimatePresence>
               <div className="flex gap-1 mt-4">{RESUME_TIPS.map((_,i)=><button key={i} onClick={()=>setTipI(i)} className="h-1.5 rounded-full transition-all duration-300" style={{width:i===tipI?16:6,background:i===tipI?accent:"rgba(255,255,255,0.15)"}}/>)}</div>
             </div>
-            {/* Section Checklist */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📋 Checklist</p>
               {[["Name & Email",!!(data.name&&data.email)],["Summary",data.summary.length>30],["5+ Skills",data.skills.length>=5],["Experience",data.experience.some(e=>e.role&&e.company)],["Projects",data.projects.some(p=>p.name)],["Education",data.education.some(e=>e.degree)],["Photo",!!data.profileImage]].map(([l,ok])=>(
@@ -2021,7 +2008,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* ── NEW: Skill Strength Meter ── */}
+            {}
             {data.skills.length>0&&(
               <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
                 <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>💪 Skill Strength</p>
@@ -2042,7 +2029,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             )}
 
-            {/* ── NEW: AI Suggestions ── */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🤖 AI Suggestions</p>
               <div className="space-y-2">
@@ -2073,7 +2060,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* ── NEW: Interview Tips ── */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🎤 Interview Tips</p>
               <div className="space-y-2">
@@ -2091,7 +2078,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* ── NEW: Auto Save Status ── */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"16px 20px"}}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -2103,8 +2090,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               <p className={"text-xs "+tm+" mt-1"}>All changes saved locally</p>
             </div>
 
-
-            {/* ── NEW: Resume Analytics ── */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>📈 Analytics</p>
               <div className="grid grid-cols-2 gap-2">
@@ -2123,7 +2109,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* ── NEW: Quick Improve Buttons ── */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🚀 Quick Improve</p>
               <div className="space-y-2">
@@ -2153,7 +2139,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
               </div>
             </div>
 
-            {/* How to Improve Guide */}
+            {}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <button onClick={()=>setShowTipsPanel(p=>!p)} className="w-full flex items-center justify-between">
                 <p className={"text-xs font-bold "+tm+" uppercase tracking-widest"}>📖 How to Improve</p>
@@ -2191,7 +2177,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
         </div>
       </div>
 
-      {/* ── HIDDEN PDF EXPORT DIV — full size, no transform, invisible ── */}
+      {}
       <div style={{position:"fixed",left:"-9999px",top:0,zIndex:-1,pointerEvents:"none"}}>
         <div ref={pdfRef} style={{width:"794px",background:"white",fontFamily:"Inter,sans-serif"}}>
           {tpl==="modern"   &&<ModernPreview   data={data} accent={accent}/>}
@@ -2207,4 +2193,3 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
     </div>
   );
 }
-// PREVIEW COMPONENTS

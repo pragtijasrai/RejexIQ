@@ -7,7 +7,6 @@ const C = {
   warning: "#f59e0b", text: "#f0f4ff", muted: "#64748b", surface: "#111827"
 };
 
-// Animated arc meter
 function ArcMeter({ value, size = 180 }) {
   const r = size * 0.38;
   const cx = size / 2, cy = size / 2;
@@ -30,7 +29,7 @@ function ArcMeter({ value, size = 180 }) {
         <path d={arcPath(startAngle, endAngle)} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={size * 0.06} strokeLinecap="round" />
         <path d={arcPath(startAngle, startAngle + valueArc)} fill="none" stroke={color} strokeWidth={size * 0.06} strokeLinecap="round"
           style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: "all 1s ease" }} />
-        {/* Needle */}
+        {}
         {(() => {
           const needleAngle = startAngle + valueArc;
           const nx = cx + (r - size * 0.04) * Math.cos(toRad(needleAngle));
@@ -90,7 +89,7 @@ export default function RejectionMeter({ user, selectedRole }) {
     <div style={{ fontFamily: "'Inter',sans-serif" }}>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
-      {/* Main meter */}
+      {}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "24px 20px", marginBottom: 16, textAlign: "center" }}>
         <div style={{ fontSize: 11, color: C.danger, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>Rejection Probability</div>
         <ArcMeter value={data.probability} size={200} />
@@ -99,7 +98,7 @@ export default function RejectionMeter({ user, selectedRole }) {
         </p>
       </div>
 
-      {/* Improvement scenario */}
+      {}
       {data.improvements?.length > 0 && (
         <div style={{ background: `${C.success}08`, border: `1px solid ${C.success}30`, borderRadius: 14, padding: "16px 20px", marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: C.success, fontWeight: 700, marginBottom: 8 }}>💡 If you improve:</div>
@@ -115,7 +114,7 @@ export default function RejectionMeter({ user, selectedRole }) {
         </div>
       )}
 
-      {/* Risk factors */}
+      {}
       {data.factors?.length > 0 && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Risk Factors</div>
@@ -123,7 +122,7 @@ export default function RejectionMeter({ user, selectedRole }) {
         </div>
       )}
 
-      {/* Projects slider */}
+      {}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px" }}>
         <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 10 }}>Portfolio Projects: <span style={{ color: C.accent }}>{projects}</span></div>
         <input type="range" min={0} max={8} value={projects} onChange={e => setProjects(+e.target.value)}

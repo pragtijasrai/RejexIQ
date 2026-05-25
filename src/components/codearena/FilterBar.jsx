@@ -30,7 +30,7 @@ export default function FilterBar({ search, onSearch, difficulty, onDifficulty, 
 
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-      {/* Search */}
+      {}
       <div style={{ flex: 1, minWidth: 180, position: "relative" }}>
         <span style={{
           position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
@@ -58,7 +58,7 @@ export default function FilterBar({ search, onSearch, difficulty, onDifficulty, 
         />
       </div>
 
-      {/* Difficulty */}
+      {}
       <select value={difficulty} onChange={e => onDifficulty(e.target.value)} style={selectStyle}>
         <option value="all">All Difficulties</option>
         <option value="easy">Easy</option>
@@ -66,7 +66,7 @@ export default function FilterBar({ search, onSearch, difficulty, onDifficulty, 
         <option value="hard">Hard</option>
       </select>
 
-      {/* Topic */}
+      {}
       <select value={topic} onChange={e => onTopic(e.target.value)} style={selectStyle}>
         <option value="all">All Topics</option>
         <option value="array">Arrays</option>

@@ -89,7 +89,7 @@ function ResultScreen({ result, roleLabel, onRetry, onClose }) {
         ))}
       </div>
 
-      {/* Skill deltas */}
+      {}
       {Object.keys(result.skillDeltas).length > 0 && (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", maxWidth: 400, margin: "0 auto 24px", textAlign: "left" }}>
           <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Skill Impact</div>
@@ -157,7 +157,7 @@ export default function JobSimulator({ user, selectedRole, onClose }) {
 
       {!submitted ? (
         <>
-          {/* Header */}
+          {}
           <div style={{ background: `linear-gradient(135deg,${C.card},${C.surface})`, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px", marginBottom: 24 }}>
             <div style={{ fontSize: 11, color: C.accent, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Job Simulation</div>
             <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 6 }}>{sim.title}</h3>
@@ -169,7 +169,7 @@ export default function JobSimulator({ user, selectedRole, onClose }) {
             </div>
           </div>
 
-          {/* Progress */}
+          {}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.muted, marginBottom: 6 }}>
               <span>Progress</span>
@@ -180,7 +180,7 @@ export default function JobSimulator({ user, selectedRole, onClose }) {
             </div>
           </div>
 
-          {/* Tasks */}
+          {}
           {sim.tasks.map((task, i) => (
             <TaskCard key={task.id} task={task} index={i}
               selected={answers[task.id]}

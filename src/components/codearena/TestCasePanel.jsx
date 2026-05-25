@@ -19,7 +19,7 @@ export default function TestCasePanel({ problem, runResult }) {
       overflow: "hidden",
       marginTop: 12,
     }}>
-      {/* Tab bar */}
+      {}
       <div style={{
         display: "flex", borderBottom: `1px solid ${G.border}`,
         background: "rgba(0,0,0,0.2)",
@@ -46,7 +46,7 @@ export default function TestCasePanel({ problem, runResult }) {
         ))}
       </div>
 
-      {/* Content */}
+      {}
       <div style={{ padding: "16px 18px", minHeight: 120 }}>
         {activeTab === 0 && (
           <div>

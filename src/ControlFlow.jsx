@@ -91,7 +91,6 @@ function CodeBlock({ label, children }) {
   );
 }
 
-// ── Chapter 1: Decision Constructs ──
 function SecDecision() {
   return (
     <div className="cf-sec">
@@ -106,45 +105,41 @@ function SecDecision() {
         <div className="cf-card acc-purple"><div className="icon">🎛️</div><div className="ctitle">switch statement</div><div className="cbody">Multi-way branch on an integer, char, String or enum. Each <code>case</code> is a label; <code>break</code> exits. Without break, execution <em>falls through</em> to the next case.</div></div>
       </div>
 
-      <CodeBlock label="if / if-else / ladder / nested if">{`// 1. Simple if
+      <CodeBlock label="if / if-else / ladder / nested if">{`
 int age = 20;
 if (age >= 18) {
-  System.out.println("Adult");           // prints because 20 >= 18
+  System.out.println("Adult");           
 }
 
-// 2. if-else
 int num = -5;
 if (num >= 0) {
   System.out.println("Positive");
 } else {
-  System.out.println("Negative");        // executes
+  System.out.println("Negative");        
 }
 
-// 3. if-else if ladder
 int marks = 75;
 if      (marks >= 90) System.out.println("A+");
 else if (marks >= 80) System.out.println("A");
-else if (marks >= 70) System.out.println("B");  // executes (75 falls here)
+else if (marks >= 70) System.out.println("B");  
 else if (marks >= 60) System.out.println("C");
 else                  System.out.println("Fail");
 
-// 4. Nested if
 int x = 15;
 if (x > 0) {
   if (x % 2 == 0) System.out.println("Positive Even");
-  else             System.out.println("Positive Odd");  // executes
+  else             System.out.println("Positive Odd");  
 }`}</CodeBlock>
 
-      <CodeBlock label="switch — classic & enhanced (Java 14+)">{`// Classic switch with fall-through danger
+      <CodeBlock label="switch — classic & enhanced (Java 14+)">{`
 int day = 3;
 switch (day) {
   case 1: System.out.println("Monday");    break;
   case 2: System.out.println("Tuesday");   break;
-  case 3: System.out.println("Wednesday"); break;  // executes
+  case 3: System.out.println("Wednesday"); break;  
   default: System.out.println("Weekend");
 }
 
-// Fall-through intentionally used (group multiple cases)
 switch (day) {
   case 1: case 2: case 3: case 4: case 5:
     System.out.println("Weekday"); break;
@@ -152,7 +147,6 @@ switch (day) {
     System.out.println("Weekend");
 }
 
-// Enhanced switch expression (Java 14+) — no break needed
 String result = switch (day) {
   case 1, 2, 3, 4, 5 -> "Weekday";
   case 6, 7           -> "Weekend";
@@ -177,7 +171,6 @@ System.out.println(result);`}</CodeBlock>
   );
 }
 
-// ── Chapter 2: Loop Constructs ──
 function SecLoops() {
   return (
     <div className="cf-sec">
@@ -192,54 +185,43 @@ function SecLoops() {
         <div className="cf-card acc-purple"><div className="icon">📋</div><div className="ctitle">for-each loop</div><div className="cbody">Syntactic sugar for iterating over arrays or collections. No index, cleaner syntax, but cannot modify elements or iterate in reverse.</div></div>
       </div>
 
-      <CodeBlock label="All 4 loop types with deep notes">{`// ===== for loop anatomy =====
-// for (init; condition; update) { body }
-// init   → runs once at start
-// cond   → checked before every iteration
-// update → runs after every iteration
+      <CodeBlock label="All 4 loop types with deep notes">{`
+
 for (int i = 1; i <= 5; i++) {
-  System.out.print(i + " ");    // 1 2 3 4 5
+  System.out.print(i + " ");    
 }
 
-// Step by 2, or count backwards
 for (int i = 10; i >= 1; i -= 2) {
-  System.out.print(i + " ");    // 10 8 6 4 2
+  System.out.print(i + " ");    
 }
 
-// ===== while loop =====
 int i = 1;
 while (i <= 5) {
-  System.out.print(i + " ");    // 1 2 3 4 5
-  i++;                           // MUST update, else infinite loop!
+  System.out.print(i + " ");    
+  i++;                           
 }
 
-// while(true) with break — useful pattern
 int n = 1;
 while (true) {
   System.out.print(n + " ");
   n++;
-  if (n > 5) break;              // exit when done
+  if (n > 5) break;              
 }
 
-// ===== do-while loop =====
-// body runs FIRST, condition checked AFTER
 int x = 1;
 do {
-  System.out.print(x + " ");    // runs at least once
+  System.out.print(x + " ");    
   x++;
-} while (x <= 5);                // Note the semicolon!
+} while (x <= 5);                
 
-// do-while with false condition still runs once
 int k = 100;
 do {
-  System.out.println("Runs once!"); // prints even though k > 5
+  System.out.println("Runs once!"); 
 } while (k <= 5);
 
-// ===== for-each loop =====
-// for (type element : arrayOrCollection)
 int[] arr = {10, 20, 30, 40};
 for (int val : arr) {
-  System.out.print(val + " ");   // 10 20 30 40
+  System.out.print(val + " ");   
 }
 
 String[] fruits = {"Apple", "Mango", "Banana"};
@@ -262,7 +244,6 @@ for (String fruit : fruits) {
   );
 }
 
-// ── Chapter 3: Jump Statements ──
 function SecJump() {
   return (
     <div className="cf-sec">
@@ -276,51 +257,46 @@ function SecJump() {
         <div className="cf-card acc-green"><div className="icon">↩️</div><div className="ctitle">return</div><div className="cbody">Exits the entire method. Can optionally carry a value back to the caller. Also terminates any loop the method happens to be in.</div></div>
       </div>
 
-      <CodeBlock label="break — simple, labeled, and in switch">{`// break exits the innermost loop
+      <CodeBlock label="break — simple, labeled, and in switch">{`
 for (int i = 1; i <= 10; i++) {
-  if (i == 5) break;           // stops at 5
-  System.out.print(i + " ");   // prints: 1 2 3 4
+  if (i == 5) break;           
+  System.out.print(i + " ");   
 }
 
-// Labeled break — escape nested loops
-outer:                           // label for outer loop
+outer:                           
 for (int i = 1; i <= 3; i++) {
   for (int j = 1; j <= 3; j++) {
-    if (i == 2 && j == 2) break outer; // exits BOTH loops
+    if (i == 2 && j == 2) break outer; 
     System.out.println(i + "," + j);
   }
 }
-// Prints: 1,1  1,2  1,3  2,1  (stops at 2,2)`}</CodeBlock>
-
-      <CodeBlock label="continue — with and without label">{`// continue skips the rest of THIS iteration
+`}</CodeBlock>
+      <CodeBlock label="continue — with and without label">{`
 for (int i = 1; i <= 10; i++) {
-  if (i % 2 == 0) continue;    // skip even numbers
-  System.out.print(i + " ");   // prints: 1 3 5 7 9
+  if (i % 2 == 0) continue;    
+  System.out.print(i + " ");   
 }
 
-// continue with label — skip to outer loop's next iteration
 outer:
 for (int i = 1; i <= 3; i++) {
   for (int j = 1; j <= 3; j++) {
-    if (j == 2) continue outer; // skip j=2,3 for each i
+    if (j == 2) continue outer; 
     System.out.println(i + "," + j);
   }
 }
-// Prints: 1,1   2,1   3,1   (j=2 skips rest of inner loop)`}</CodeBlock>
-
-      <CodeBlock label="return — exiting methods from within loops">{`// return exits the entire method
+`}</CodeBlock>
+      <CodeBlock label="return — exiting methods from within loops">{`
 static boolean isPrime(int n) {
-  if (n < 2) return false;          // early exit
+  if (n < 2) return false;          
   for (int i = 2; i * i <= n; i++) {
-    if (n % i == 0) return false;   // exit as soon as found
+    if (n % i == 0) return false;   
   }
-  return true;                       // only reaches here if prime
+  return true;                       
 }
 
-// void return — just exits method
 static void printUntilNeg(int[] arr) {
   for (int val : arr) {
-    if (val < 0) return;            // stop processing
+    if (val < 0) return;            
     System.out.println(val);
   }
 }`}</CodeBlock>
@@ -343,7 +319,6 @@ static void printUntilNeg(int[] arr) {
   );
 }
 
-// ── Chapter 4: Nested Loops ──
 function SecNested() {
   return (
     <div className="cf-sec">
@@ -353,32 +328,22 @@ function SecNested() {
 
       <div className="cf-alert al-blue"><strong>Mental model:</strong> Think of a clock. The seconds hand (inner loop) completes 60 rotations for every 1 rotation of the minute hand (outer loop). Nested loops work exactly like this.</div>
 
-      <CodeBlock label="Nested loops — mechanics & multiplication table">{`// Trace: outer i runs 1..3, inner j runs 1..3 for EACH i
-// Total iterations = 3 × 3 = 9
+      <CodeBlock label="Nested loops — mechanics & multiplication table">{`
+
 for (int i = 1; i <= 3; i++) {
   for (int j = 1; j <= 3; j++) {
     System.out.print("(" + i + "," + j + ") ");
   }
-  System.out.println();  // newline after each row
+  System.out.println();  
 }
-// (1,1)(1,2)(1,3)
-// (2,1)(2,2)(2,3)
-// (3,1)(3,2)(3,3)
 
-// 5×5 Multiplication Table
 for (int i = 1; i <= 5; i++) {
   for (int j = 1; j <= 5; j++) {
-    System.out.printf("%4d", i * j);  // formatted width
+    System.out.printf("%4d", i * j);  
   }
   System.out.println();
 }
-//    1   2   3   4   5
-//    2   4   6   8  10
-//    3   6   9  12  15
-//    4   8  12  16  20
-//    5  10  15  20  25
 
-// Mixed loop types — while outer, for inner
 int row = 1;
 while (row <= 3) {
   for (int col = 1; col <= row; col++) {
@@ -387,10 +352,7 @@ while (row <= 3) {
   System.out.println();
   row++;
 }
-// *
-// * *
-// * * *`}</CodeBlock>
-
+`}</CodeBlock>
       <div className="cf-fw">
         <h3>Key rules for nested loop variables</h3>
         <div className="syn-row"><div className="syn-n">1</div><div className="syn-t">Use different variable names: outer <code>i</code>, inner <code>j</code>, deepest <code>k</code>. Never reuse the same name across levels.</div></div>
@@ -402,7 +364,6 @@ while (row <= 3) {
   );
 }
 
-// ── Chapter 5: Pattern Problems ──
 function SecPatterns() {
   const patterns = [
     { title:"Right Triangle (stars)", sub:"Inner loop: j runs from 1 to i", code:`for(int i=1;i<=5;i++){
@@ -503,7 +464,6 @@ for(int i=1;i<=5;i++){
   );
 }
 
-// ── Chapter 6: Live Playground ──
 function SecPlayground() {
   const [patType, setPatType] = useState("right");
   const [patSize, setPatSize] = useState(5);
@@ -598,7 +558,7 @@ function SecPlayground() {
       <div className="cf-title">Live Playground</div>
       <div className="cf-desc">See real output. Run pattern generators and loop demos instantly.</div>
 
-      {/* Pattern Generator */}
+      {}
       <div className="cf-fw">
         <h3>Pattern Generator</h3>
         <div className="demo-ctrl">
@@ -624,7 +584,7 @@ function SecPlayground() {
         <div className="demo-out">{patOut}</div>
       </div>
 
-      {/* Loop Explorer */}
+      {}
       <div className="cf-fw" style={{marginTop:20}}>
         <h3>Loop Behavior Explorer</h3>
         <div className="demo-ctrl">
@@ -648,7 +608,7 @@ function SecPlayground() {
         <div className="demo-out">{loopOut}</div>
       </div>
 
-      {/* Problem Checker */}
+      {}
       <div className="cf-fw" style={{marginTop:20}}>
         <h3>Practice Problem Checker</h3>
         <div className="demo-ctrl">
@@ -674,7 +634,6 @@ function SecPlayground() {
   );
 }
 
-// ── Main Export ──
 const CHAPTERS = [
   { id:"decision", label:"Decision Constructs", color:"orange" },
   { id:"loops",    label:"Loop Constructs",     color:"blue"   },
@@ -706,7 +665,7 @@ export default function ControlFlow({ onPrev, onNext, onChapterChange }) {
       <style>{styles}</style>
       <div className="cf-wrap">
 
-        {/* Tab nav */}
+        {}
         <div className="cf-nav">
           {CHAPTERS.map(ch => (
             <button key={ch.id} className={`cf-nb${active===ch.id?" on":""}`}
@@ -717,7 +676,7 @@ export default function ControlFlow({ onPrev, onNext, onChapterChange }) {
           ))}
         </div>
 
-        {/* Active section */}
+        {}
         {active === "decision"   && <SecDecision />}
         {active === "loops"      && <SecLoops />}
         {active === "jump"       && <SecJump />}
@@ -725,11 +684,11 @@ export default function ControlFlow({ onPrev, onNext, onChapterChange }) {
         {active === "patterns"   && <SecPatterns />}
         {active === "playground" && <SecPlayground />}
 
-        {/* Prev / Next bar */}
+        {}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
           marginTop:48,paddingTop:24,borderTop:"0.5px solid var(--java-border)"}}>
 
-          {/* Prev: within chapters, or back to Arrays & Recursion */}
+          {}
           {curIdx > 0 ? (
             <button className="demo-btn" style={{display:"flex",alignItems:"center",gap:8,padding:"10px 22px",fontSize:14,background:"var(--java-blue)"}}
               onClick={() => switchTab(CHAPTERS[curIdx-1].id)}>
@@ -742,7 +701,7 @@ export default function ControlFlow({ onPrev, onNext, onChapterChange }) {
             </button>
           ) : <div />}
 
-          {/* Dot indicators */}
+          {}
           <div style={{display:"flex",gap:6}}>
             {CHAPTERS.map((ch,i) => (
               <div key={ch.id} onClick={() => switchTab(ch.id)}
@@ -751,7 +710,7 @@ export default function ControlFlow({ onPrev, onNext, onChapterChange }) {
             ))}
           </div>
 
-          {/* Next: within chapters, or forward to next tutorial */}
+          {}
           {curIdx < CHAPTERS.length-1 ? (
             <button className="demo-btn" style={{display:"flex",alignItems:"center",gap:8,padding:"10px 22px",fontSize:14}}
               onClick={() => switchTab(CHAPTERS[curIdx+1].id)}>

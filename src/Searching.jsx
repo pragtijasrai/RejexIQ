@@ -47,7 +47,6 @@ const styles = `
 @media(max-width:500px){ .srch-2col{grid-template-columns:1fr;} }
 `;
 
-// ── Array cell renderer ──
 function ArrCells({ arr, lo = -1, hi = -1, mid = -1, found = -1, visited = [] }) {
   return (
     <div className="srch-arr">
@@ -70,7 +69,6 @@ function ArrCells({ arr, lo = -1, hi = -1, mid = -1, found = -1, visited = [] })
   );
 }
 
-// ── Linear Search ──
 function SecLinear() {
   const ARR = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
   const [target, setTarget] = useState(23);
@@ -112,18 +110,15 @@ function SecLinear() {
       </div>
       <div className="srch-code">{`int linearSearch(int[] arr, int key) {
   for (int i = 0; i < arr.length; i++) {
-    if (arr[i] == key) return i;   // found at index i
+    if (arr[i] == key) return i;   
   }
-  return -1;                        // not found
+  return -1;                        
 }
-// Time: O(n) worst/avg | O(1) best (first element)
-// Space: O(1)
-// Works on: unsorted AND sorted arrays`}</div>
+`}</div>
     </div>
   );
 }
 
-// ── Binary Search ──
 function SecBinary() {
   const ARR = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
   const [target, setTarget] = useState(23);
@@ -180,19 +175,18 @@ function SecBinary() {
         <button className="srch-btn primary" onClick={doStep} disabled={done}>Step</button>
         <button className="srch-btn" onClick={reset}>Reset</button>
       </div>
-      <div className="srch-code">{`// Iterative Binary Search
+      <div className="srch-code">{`
 int binarySearch(int[] arr, int key) {
   int lo = 0, hi = arr.length - 1;
   while (lo <= hi) {
-    int mid = lo + (hi - lo) / 2;  // avoids overflow
+    int mid = lo + (hi - lo) / 2;  
     if (arr[mid] == key) return mid;
-    else if (arr[mid] < key) lo = mid + 1;  // go right
-    else hi = mid - 1;                       // go left
+    else if (arr[mid] < key) lo = mid + 1;  
+    else hi = mid - 1;                       
   }
-  return -1; // not found
+  return -1; 
 }
 
-// Recursive Binary Search
 int binarySearch(int[] arr, int lo, int hi, int key) {
   if (lo > hi) return -1;
   int mid = lo + (hi - lo) / 2;
@@ -200,13 +194,12 @@ int binarySearch(int[] arr, int lo, int hi, int key) {
   if (arr[mid] < key) return binarySearch(arr, mid+1, hi, key);
   return binarySearch(arr, lo, mid-1, key);
 }
-// Time: O(log n) | Space: O(1) iterative, O(log n) recursive`}</div>
+`}</div>
       <div className="srch-info"><p>For n=1,000,000: Linear search needs up to 1,000,000 comparisons. Binary search needs at most log₂(1,000,000) ≈ 20 comparisons. That's 50,000× faster!</p></div>
     </div>
   );
 }
 
-// ── Comparison & Quiz ──
 function SecSearchComparison() {
   const QUESTIONS = [
     { q:"What is the time complexity of Binary Search?", opts:["O(n)","O(log n)","O(n log n)","O(1)"], ans:1 },

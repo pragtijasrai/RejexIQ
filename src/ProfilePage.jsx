@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 
-// ─── useInView hook ──────────────────────────────────────────────────────────
 function useInView(options = {}) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -16,7 +15,6 @@ function useInView(options = {}) {
   return [ref, inView];
 }
 
-// ─── Animated Section wrapper ────────────────────────────────────────────────
 function Section({ children, className = "", delay = 0, direction = "up" }) {
   const [ref, inView] = useInView();
   const transforms = { up: "translateY(48px)", left: "translateX(-48px)", right: "translateX(48px)", scale: "scale(0.93)" };
@@ -35,7 +33,6 @@ function Section({ children, className = "", delay = 0, direction = "up" }) {
   );
 }
 
-// ─── Skill Bar ───────────────────────────────────────────────────────────────
 function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
   const [ref, inView] = useInView();
   return (
@@ -78,7 +75,6 @@ function SkillBar({ label, pct, color, editMode, onChangePct, onDelete }) {
   );
 }
 
-// ─── Stat Card ───────────────────────────────────────────────────────────────
 function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
   const [ref, inView] = useInView();
   const [count, setCount] = useState(0);
@@ -130,7 +126,6 @@ function StatCard({ num, label, icon, editMode, onNumChange, onLabelChange }) {
   );
 }
 
-// ─── Timeline Item ───────────────────────────────────────────────────────────
 function TimelineItem({ title, org, period, desc, tags, index, editMode, onUpdate, onDelete }) {
   const [ref, inView] = useInView();
 
@@ -221,7 +216,6 @@ const POPULAR_SKILLS = [
   "UI/UX Design", "Git & GitHub", "Docker & Kubernetes", "Agile Methodologies"
 ];
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [scrollY, setScrollY] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -255,7 +249,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const heroRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
 
-  // Core Identity States
+  
   const [tempName, setTempName] = useState(user?.name || "Arjun Sharma");
   const [tempTrack, setTempTrack] = useState(user?.track || "Senior Frontend Engineer");
   const [tempBio, setTempBio] = useState(user?.bio || "Passionate about building performant, elegant digital products. My journey started with competitive programming, where I fell in love with algorithms and system thinking. Today I build at the intersection of engineering craftsmanship and user experience.");
@@ -264,7 +258,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [tempBranch, setTempBranch] = useState(user?.branch || "Computer Science");
   const [tempPrivacy, setTempPrivacy] = useState(user?.privacy || "public");
 
-  // Stats
+  
   const [tempStats, setTempStats] = useState(user?.stats || [
     { num: "4+", label: "Years Experience", icon: "💼" },
     { num: "18", label: "Projects Shipped", icon: "🚀" },
@@ -273,7 +267,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     { num: "12", label: "Mentees", icon: "🌱" }
   ]);
 
-  // Contact Info
+  
   const [tempContact, setTempContact] = useState(user?.contactInfo || {
     email: user?.email || "arjun@rejexiq.dev",
     location: "Bengaluru, India",
@@ -281,7 +275,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     availability: "Available for freelance"
   });
 
-  // Social Links
+  
   const [tempSocials, setTempSocials] = useState(user?.socialLinks || {
     github: "https://github.com",
     linkedin: "https://linkedin.com",
@@ -289,7 +283,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     blog: "https://medium.com"
   });
 
-  // Timelines (Experience & Education)
+  
   const [tempExperience, setTempExperience] = useState(user?.experience || [
     { title: "Senior Frontend Engineer", org: "TechCorp Inc.", period: "2023 – Present", desc: "Led redesign of core product dashboard, improving performance by 40% and user retention by 22%.", tags: ["React", "TypeScript", "Figma", "AWS"] },
     { title: "Full Stack Developer", org: "Startup Labs", period: "2021 – 2023", desc: "Built scalable REST APIs and React applications serving 50k+ daily users.", tags: ["Node.js", "MongoDB", "React", "Docker"] },
@@ -301,7 +295,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     { title: "Higher Secondary (XII)", org: "Delhi Public School", period: "2016 – 2017", desc: "PCM + CS stream. 96.2% aggregate.", tags: ["Mathematics", "Physics", "Computer Science"] }
   ]);
 
-  // Roadmap Items
+  
   const [tempRoadmaps, setTempRoadmaps] = useState(user?.roadmaps || [
     { icon: "🌱", level: "Beginner", label: "Foundations", items: ["Python basics", "Math & Logic", "Problem Solving"] },
     { icon: "🌿", level: "Intermediate", label: "Core Skills", items: ["Data Structures", "Algorithms", "System Design basics"] },
@@ -309,7 +303,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     { icon: "🏆", level: "Expert", label: "Mastery", items: ["Research Papers", "Leadership", "Mentoring others"] }
   ]);
 
-  // Skills
+  
   const [tempSkills, setTempSkills] = useState(() => {
     if (user?.skillsData && Array.isArray(user.skillsData)) {
       return user.skillsData;
@@ -341,7 +335,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
   const [tempLanguages, setTempLanguages] = useState(user?.languages || ["Hindi (Native)", "English (C2)", "Kannada (B1)"]);
 
-  // Certifications & Projects
+  
   const [tempCertifications, setTempCertifications] = useState(user?.certifications || [
     { name: "AWS Certified Solutions Architect", issuer: "Amazon Web Services", year: "2023", color: "var(--g-light)" },
     { name: "Google Professional Data Engineer", issuer: "Google Cloud", year: "2022", color: "var(--g-mid)" },
@@ -355,16 +349,16 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     { name: "ResumeAI", desc: "AI-powered resume analyser that gives ATS score + suggestions in under 3 seconds.", tech: ["Python", "FastAPI", "Claude API", "React"], stars: "890", link: "https://github.com" }
   ]);
 
-  // Social Features
+  
   const [tempFollowers, setTempFollowers] = useState(user?.followers || 1240);
   const [tempFollowing, setTempFollowing] = useState(user?.following || 45);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
 
-  // Custom Sections
+  
   const [tempCustomSections, setTempCustomSections] = useState(user?.customSections || []);
 
-  // Activity Stats
+  
   const [activityStats, setActivityStats] = useState(user?.activityStats || {
     currentStreak: 12,
     maxStreak: 45,
@@ -373,18 +367,18 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
   const [activityGrid] = useState(() => {
     const data = [];
-    const colors = ["#f8f6f0", "#93c5fd", "#3b82f6", "#1e3a8a", "#0f172a"]; // Adjusted base color to match the cream background of stats cards
+    const colors = ["#f8f6f0", "#93c5fd", "#3b82f6", "#1e3a8a", "#0f172a"]; 
     const today = new Date();
     const streak = activityStats.currentStreak || 12;
 
-    // Exactly 365 days (1 year)
+    
     const TOTAL_DAYS = 365;
 
     for (let i = TOTAL_DAYS - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
 
-      // Force "no activity" for dates before February 2026
+      
       const isBeforeFeb = d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() < 1);
       const isMissed = isBeforeFeb ? true : (i < streak ? false : Math.random() < 0.75);
 
@@ -392,7 +386,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
       let activeMinutes = 0;
 
       if (!isMissed) {
-        // Random active time between 15 mins and 300 mins (5 hrs)
+        
         activeMinutes = 15 + Math.floor(Math.random() * 285);
         if (activeMinutes < 60) intensity = 1;
         else if (activeMinutes < 120) intensity = 2;
@@ -434,7 +428,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         const isJanuary = month === 0;
         let labelText = day.dateObj.toLocaleDateString('en-US', { month: 'short' });
 
-        // Add the year if it's the start of the graph or the start of a new year
+        
         if (isFirstLabel || isJanuary) {
           labelText += ` ${day.dateObj.getFullYear()}`;
         }
@@ -448,8 +442,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     }
   });
 
-
-  // Onboarding
+  
   const [onboardStep, setOnboardStep] = useState(1);
   const [onboardName, setOnboardName] = useState(user?.name || "");
   const [onboardUsername, setOnboardUsername] = useState("");
@@ -461,7 +454,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   const [branchSuggestions, setBranchSuggestions] = useState([]);
   const [usernameSuggestions, setUsernameSuggestions] = useState([]);
 
-  // Sync state with parent user on mount or change
+  
   useEffect(() => {
     if (user) {
       setTempName(user.name || "Arjun Sharma");
@@ -497,7 +490,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     }
   }, [user]);
 
-  // Dynamic username suggestions
+  
   useEffect(() => {
     if (!onboardName) {
       setUsernameSuggestions([]);
@@ -598,10 +591,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     reader.readAsDataURL(file);
   };
 
-  // Dynamic GitHub Projects Fetch
+  
   const fetchGitHubProjects = async () => {
     let targetUsername = tempUsername;
-    // Extract from github social link if available
+    
     if (tempSocials?.github && tempSocials.github.includes("github.com/")) {
       let urlStr = tempSocials.github.trim();
       if (urlStr.endsWith('/')) {
@@ -627,7 +620,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         throw new Error("No public repositories found.");
       }
       const mapped = data.map(repo => {
-        // stars count abbreviation
+        
         let stars = String(repo.stargazers_count);
         if (repo.stargazers_count >= 1000) {
           stars = (repo.stargazers_count / 1000).toFixed(1) + "k";
@@ -658,21 +651,20 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempCustomSections([...tempCustomSections, { title: "New Section", content: "Section content goes here..." }]);
   };
 
-
-  // Robust Scroll Listener on main container
+  
   useEffect(() => {
     const scrollContainer = document.querySelector(".main-content-area") || window;
     const onScroll = () => {
       setScrollY(scrollContainer.scrollTop !== undefined ? scrollContainer.scrollTop : window.scrollY);
     };
     scrollContainer.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // initial trigger
+    onScroll(); 
     return () => scrollContainer.removeEventListener("scroll", onScroll);
   }, []);
 
   const parallaxBg = -scrollY * 0.25;
 
-  // Sync custom school schooling to education head
+  
   const dynamicEducation = tempSchool
     ? [
       {
@@ -695,7 +687,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
   }
   const showOnboarding = isNew && user?.email !== "demo@rejexiq.com";
 
-  // Helper function to return background cover styling
+  
   function tempCoverBackground() {
     if (user?.cover) {
       if (user.cover.startsWith("linear-gradient")) {
@@ -706,9 +698,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     return `linear-gradient(135deg, #070a1e 0%, #141b3d 75%, #1f2a55 100%)`;
   }
 
-  // ─── CRUD Helper Functions ─────────────────────────────────────────────────
+  
 
-  // Stats
+  
   const updateStatItem = (index, key, val) => {
     if (!tempStats || !tempStats[index]) return;
     const updated = [...tempStats];
@@ -716,7 +708,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempStats(updated);
   };
 
-  // Roadmaps
+  
   const updateRoadmapItem = (index, key, val) => {
     if (!tempRoadmaps || !tempRoadmaps[index]) return;
     const updated = [...tempRoadmaps];
@@ -724,7 +716,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempRoadmaps(updated);
   };
 
-  // Experience
+  
   const addExperience = () => {
     setTempExperience([
       ...(tempExperience || []),
@@ -742,7 +734,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempExperience(updated);
   };
 
-  // Education
+  
   const addEducation = () => {
     setTempEducation([
       ...(tempEducation || []),
@@ -760,7 +752,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempEducation(updated);
   };
 
-  // Technical Skills
+  
   const addTechSkill = () => {
     setTempSkills([
       ...(tempSkills || []),
@@ -778,7 +770,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempSkills(updated);
   };
 
-  // Soft Skills
+  
   const addSoftSkill = () => {
     setTempSoftSkills([
       ...(tempSoftSkills || []),
@@ -796,7 +788,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempSoftSkills(updated);
   };
 
-  // Languages
+  
   const addLanguage = () => {
     setTempLanguages([...(tempLanguages || []), "New Language (Native)"]);
   };
@@ -811,7 +803,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempLanguages(updated);
   };
 
-  // Certifications
+  
   const addCertification = () => {
     setTempCertifications([
       ...(tempCertifications || []),
@@ -829,7 +821,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
     setTempCertifications(updated);
   };
 
-  // Projects
+  
   const addProject = () => {
     setTempProjects([
       ...(tempProjects || []),
@@ -874,7 +866,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           --accent: ${theme.accent}; --purple: ${theme.purple}; --cyan: #22d3ee;
         }
         
-        /* ─── Sticky Nav ─── */
+        
         .prof-nav {
           position: fixed; top: 0; left: 0; right: 0; z-index: 100;
           padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
@@ -895,7 +887,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           cursor: pointer; transition: all 0.2s;
         }
 
-        /* ─── Compact Hero Banner ─── */
+        
         .hero-cover {
           position: relative; height: 220px;
           overflow: hidden; width: 100%;
@@ -959,7 +951,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           cursor: pointer; transition: all 0.25s; letter-spacing: 0.02em;
         }
 
-        /* ─── Premium Unified Profile Header Card ─── */
+        
         .profile-header-card {
           max-width: 1100px;
           margin: 0 auto;
@@ -1046,15 +1038,15 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           max-width: 750px;
         }
 
-        /* ─── Main Body ─── */
+        
         .profile-body { max-width: 1100px; margin: 0 auto; padding: 48px 32px 100px; }
 
-        /* ─── Section Head ─── */
+        
         .section-head { margin-bottom: 36px; }
         .section-label { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--g-light); font-weight: 600; margin-bottom: 6px; }
         .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: var(--gray-800); letter-spacing: -0.02em; }
 
-        /* ─── Stats Row ─── */
+        
         .stats-row { display: flex; gap: 20px; margin-bottom: 56px; flex-wrap: wrap; }
         .stat-card {
           flex: 1; min-width: 140px; background: var(--white); border-radius: 20px;
@@ -1067,7 +1059,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; color: var(--g-light); line-height: 1; margin-bottom: 4px; }
         .stat-label { font-size: 0.72rem; color: var(--gray-400); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
-        /* ─── About Grid ─── */
+        
         .about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 56px; }
         .about-card {
           background: var(--white); border-radius: 20px; padding: 32px;
@@ -1089,7 +1081,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         .social-btn:hover { border-color: var(--g-light); color: var(--g-light); transform: translateY(-1px); }
 
-        /* ─── Roadmap ─── */
+        
         .roadmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 56px; }
         .roadmap-card {
           background: var(--white); border-radius: 18px; padding: 24px 20px;
@@ -1108,7 +1100,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         .roadmap-item { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--gray-600); }
         .roadmap-item::before { content: '→'; color: var(--g-light); font-size: 0.7rem; }
 
-        /* ─── Timeline ─── */
+        
         .timeline { position: relative; padding-left: 32px; margin-bottom: 56px; }
         .timeline::before {
           content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px;
@@ -1132,11 +1124,11 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           font-size: 0.7rem; color: var(--g-light); font-weight: 500;
         }
 
-        /* ─── Skills ─── */
+        
         .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 56px; }
         .skills-card { background: var(--white); border-radius: 20px; padding: 32px; box-shadow: var(--card-shadow); border: 1px solid var(--gray-200); }
 
-        /* ─── Certifications ─── */
+        
         .cert-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 56px; }
         .cert-card {
           background: var(--white); border-radius: 16px; padding: 20px 22px;
@@ -1155,7 +1147,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         .dropdown-item:hover { background: var(--gray-100); color: var(--g-light); }
 
-        /* ─── Projects ─── */
+        
         .projects-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-bottom: 56px; }
         .projects-grid > div { height: 100%; display: flex; flex-direction: column; }
         .project-card {
@@ -1176,7 +1168,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         .project-link:hover { gap: 8px; }
 
-        /* ─── Resume CTA ─── */
+        
         .resume-cta {
           border-radius: 24px; padding: 48px 44px;
           display: flex; align-items: center; justify-content: space-between;
@@ -1202,7 +1194,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         .resume-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
 
-        /* ─── Onboarding overlay ─── */
+        
         .onboard-overlay {
           position: fixed; inset: 0; z-index: 999;
           background: rgba(45, 10, 10, 0.85); backdrop-filter: blur(25px);
@@ -1231,7 +1223,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         .onboard-progress-bar { height: 6px; background: rgba(128,0,0,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 24px; }
         .onboard-progress-fill { height: 100%; background: linear-gradient(90deg, #800000, #4a0404); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
 
-        /* ─── Premium List Input Controls ─── */
+        
         .crud-input {
           width: 100%; padding: 8px 12px; background: var(--gray-100); border: 1.5px solid var(--gray-200);
           border-radius: 8px; color: var(--gray-800); outline: none; font-size: 0.85rem; transition: all 0.2s;
@@ -1251,7 +1243,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
         .crud-btn-delete:hover { background: #ef4444; color: white; }
 
-        /* ─── Responsive ─── */
+        
         @media (max-width: 900px) {
           .roadmap-grid { grid-template-columns: repeat(2,1fr); }
           .projects-grid { grid-template-columns: repeat(2,1fr); }
@@ -1300,9 +1292,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         }
       `}</style>
 
-      {/* Nav has been removed as requested */}
+      {}
 
-      {/* ─── Compact Hero Cover Photo ─── */}
+      {}
       <section className="hero-cover" ref={heroRef}>
         <div
           className="hero-bg"
@@ -1331,7 +1323,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           background: "linear-gradient(to top, rgba(253, 253, 251, 0.15) 0%, transparent 100%)"
         }} />
 
-        {/* Cover Background Customizer & Presets Bar (Visible in Edit Mode) */}
+        {}
         {editMode && (
           <div style={{
             position: "absolute",
@@ -1392,14 +1384,13 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             >
               🖼️ Upload
             </button>
-            <input type="file" id="cover-input-file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverChange} />
+            <input type="file" id="cover-input-file" accept="image/*" style={{ display: 'none' }} />
           </div>
         )}
       </section>
 
-      {/* ─── Premium Unified Profile Header Card (Floating squircle grid card) ─── */}
       <section className="profile-header-card">
-        {/* Avatar Container in Column 1 */}
+        {}
         <div className="profile-header-avatar-container">
           <div
             className="hero-avatar-wrap profile-header-avatar-inner"
@@ -1415,11 +1406,9 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               <span>Upload</span>
             </div>
           </div>
-          {/* <div className="hero-badge" style={{ bottom: "-4px", right: "-4px" }}>⭐ Pro</div> */}
-          <input type="file" id="avatar-input-file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+          {}
+          <input type="file" id="avatar-input-file" accept="image/*" style={{ display: 'none' }} />
         </div>
-
-        {/* Text and input details in Column 2 */}
         <div className="profile-header-info">
           {editMode ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", marginTop: 8 }} className="profile-header-inputs">
@@ -1574,7 +1563,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 )}
               </div>
 
-              {/* Social Stats & Buttons */}
+              {}
               <div style={{ display: "flex", alignItems: "center", gap: "24px", marginTop: "8px" }}>
                 <div style={{ display: "flex", gap: "16px", fontSize: "0.85rem", color: "var(--gray-600)" }}>
                   <div style={{ cursor: "pointer" }}><strong style={{ color: "var(--gray-800)" }}>{tempFollowers}</strong> Followers</div>
@@ -1631,10 +1620,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
         </div>
       </section>
 
-      {/* ─── Creamish Body Container ─── */}
+      {}
       <div className="profile-body">
 
-        {/* Stats Row (Fully Editable in Place) */}
+        {}
         <Section direction="up" delay={0}>
           <div className="stats-row">
             {Array.isArray(tempStats) && tempStats.map((s, idx) => (
@@ -1651,7 +1640,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* About Section */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
@@ -1675,7 +1664,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               </p>
             </div>
 
-            {/* User Profile Details Card */}
+            {}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>User Profile Details</div>
               {editMode ? (
@@ -1711,7 +1700,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               )}
             </div>
 
-            {/* Contact Details (Fully Editable in Edit Mode) */}
+            {}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>Contact</div>
               {editMode ? (
@@ -1755,7 +1744,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               )}
             </div>
 
-            {/* Social Links (Fully Editable in Edit Mode) */}
+            {}
             <div className="about-card">
               <div className="section-label" style={{ marginBottom: 14 }}>Socials</div>
               {editMode ? (
@@ -1789,7 +1778,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Activity Status Section */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head">
             <div className="section-label">Engagement</div>
@@ -1811,7 +1800,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                 </div>
 
                 <div style={{ display: "flex", gap: "8px", minWidth: "max-content", paddingBottom: "10px" }}>
-                  {/* Y-axis labels */}
+                  {}
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "0px", paddingBottom: "32px", fontSize: "0.75rem", color: "#64748b" }}>
                     <div style={{ height: "12px", visibility: "hidden" }}>Sun</div>
                     <div style={{ height: "12px", lineHeight: "12px" }}>Mon</div>
@@ -1824,7 +1813,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
 
-                    {/* 7-row grid (column flow) */}
+                    {}
                     <div style={{
                       display: "grid",
                       gridTemplateRows: "repeat(7, 12px)",
@@ -1844,10 +1833,10 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                       ))}
                     </div>
 
-                    {/* Month labels and Badges row */}
+                    {}
                     <div style={{ position: "relative", height: "24px", marginTop: "4px" }}>
                       {monthLabels.map((m, i) => {
-                        // Let's add badges for Feb, Mar, Apr
+                        
                         let badge = null;
                         if (m.label.includes("Feb")) badge = { text: "Noob", icon: "🌱", color: "#3b82f6" };
                         if (m.label.includes("Mar")) badge = { text: "Pro", icon: "⭐", color: "#8b5cf6" };
@@ -1882,7 +1871,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                   </div>
                 </div>
 
-                {/* Footer legend */}
+                {}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", minWidth: "max-content" }}>
                   <div style={{ fontSize: "0.75rem", color: "#64748b", cursor: "pointer", textDecoration: "underline" }}>Learn how we measure activity</div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "#64748b" }}>
@@ -1900,7 +1889,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Roadmap Paths Section (Fully Editable in Edit Mode) */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head">
             <div className="section-label">Career Paths</div>
@@ -1931,7 +1920,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Experience Section */}
+        {}
         <Section direction="left" delay={0}>
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
@@ -1956,7 +1945,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Education Section */}
+        {}
         <Section direction="left" delay={0}>
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
@@ -1987,14 +1976,14 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Skills Section (Fully Interactive Range Sliders) */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head">
             <div className="section-label">Expertise</div>
             <div className="section-title">Skills & Capabilities</div>
           </div>
           <div className="skills-grid">
-            {/* Technical Skills Card */}
+            {}
             <div className="skills-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <span className="section-label" style={{ margin: 0 }}>Technical Skills</span>
@@ -2025,7 +2014,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
               ))}
             </div>
 
-            {/* Soft Skills & Languages Card */}
+            {}
             <div className="skills-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <span className="section-label" style={{ margin: 0 }}>Soft Skills</span>
@@ -2086,7 +2075,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Certifications Section */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
@@ -2134,7 +2123,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Featured Projects Section (Dynamic & Manual Edit) */}
+        {}
         <Section direction="up" delay={0}>
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
             <div>
@@ -2219,7 +2208,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </div>
         </Section>
 
-        {/* Custom Sections */}
+        {}
         {tempCustomSections.map((sec, idx) => (
           <Section key={`custom-${idx}`} direction="up" delay={0}>
             <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
@@ -2268,7 +2257,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
           </Section>
         ))}
 
-        {/* Resume CTA Section (Themed Deep Cosmic Bluish) */}
+        {}
         <Section direction="up" delay={0}>
           <div className="resume-cta">
             <div>
@@ -2281,7 +2270,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
 
       </div>
 
-      {/* ─── Animated Onboarding Overlay Wizard ─── */}
+      {}
       {showOnboarding && (
         <div className="onboard-overlay">
           <div className="onboard-card">

@@ -12,11 +12,10 @@ function ArraysTopic({ onPrev, onNext }) { return <ArraysRecursion onPrev={onPre
 function StackTopic({ onPrev, onNext }) { return <StacksQueues onPrev={onPrev} onNext={onNext} _startAt="stack" />; }
 function QueueTopic({ onPrev, onNext }) { return <StacksQueues onPrev={onPrev} onNext={onNext} _startAt="queue" />; }
 
-// ── Per-topic hero graphics (pure SVG) ──
 function HeroBasics() {
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Code editor window */}
+      {}
       <rect x="10" y="10" width="260" height="140" rx="10" fill="#1e1e2e" stroke="#6c63ff" strokeWidth="1.5" />
       <rect x="10" y="10" width="260" height="28" rx="10" fill="#2a2a3d" />
       <rect x="10" y="28" width="260" height="10" fill="#2a2a3d" />
@@ -32,14 +31,14 @@ function HeroBasics() {
       <text x="30" y="112" fontFamily="monospace" fontSize="10" fill="#c3e88d">      "Hello, World!"</text>
       <text x="30" y="130" fontFamily="monospace" fontSize="10" fill="#abb2bf">  {"}"}</text>
       <text x="22" y="148" fontFamily="monospace" fontSize="10" fill="#abb2bf">{"}"}</text>
-      {/* Output terminal */}
+      {}
       <rect x="290" y="50" width="120" height="60" rx="8" fill="#0d1117" stroke="#43e97b" strokeWidth="1.5" />
       <text x="300" y="68" fontFamily="monospace" fontSize="9" fill="#43e97b">$ java Hello</text>
       <text x="300" y="84" fontFamily="monospace" fontSize="10" fill="#fff">Hello, World!</text>
       <rect x="300" y="90" width="6" height="10" rx="1" fill="#43e97b" opacity="0.8">
         <animate attributeName="opacity" values="0.8;0;0.8" dur="1s" repeatCount="indefinite" />
       </rect>
-      {/* Arrow */}
+      {}
       <path d="M272 80 L288 80" stroke="#6c63ff" strokeWidth="2" markerEnd="url(#arr)" />
       <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 2L8 5L2 8" fill="none" stroke="#6c63ff" strokeWidth="1.5" /></marker></defs>
     </svg>
@@ -52,9 +51,9 @@ function HeroComplexity() {
   const labels = ["O(1)", "O(log n)", "O(n)", "O(n log n)", "O(n²)"];
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Grid lines */}
+      {}
       {[0, 1, 2, 3].map(i => <line key={i} x1="40" y1={20 + i * 35} x2="400" y2={20 + i * 35} stroke="#2a2a3d" strokeWidth="0.5" />)}
-      {/* Bars */}
+      {}
       {bars.map((h, i) => (
         <g key={i}>
           <rect x={55 + i * 68} y={155 - h} width="44" height={h} rx="4" fill={colors[i]} opacity="0.85">
@@ -64,7 +63,7 @@ function HeroComplexity() {
           <text x={77 + i * 68} y="155" textAnchor="middle" fontSize="9" fill={colors[i]} fontFamily="monospace">{labels[i]}</text>
         </g>
       ))}
-      {/* Axes */}
+      {}
       <line x1="40" y1="20" x2="40" y2="155" stroke="#6c63ff" strokeWidth="1.5" />
       <line x1="40" y1="155" x2="410" y2="155" stroke="#6c63ff" strokeWidth="1.5" />
       <text x="15" y="90" fontSize="10" fill="#9090a8" transform="rotate(-90,15,90)">Operations</text>
@@ -79,20 +78,20 @@ function HeroArrays() {
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
       <text x="210" y="20" textAnchor="middle" fontSize="11" fill="#9090a8" fontFamily="monospace">int[] arr = {"{12, 45, 7, 89, 23, 56, 34}"}</text>
-      {/* Memory cells */}
+      {}
       {vals.map((v, i) => (
         <g key={i}>
           <rect x={15 + i * 56} y="35" width="48" height="52" rx="6" fill="#1a1a25" stroke={colors[i]} strokeWidth="1.5" />
           <text x={39 + i * 56} y="58" textAnchor="middle" fontSize="16" fontWeight="700" fill={colors[i]}>{v}</text>
           <text x={39 + i * 56} y="76" textAnchor="middle" fontSize="9" fill="#9090a8" fontFamily="monospace">[{i}]</text>
-          {/* Address */}
+          {}
           <text x={39 + i * 56} y="100" textAnchor="middle" fontSize="8" fill="#5c5c7a" fontFamily="monospace">{(1000 + i * 4).toString(16).toUpperCase()}</text>
         </g>
       ))}
-      {/* Contiguous memory arrow */}
+      {}
       <path d="M15 120 L407 120" stroke="#6c63ff" strokeWidth="1" strokeDasharray="4 3" />
       <text x="210" y="135" textAnchor="middle" fontSize="10" fill="#6c63ff">Contiguous Memory — O(1) Random Access</text>
-      {/* HEAD pointer */}
+      {}
       <path d="M39 30 L39 20" stroke="#43e97b" strokeWidth="1.5" markerEnd="url(#ha)" />
       <text x="39" y="16" textAnchor="middle" fontSize="9" fill="#43e97b">HEAD</text>
       <defs><marker id="ha" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><circle cx="5" cy="5" r="3" fill="#43e97b" /></marker></defs>
@@ -113,10 +112,10 @@ function HeroStrings() {
           <text x={26 + i * 36} y="80" textAnchor="middle" fontSize="8" fill="#5c5c7a" fontFamily="monospace">{i}</text>
         </g>
       ))}
-      {/* Immutable badge */}
+      {}
       <rect x="120" y="100" width="180" height="28" rx="14" fill="rgba(108,99,255,0.15)" stroke="#6c63ff" strokeWidth="1" />
       <text x="210" y="119" textAnchor="middle" fontSize="11" fill="#6c63ff" fontWeight="600">🔒 Immutable — Stored in String Pool</text>
-      {/* Pool visual */}
+      {}
       <rect x="10" y="135" width="400" height="18" rx="4" fill="rgba(67,233,123,0.08)" stroke="#43e97b" strokeWidth="0.5" />
       <text x="210" y="148" textAnchor="middle" fontSize="9" fill="#43e97b" fontFamily="monospace">String Pool (Method Area / Heap)</text>
     </svg>
@@ -126,7 +125,7 @@ function HeroStrings() {
 function HeroRecursion() {
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Call stack frames */}
+      {}
       {[
         { y: 10, label: "factorial(5)", val: "5 × ...", color: "#6c63ff", w: 200 },
         { y: 38, label: "factorial(4)", val: "4 × ...", color: "#4ecdc4", w: 170 },
@@ -141,13 +140,13 @@ function HeroRecursion() {
         </g>
       ))}
       <text x="20" y="152" fontSize="9" fill="#9090a8">← Call Stack (grows down)</text>
-      {/* Return values */}
+      {}
       <text x="240" y="25" fontSize="10" fill="#6c63ff" fontFamily="monospace">5! = 120</text>
       <text x="240" y="50" fontSize="10" fill="#4ecdc4" fontFamily="monospace">4! = 24</text>
       <text x="240" y="75" fontSize="10" fill="#43e97b" fontFamily="monospace">3! = 6</text>
       <text x="240" y="100" fontSize="10" fill="#ffd166" fontFamily="monospace">2! = 2</text>
       <text x="240" y="130" fontSize="10" fill="#ff6b6b" fontFamily="monospace">BASE CASE → 1</text>
-      {/* Arrows */}
+      {}
       {[25, 53, 81, 109].map((y, i) => (
         <path key={i} d={`M220 ${y} L238 ${y}`} stroke="#5c5c7a" strokeWidth="1" markerEnd="url(#ra)" />
       ))}
@@ -159,26 +158,26 @@ function HeroRecursion() {
 function HeroControlFlow() {
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Flowchart */}
-      {/* Start */}
+      {}
+      {}
       <ellipse cx="210" cy="18" rx="40" ry="12" fill="#6c63ff" opacity="0.9" />
       <text x="210" y="22" textAnchor="middle" fontSize="10" fill="#fff" fontWeight="600">START</text>
       <line x1="210" y1="30" x2="210" y2="44" stroke="#9090a8" strokeWidth="1.5" />
-      {/* Decision diamond */}
+      {}
       <polygon points="210,44 250,72 210,100 170,72" fill="#1a1a25" stroke="#ffd166" strokeWidth="1.5" />
       <text x="210" y="70" textAnchor="middle" fontSize="9" fill="#ffd166">score</text>
       <text x="210" y="82" textAnchor="middle" fontSize="9" fill="#ffd166">{">= 60?"}</text>
-      {/* Yes branch */}
+      {}
       <line x1="250" y1="72" x2="310" y2="72" stroke="#43e97b" strokeWidth="1.5" />
       <text x="278" y="68" fontSize="9" fill="#43e97b">YES</text>
       <rect x="310" y="58" width="70" height="28" rx="6" fill="#1a1a25" stroke="#43e97b" strokeWidth="1.5" />
       <text x="345" y="76" textAnchor="middle" fontSize="10" fill="#43e97b">PASS ✓</text>
-      {/* No branch */}
+      {}
       <line x1="210" y1="100" x2="210" y2="114" stroke="#ff6b6b" strokeWidth="1.5" />
       <text x="220" y="110" fontSize="9" fill="#ff6b6b">NO</text>
       <rect x="170" y="114" width="80" height="28" rx="6" fill="#1a1a25" stroke="#ff6b6b" strokeWidth="1.5" />
       <text x="210" y="132" textAnchor="middle" fontSize="10" fill="#ff6b6b">FAIL ✗</text>
-      {/* Loop indicator */}
+      {}
       <rect x="10" y="50" width="120" height="60" rx="8" fill="rgba(78,205,196,0.08)" stroke="#4ecdc4" strokeWidth="1" />
       <text x="70" y="68" textAnchor="middle" fontSize="9" fill="#4ecdc4" fontFamily="monospace">for(i=0;</text>
       <text x="70" y="82" textAnchor="middle" fontSize="9" fill="#4ecdc4" fontFamily="monospace">i &lt; n; i++)</text>
@@ -198,26 +197,26 @@ function HeroLinkedList() {
           <path d="M2 2L8 5L2 8" fill="none" stroke="#9090a8" strokeWidth="1.5" />
         </marker>
       </defs>
-      {/* HEAD label */}
+      {}
       <text x="30" y="30" textAnchor="middle" fontSize="10" fill="#43e97b" fontWeight="600">HEAD</text>
       <line x1="30" y1="33" x2="30" y2="48" stroke="#43e97b" strokeWidth="1.5" markerEnd="url(#lla)" />
       {nodes.map((v, i) => (
         <g key={i}>
-          {/* Data cell */}
+          {}
           <rect x={10 + i * 96} y="50" width="52" height="50" rx="6" fill="#1a1a25" stroke={colors[i]} strokeWidth="1.5" />
           <text x={36 + i * 96} y="72" textAnchor="middle" fontSize="16" fontWeight="700" fill={colors[i]}>{v}</text>
           <text x={36 + i * 96} y="88" textAnchor="middle" fontSize="8" fill="#5c5c7a" fontFamily="monospace">data</text>
-          {/* Next pointer cell */}
+          {}
           <rect x={62 + i * 96} y="50" width="34" height="50" rx="6" fill="#0d0d16" stroke={colors[i]} strokeWidth="1" strokeDasharray="3 2" />
           <text x={79 + i * 96} y="78" textAnchor="middle" fontSize="9" fill="#9090a8" fontFamily="monospace">{i < 3 ? "next" : "NULL"}</text>
-          {/* Arrow to next */}
+          {}
           {i < 3 && <line x1={97 + i * 96} y1="75" x2={106 + i * 96} y2="75" stroke="#9090a8" strokeWidth="1.5" markerEnd="url(#lla)" />}
         </g>
       ))}
-      {/* NULL terminator */}
+      {}
       <rect x="394" y="62" width="22" height="26" rx="4" fill="#1a1a25" stroke="#ff6b6b" strokeWidth="1" />
       <text x="405" y="79" textAnchor="middle" fontSize="8" fill="#ff6b6b" fontFamily="monospace">∅</text>
-      {/* Memory addresses */}
+      {}
       {nodes.map((_, i) => (
         <text key={i} x={36 + i * 96} y="115" textAnchor="middle" fontSize="8" fill="#3a3a5a" fontFamily="monospace">0x{(256 + i * 32).toString(16).toUpperCase()}</text>
       ))}
@@ -231,9 +230,9 @@ function HeroStack() {
   const colors = ["#ff6b6b", "#ffd166", "#6c63ff"];
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Stack container */}
+      {}
       <rect x="140" y="10" width="140" height="140" rx="8" fill="#0d0d16" stroke="#6c63ff" strokeWidth="1.5" />
-      {/* Stack items */}
+      {}
       {items.map((v, i) => (
         <g key={i}>
           <rect x="148" y={20 + i * 38} width="124" height="32" rx="5" fill="#1a1a25" stroke={colors[i]} strokeWidth={i === 0 ? 2 : 1.5} />
@@ -241,17 +240,17 @@ function HeroStack() {
           {i === 0 && <text x="280" y={41 + i * 38} fontSize="9" fill={colors[i]} fontFamily="monospace">← TOP</text>}
         </g>
       ))}
-      {/* LIFO label */}
+      {}
       <text x="210" y="148" textAnchor="middle" fontSize="10" fill="#9090a8">LIFO — Last In, First Out</text>
-      {/* Push arrow */}
+      {}
       <path d="M80 36 L138 36" stroke="#43e97b" strokeWidth="2" markerEnd="url(#sa)" />
       <text x="60" y="32" fontSize="10" fill="#43e97b" fontWeight="600">PUSH</text>
       <rect x="30" y="40" width="44" height="24" rx="4" fill="rgba(67,233,123,0.1)" stroke="#43e97b" strokeWidth="1" />
       <text x="52" y="56" textAnchor="middle" fontSize="13" fontWeight="700" fill="#43e97b">40</text>
-      {/* Pop arrow */}
+      {}
       <path d="M138 52 L90 52" stroke="#ff6b6b" strokeWidth="2" markerEnd="url(#pa)" />
       <text x="60" y="70" fontSize="10" fill="#ff6b6b" fontWeight="600">POP</text>
-      {/* Operations */}
+      {}
       <text x="340" y="40" fontSize="10" fill="#43e97b" fontFamily="monospace">push(x)</text>
       <text x="340" y="58" fontSize="10" fill="#ff6b6b" fontFamily="monospace">pop()</text>
       <text x="340" y="76" fontSize="10" fill="#ffd166" fontFamily="monospace">peek()</text>
@@ -269,11 +268,11 @@ function HeroQueue() {
   const colors = ["#43e97b", "#4ecdc4", "#6c63ff", "#ffd166"];
   return (
     <svg viewBox="0 0 420 160" style={{ width: "100%", maxWidth: 420 }}>
-      {/* Enqueue arrow */}
+      {}
       <path d="M10 80 L38 80" stroke="#43e97b" strokeWidth="2" markerEnd="url(#qa)" />
       <text x="5" y="70" fontSize="9" fill="#43e97b" fontWeight="600">EN</text>
       <text x="5" y="82" fontSize="9" fill="#43e97b" fontWeight="600">QUEUE</text>
-      {/* Queue items */}
+      {}
       {items.map((v, i) => (
         <g key={i}>
           <rect x={42 + i * 82} y="56" width="74" height="48" rx="6" fill="#1a1a25" stroke={colors[i]} strokeWidth={i === 0 || i === 3 ? 2 : 1.5} />
@@ -282,13 +281,13 @@ function HeroQueue() {
           {i === 3 && <text x={79 + i * 82} y="96" textAnchor="middle" fontSize="8" fill={colors[i]} fontFamily="monospace">REAR</text>}
         </g>
       ))}
-      {/* Dequeue arrow */}
+      {}
       <path d="M382 80 L410 80" stroke="#ff6b6b" strokeWidth="2" markerEnd="url(#da)" />
       <text x="385" y="70" fontSize="9" fill="#ff6b6b" fontWeight="600">DE</text>
       <text x="385" y="82" fontSize="9" fill="#ff6b6b" fontWeight="600">QUEUE</text>
-      {/* FIFO label */}
+      {}
       <text x="210" y="125" textAnchor="middle" fontSize="10" fill="#9090a8">FIFO — First In, First Out</text>
-      {/* Circular queue hint */}
+      {}
       <path d="M42 140 Q210 155 382 140" fill="none" stroke="#6c63ff" strokeWidth="1" strokeDasharray="4 3" />
       <text x="210" y="152" textAnchor="middle" fontSize="9" fill="#6c63ff">Circular Queue wraps around →</text>
       <defs>
@@ -560,7 +559,6 @@ const hubCss = `
 
 .hub-root { font-family: var(--font-sans, sans-serif); }
 
-/* ── Topic selector grid ── */
 .hub-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
@@ -619,7 +617,6 @@ const hubCss = `
 .hub-pill .p-icon { font-size: 22px; margin-bottom: 8px; }
 .hub-pill .p-desc { display: none; }
 
-/* ── Hero banner ── */
 .hub-hero {
   margin: 16px 0 0;
   border-radius: 20px;
@@ -632,7 +629,7 @@ const hubCss = `
     linear-gradient(135deg, var(--hero-color, #6c63ff), var(--hero-color2, #4ecdc4)) border-box;
   box-shadow: 0 8px 40px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.04);
 }
-/* Animated glow orbs */
+
 .hub-hero::before {
   content:'';
   position:absolute; top:-60px; left:-60px;
@@ -707,7 +704,7 @@ const hubCss = `
   color: var(--hero-color, #6c63ff);
   background: rgba(108,99,255,.08);
 }
-/* Stats row */
+
 .hub-hero-stats {
   display: flex; gap: 20px; flex-wrap: wrap;
 }
@@ -725,7 +722,7 @@ const hubCss = `
   font-size: 10px; color: var(--color-text-tertiary);
   text-transform: uppercase; letter-spacing: 1px;
 }
-/* Graphic panel */
+
 .hub-hero-graphic {
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
@@ -740,7 +737,6 @@ const hubCss = `
   opacity:.08; pointer-events:none;
 }
 
-/* ── Progress ── */
 .hub-progress-row {
   display: flex; align-items: center; gap: 10px;
   margin: 12px 0 20px;
@@ -792,7 +788,7 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
 
   function goTo(idx) {
     setTopicIdx(idx);
-    setIsOnLastChapter(false); // reset when switching topics
+    setIsOnLastChapter(false); 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -800,13 +796,13 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
   const prev = topicIdx > 0 ? () => goTo(topicIdx - 1) : undefined;
   const next = topicIdx < TOPICS.length - 1 ? () => goTo(topicIdx + 1) : undefined;
 
-  // Called by each tutorial when chapter changes
+  
   const onChapterChange = (curIdx, totalChapters) => {
     setIsOnLastChapter(curIdx === totalChapters - 1);
   };
 
   function renderTopic() {
-    // Only show mark-complete bar when on the last chapter of the topic
+    
     const markBar = (onMarkComplete && isOnLastChapter) ? (
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -877,7 +873,7 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
     <div className="hub-root" style={{ "--hero-color": meta.color, "--hero-color-a": meta.color + "22", "--hero-color2": meta.color2 }}>
       <style>{hubCss}</style>
 
-      {/* ── Topic selector grid ── */}
+      {}
       <div className="hub-grid">
         {TOPICS.map((t, i) => {
           const done = completedTopics.includes(t.id);
@@ -895,7 +891,7 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
         })}
       </div>
 
-      {/* ── Progress bar ── */}
+      {}
       <div className="hub-progress-row">
         <div className="hub-progress-bar">
           <div className="hub-progress-fill" style={{ width: `${pct}%` }} />
@@ -903,7 +899,7 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
         <span className="hub-progress-label">{topicIdx + 1}/{TOPICS.length} — {pct}%</span>
       </div>
 
-      {/* ── Hero banner ── */}
+      {}
       <div className="hub-hero">
         <div className="hub-hero-inner">
           <div className="hub-hero-left">
@@ -933,7 +929,7 @@ export default function DSAHub({ onMarkComplete, completedTopics = [] }) {
         </div>
       </div>
 
-      {/* ── Active tutorial content ── */}
+      {}
       <div style={{ marginTop: 24 }}>
         {renderTopic()}
       </div>

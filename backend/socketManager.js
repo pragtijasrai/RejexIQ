@@ -2,7 +2,6 @@ const socketIo = require("socket.io");
 const User = require("./models/User");
 const Message = require("./models/Message");
 
-// Store active sockets mapping userId -> socketId
 const activeUsers = new Map();
 
 function initSocket(server, corsOptions) {
@@ -11,7 +10,7 @@ function initSocket(server, corsOptions) {
   io.on("connection", (socket) => {
     console.log("🟢 Client connected:", socket.id);
 
-    // 1. User Joins
+    
     socket.on("join", async (userId) => {
       if (!userId) return;
       activeUsers.set(userId, socket.id);
@@ -23,7 +22,7 @@ function initSocket(server, corsOptions) {
       } catch (err) {}
     });
 
-    // 2. Typing Indicator
+    
     socket.on("typing", ({ senderId, receiverId }) => {
       const receiverSocketId = activeUsers.get(receiverId);
       if (receiverSocketId) {
@@ -38,7 +37,7 @@ function initSocket(server, corsOptions) {
       }
     });
 
-    // Handle connection requests
+    
     socket.on("connectionRequest", (data) => {
       const { senderId, receiverId } = data;
       const receiverSocketId = activeUsers.get(receiverId);
@@ -47,7 +46,7 @@ function initSocket(server, corsOptions) {
       }
     });
 
-    // Handle connection accepted
+    
     socket.on("connectionAccepted", (data) => {
       const { senderId, receiverId } = data;
       const receiverSocketId = activeUsers.get(receiverId);
@@ -56,14 +55,14 @@ function initSocket(server, corsOptions) {
       }
     });
 
-    // Broadcast profile updates
+    
     socket.on("profileUpdated", (data) => {
       const { userId } = data;
-      // broadcast to everyone else
+      
       socket.broadcast.emit("userProfileUpdated", { userId });
     });
 
-    // 3. Send Message
+    
     socket.on("sendMessage", async (data) => {
       const { senderId, receiverId, text, isFile, fileUrl } = data;
       
@@ -91,7 +90,7 @@ function initSocket(server, corsOptions) {
           io.to(receiverSocketId).emit("receiveMessage", msgPayload);
         }
         
-        // Also send it back to sender to confirm
+        
         socket.emit("messageSent", msgPayload);
 
       } catch (err) {
@@ -99,7 +98,7 @@ function initSocket(server, corsOptions) {
       }
     });
 
-    // 4. Disconnect
+    
     socket.on("disconnect", async () => {
       console.log("🔴 Client disconnected:", socket.id);
       if (socket.userId) {

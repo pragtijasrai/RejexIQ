@@ -11,13 +11,6 @@ import {
 import Lenis from "lenis";
 import LuxuryExperience from "./components/LuxuryExperience";
 
-/* ============================================================
-   RejexIQ — animated single-file career landing page
-   Inspired by the Solais reel: 3D shards, splash portals,
-   reddish gradient → "stairs" transitions, filling dashboards.
-   ============================================================ */
-
-/* ---------- smooth scroll ---------- */
 function useLenis() {
   useEffect(() => {
     const lenis = new Lenis({ duration: 1.15, smoothWheel: true });
@@ -27,18 +20,17 @@ function useLenis() {
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    // Cleanup: destroy lenis when component unmounts (e.g. user navigates away)
+    
     return () => {
       cancelAnimationFrame(raf);
       lenis.destroy();
-      // Restore native scroll on body
+      
       document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
   }, []);
 }
 
-/* ---------- reusable: word-by-word reveal ---------- */
 function Reveal({ text, className = "", as: Tag = "h2", delay = 0, style = {} }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-15%" });
@@ -61,7 +53,6 @@ function Reveal({ text, className = "", as: Tag = "h2", delay = 0, style = {} })
   );
 }
 
-/* ---------- particle field (canvas, weight) ---------- */
 function Particles({ density = 80, color = "rgba(255,90,70,0.6)" }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -109,7 +100,6 @@ function Particles({ density = 80, color = "rgba(255,90,70,0.6)" }) {
   return <canvas ref={ref} className="absolute inset-0 w-full h-full pointer-events-none" />;
 }
 
-/* ---------- 3D Career Orb — rocket-trophy that bursts on hover ---------- */
 function CareerOrb({ mouse }) {
   const [burst, setBurst] = useState(0);
   const rx = useTransform(mouse.y, [-1, 1], [20, -20]);
@@ -117,14 +107,14 @@ function CareerOrb({ mouse }) {
   const sx = useSpring(rx, { stiffness: 60, damping: 14 });
   const sy = useSpring(ry, { stiffness: 60, damping: 14 });
 
-  // particle ring (8 floating dots orbiting)
+  
   const orbit = [...Array(10)].map((_, i) => ({
     a: (i / 10) * Math.PI * 2,
     r: 150 + (i % 3) * 14,
     d: i * 0.08,
   }));
 
-  // burst particles (white) — generated on hover
+  
   const burstParts = [...Array(36)].map((_, i) => {
     const a = (i / 36) * Math.PI * 2;
     const d = 140 + Math.random() * 120;
@@ -137,7 +127,7 @@ function CareerOrb({ mouse }) {
       style={{ perspective: 1400 }}
       onMouseEnter={() => setBurst((n) => n + 1)}
     >
-      {/* orbiting halo dots */}
+      {}
       {orbit.map((o, i) => (
         <motion.span
           key={i}
@@ -161,7 +151,7 @@ function CareerOrb({ mouse }) {
         animate={{ y: [0, -12, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* glowing aura behind */}
+        {}
         <div
           className="absolute -inset-20 rounded-full blur-3xl"
           style={{
@@ -170,7 +160,7 @@ function CareerOrb({ mouse }) {
           }}
         />
 
-        {/* the shape: stylised 3D rocket-trophy (career launch) */}
+        {}
         <motion.svg
           width="240"
           height="300"
@@ -202,7 +192,7 @@ function CareerOrb({ mouse }) {
             </radialGradient>
           </defs>
 
-          {/* flame trail */}
+          {}
           <motion.path
             d="M100 230 Q120 290 140 230 Q130 270 120 280 Q110 270 100 230 Z"
             fill="url(#flame)"
@@ -211,11 +201,11 @@ function CareerOrb({ mouse }) {
             style={{ transformOrigin: "120px 230px" }}
           />
 
-          {/* fins */}
+          {}
           <path d="M70 200 L100 180 L100 230 Z" fill="#5a0a14" />
           <path d="M170 200 L140 180 L140 230 Z" fill="#5a0a14" />
 
-          {/* body */}
+          {}
           <path
             d="M120 30 Q160 90 160 180 L160 220 L80 220 L80 180 Q80 90 120 30 Z"
             fill="url(#rocketBody)"
@@ -223,17 +213,17 @@ function CareerOrb({ mouse }) {
             strokeWidth="1.5"
           />
 
-          {/* high stripe */}
+          {}
           <path
             d="M120 40 Q140 100 140 180 L140 215 L132 215 L132 180 Q132 100 120 50 Z"
             fill="rgba(255,255,255,0.18)"
           />
 
-          {/* window — "the eye on your career" */}
+          {}
           <circle cx="120" cy="120" r="22" fill="url(#rocketWindow)" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
           <circle cx="113" cy="113" r="6" fill="#fff" opacity="0.85" />
 
-          {/* trophy star above (career milestone) */}
+          {}
           <motion.g
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
@@ -248,7 +238,7 @@ function CareerOrb({ mouse }) {
         </motion.svg>
       </motion.div>
 
-      {/* WHITE PARTICLE BURST on hover */}
+      {}
       <AnimatePresence>
         {[...Array(burst)].map((_, k) => (
           <motion.div key={k} className="absolute inset-0 pointer-events-none">
@@ -270,7 +260,6 @@ function CareerOrb({ mouse }) {
   );
 }
 
-/* ---------- top nav ---------- */
 function Nav({ onNav }) {
   return (
     <motion.nav
@@ -284,7 +273,7 @@ function Nav({ onNav }) {
         background: "rgba(8,4,5,0.55)", backdropFilter: "blur(14px)",
       }}
     >
-      {/* Logo */}
+      {}
       <div style={{ display: "flex", alignItems: "center", gap: 8, color: "white" }}>
         <div style={{ width: 22, height: 22, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2 }}>
           {[...Array(9)].map((_, i) => (
@@ -294,7 +283,7 @@ function Nav({ onNav }) {
         <span style={{ letterSpacing: "0.25em", fontSize: 11, fontWeight: 600 }}>REJEXIQ</span>
       </div>
 
-      {/* Center links */}
+      {}
       <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 11, letterSpacing: "0.18em", color: "rgba(255,255,255,0.75)" }}>
         <a href="#about" style={{ color: "inherit", textDecoration: "none" }}>ABOUT</a>
         <span style={{ opacity: 0.4 }}>/</span>
@@ -305,7 +294,7 @@ function Nav({ onNav }) {
         <a href="#ind" style={{ color: "inherit", textDecoration: "none" }}>INDUSTRIES</a>
       </div>
 
-      {/* Sign in button */}
+      {}
       <button
         onClick={() => onNav && onNav("login")}
         style={{
@@ -323,7 +312,6 @@ function Nav({ onNav }) {
   );
 }
 
-/* ---------- HERO ---------- */
 function Hero() {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -342,7 +330,7 @@ function Hero() {
       }}
       className="relative h-screen w-full overflow-hidden bg-transparent text-white"
     >
-      {/* reddish radial gradient */}
+      {}
       <motion.div
         style={{ y: yBg }}
         className="absolute inset-0"
@@ -357,8 +345,6 @@ function Hero() {
         }} />
       </motion.div>
 
-
-
       <motion.div
         style={{
           opacity,
@@ -368,9 +354,9 @@ function Hero() {
           paddingLeft: 60, paddingRight: 40,
         }}
       >
-        {/* left text */}
+        {}
         <div style={{ paddingTop: 20 }}>
-          {/* badge */}
+          {}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -385,7 +371,7 @@ function Hero() {
             ANALYTICS FOR YOUR CAREER
           </motion.div>
 
-          {/* headline */}
+          {}
           <Reveal
             as="h1"
             text="CLARITY IN"
@@ -414,7 +400,7 @@ function Hero() {
             }}
           />
 
-          {/* paragraph */}
+          {}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -432,7 +418,7 @@ function Hero() {
           </motion.p>
         </div>
 
-        {/* right 3D orb */}
+        {}
         <div style={{ height: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
 
         </div>
@@ -441,7 +427,6 @@ function Hero() {
   );
 }
 
-/* ---------- Section title block (UNDERSTANDING / WHAT IS …) ---------- */
 function SectionTitle({ kicker, title, accent, light = false }) {
   return (
     <div>
@@ -481,9 +466,6 @@ function SectionTitle({ kicker, title, accent, light = false }) {
   );
 }
 
-
-
-/* ---------- WHAT IS section with floating shards + 3 point cards ---------- */
 function WhatIsSection({ sectionRef }) {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -507,14 +489,13 @@ function WhatIsSection({ sectionRef }) {
           <SectionTitle kicker="UNDERSTANDING" title="WHAT IS" accent="REJEXIQ?" />
         </div>
         <div style={{ position: "relative", height: 520, pointerEvents: "none" }}>
-          {/* 3D Cinematic Annotations now handle this space */}
+          {}
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- CREAM FEATURE BREAK ---------- */
 function FeatureBreak() {
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
@@ -546,7 +527,7 @@ function FeatureBreak() {
 
   return (
     <>
-      {/* Top diagonal separator: dark → cream */}
+      {}
       <div style={{ position: "relative", height: 80, overflow: "hidden", background: "transparent" }}>
         <svg viewBox="0 0 1440 80" preserveAspectRatio="none"
           style={{ position: "absolute", bottom: 0, width: "100%", height: "100%" }}>
@@ -554,7 +535,7 @@ function FeatureBreak() {
         </svg>
       </div>
 
-      {/* Cream section body */}
+      {}
       <section ref={sectionRef} style={{
         position: "relative",
         background: "#f7f2ee",
@@ -562,18 +543,18 @@ function FeatureBreak() {
         padding: "80px 60px 100px",
         overflow: "hidden",
       }}>
-        {/* Radial glow — warm pinkish center-right like reference */}
+        {}
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none",
           background: "radial-gradient(ellipse 70% 60% at 65% 50%, rgba(220,140,130,0.22) 0%, rgba(200,100,100,0.08) 45%, transparent 75%)",
         }} />
-        {/* Subtle vertical lines texture */}
+        {}
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.06,
           backgroundImage: "repeating-linear-gradient(90deg, rgba(154,58,74,0.8) 0px, rgba(154,58,74,0.8) 1px, transparent 1px, transparent 80px)",
         }} />
 
-        {/* Section header with parallax */}
+        {}
         <motion.div
           style={{ y: headingY }}
           initial={{ opacity: 0 }}
@@ -588,7 +569,7 @@ function FeatureBreak() {
             transition={{ duration: 0.7 }}
             style={{ textAlign: "center", marginBottom: 72, position: "relative", zIndex: 2 }}
           >
-            {/* Animated kicker badge */}
+            {}
             <motion.div
               initial={{ opacity: 0, scale: 0.85 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -609,7 +590,7 @@ function FeatureBreak() {
               HOW IT WORKS
             </motion.div>
 
-            {/* Heading — word by word reveal */}
+            {}
             <div style={{
               fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 300,
               letterSpacing: "-0.02em", color: "#1a0a0c", lineHeight: 1.1,
@@ -640,7 +621,7 @@ function FeatureBreak() {
           </motion.div>
         </motion.div>
 
-        {/* Feature cards grid */}
+        {}
         <div style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
           gap: 32, maxWidth: 1100, margin: "0 auto",
@@ -676,7 +657,7 @@ function FeatureBreak() {
                 transition: "box-shadow 0.3s ease",
               }}
             >
-              {/* Animated icon */}
+              {}
               <motion.div
                 animate={{ rotate: [0, 8, -4, 0], scale: [1, 1.1, 1] }}
                 transition={{ duration: 4 + i * 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -688,7 +669,7 @@ function FeatureBreak() {
                 {f.icon}
               </motion.div>
 
-              {/* Kicker */}
+              {}
               <div style={{
                 fontSize: 9, letterSpacing: "0.3em",
                 color: i === 1 ? "rgba(255,255,255,0.45)" : "rgba(154,58,74,0.6)",
@@ -697,7 +678,7 @@ function FeatureBreak() {
                 {f.kicker}
               </div>
 
-              {/* Title */}
+              {}
               <h3 style={{
                 fontSize: "1.25rem", fontWeight: 400,
                 color: i === 1 ? "#ffffff" : "#1a0a0c",
@@ -707,7 +688,7 @@ function FeatureBreak() {
                 {f.title}
               </h3>
 
-              {/* Body */}
+              {}
               <p style={{
                 fontSize: 13, lineHeight: 1.75,
                 color: i === 1 ? "rgba(255,255,255,0.6)" : "rgba(26,10,12,0.6)",
@@ -716,7 +697,7 @@ function FeatureBreak() {
                 {f.body}
               </p>
 
-              {/* Stat counter */}
+              {}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -741,7 +722,7 @@ function FeatureBreak() {
                 </span>
               </motion.div>
 
-              {/* Animated accent line */}
+              {}
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
@@ -759,7 +740,7 @@ function FeatureBreak() {
         </div>
       </section>
 
-      {/* Bottom diagonal separator: cream → dark */}
+      {}
       <div style={{ position: "relative", height: 80, overflow: "hidden", background: "#f7f2ee" }}>
         <svg viewBox="0 0 1440 80" preserveAspectRatio="none"
           style={{ position: "absolute", top: 0, width: "100%", height: "100%" }}>
@@ -770,8 +751,6 @@ function FeatureBreak() {
   );
 }
 
-
-/* ---------- "Stairs" reveal background section ---------- */
 function StairsSection() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
@@ -833,7 +812,6 @@ function StairsSection() {
   );
 }
 
-/* ---------- DASHBOARD with filling graphs ---------- */
 function DashboardSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-20%" });
@@ -849,7 +827,7 @@ function DashboardSection() {
         <SectionTitle kicker="REAL-TIME" title="YOUR CAREER" accent="DASHBOARD" />
 
         <div style={{ marginTop: 56, display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
-          {/* big chart */}
+          {}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -878,7 +856,7 @@ function DashboardSection() {
                 ))}
               </div>
             </div>
-            {/* bars */}
+            {}
             <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 200 }}>
               {bars.map((v, i) => (
                 <motion.div key={i}
@@ -907,7 +885,7 @@ function DashboardSection() {
             </div>
           </motion.div>
 
-          {/* radial gauge */}
+          {}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -951,7 +929,7 @@ function DashboardSection() {
           </motion.div>
         </div>
 
-        {/* metric cards row */}
+        {}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, marginTop: 20 }}>
           {[
             { l: "INTERVIEWS", v: "12", d: "+3 this week" },
@@ -978,8 +956,6 @@ function DashboardSection() {
     </section>
   );
 }
-
-/* ---------- INDUSTRY cards ---------- */
 
 function FlipCard({ c, i }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -1008,7 +984,7 @@ function FlipCard({ c, i }) {
           transformStyle: "preserve-3d"
         }}
       >
-        {/* Front of Card */}
+        {}
         <div style={{
           position: "absolute", inset: 0,
           backfaceVisibility: "hidden",
@@ -1029,7 +1005,7 @@ function FlipCard({ c, i }) {
           </div>
         </div>
 
-        {/* Back of Card */}
+        {}
         <div style={{
           position: "absolute", inset: 0,
           backfaceVisibility: "hidden",
@@ -1104,7 +1080,6 @@ function IndustrySection({ onNav }) {
   );
 }
 
-/* ---------- FINAL marquee CTA ---------- */
 function MarqueeCTA({ onNav }) {
   return (
     <section style={{
@@ -1152,7 +1127,6 @@ function MarqueeCTA({ onNav }) {
   );
 }
 
-/* ---------- scroll progress bar ---------- */
 function ScrollBar() {
   const { scrollYProgress } = useScroll();
   const sx = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
@@ -1163,11 +1137,6 @@ function ScrollBar() {
   );
 }
 
-
-
-/* ============================================================
-   PAGE
-   ============================================================ */
 export default function CareerLanding({ onNav, onDemo }) {
   useLenis();
   const whatIsRef = useRef(null);

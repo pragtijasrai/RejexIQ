@@ -120,26 +120,24 @@ function SecIntro() {
         <div className="str-card acc-gr"><div className="icon">🔒</div><div className="ctitle">Immutability</div><div className="cbody">Once a String is created, its content cannot change. Any "modification" creates a new String object. This enables safe sharing and caching in the String Pool.</div></div>
         <div className="str-card acc-am"><div className="icon">🏊</div><div className="ctitle">String Pool</div><div className="cbody">A special heap area where string literals are cached. Two variables with the same literal share one object. Created with new String() bypasses the pool.</div></div>
       </div>
-      <CodeBlock label="char[] vs String — key differences">{`// char[] — mutable, primitive array
+      <CodeBlock label="char[] vs String — key differences">{`
 char[] charArr = {'H','e','l','l','o'};
-charArr[0] = 'J';                        // OK — mutable
-System.out.println(charArr);             // Jello
-System.out.println(charArr.length);      // 5 (field, not method)
+charArr[0] = 'J';                        
+System.out.println(charArr);             
+System.out.println(charArr.length);      
 
-// String — immutable object
 String str = "Hello";
-// str[0] = 'J';                         // COMPILE ERROR
-String modified = "J" + str.substring(1); // new string "Jello"
-System.out.println(str);                 // still "Hello"
-System.out.println(str.length());        // 5 (method, not field)
 
-// Converting between them
-String fromArr = new String(charArr);    // char[] -> String
-char[] fromStr = str.toCharArray();      // String -> char[]
+String modified = "J" + str.substring(1); 
+System.out.println(str);                 
+System.out.println(str.length());        
 
-// Security: char[] can be zeroed, String cannot
+String fromArr = new String(charArr);    
+char[] fromStr = str.toCharArray();      
+
 char[] password = {'s','e','c','r','e','t'};
-java.util.Arrays.fill(password, '\\0');  // wipe from memory`}</CodeBlock>
+java.util.Arrays.fill(password, '\\0');  
+`}</CodeBlock>
       <div className="str-mem">
         <div className="str-mem-box">
           <h4>char[] in memory</h4>
@@ -176,42 +174,36 @@ function SecCreate() {
       <div className="str-tag tag-gr">Chapter 2</div>
       <div className="str-title">Creating Strings</div>
       <div className="str-desc">Java provides multiple ways to create String objects. The method you choose affects memory usage, performance, and whether the String Pool is used.</div>
-      <CodeBlock label="All ways to create a String">{`// 1. String literal — goes into String Pool
+      <CodeBlock label="All ways to create a String">{`
 String s1 = "Hello";
 String s2 = "Hello";
-System.out.println(s1 == s2);        // true  (same pool object)
+System.out.println(s1 == s2);        
 
-// 2. new String() — always creates new heap object
 String s3 = new String("Hello");
-System.out.println(s1 == s3);        // false (pool vs heap)
-System.out.println(s1.equals(s3));   // true  (same content)
+System.out.println(s1 == s3);        
+System.out.println(s1.equals(s3));   
 
-// 3. intern() — force pool lookup
 String s4 = s3.intern();
-System.out.println(s1 == s4);        // true
+System.out.println(s1 == s4);        
 
-// 4. From char array
 char[] chars = {'J','a','v','a'};
-String s5 = new String(chars);       // "Java"
-String s6 = String.valueOf(chars);   // "Java"
+String s5 = new String(chars);       
+String s6 = String.valueOf(chars);   
 
-// 5. From primitives
-String fromInt    = String.valueOf(42);    // "42"
-String fromDouble = String.valueOf(3.14); // "3.14"
-String fromBool   = String.valueOf(true); // "true"
+String fromInt    = String.valueOf(42);    
+String fromDouble = String.valueOf(3.14); 
+String fromBool   = String.valueOf(true); 
 
-// 6. Concatenation
-String s7 = "Hello" + " " + "World";     // "Hello World"
-String s8 = "Count: " + 5;               // "Count: 5"
+String s7 = "Hello" + " " + "World";     
+String s8 = "Count: " + 5;               
 
-// 7. String.format()
 String s9 = String.format("Name: %s, Age: %d", "Alice", 25);
 
-// 8. Blank / empty
 String empty = "";
 String blank = "   ";
-System.out.println(empty.isEmpty());  // true
-System.out.println(blank.isBlank());  // true (Java 11+)`}</CodeBlock>
+System.out.println(empty.isEmpty());  
+System.out.println(blank.isBlank());  
+`}</CodeBlock>
       <div className="str-pool">
         <h4>String Pool visualization</h4>
         <div style={{fontSize:12,color:"#8b949e",marginBottom:10}}>Literals are cached — same content shares one object</div>
@@ -253,31 +245,27 @@ function SecImmut() {
         <div className="str-card acc-pu"><div className="icon">🛡️</div><div className="ctitle">Security</div><div className="cbody">Class names, file paths, and network URLs are Strings. If they were mutable, malicious code could change them after a security check but before use.</div></div>
       </div>
       <CodeBlock label="Immutability in action">{`String s = "Hello";
-// These all return NEW strings — s is unchanged
-String upper    = s.toUpperCase();       // "HELLO" — new object
-String trimmed  = "  Hi  ".trim();      // "Hi"    — new object
-String replaced = s.replace('l','r');   // "Herro" — new object
-System.out.println(s);                  // still "Hello"
 
-// Concatenation creates new objects
+String upper    = s.toUpperCase();       
+String trimmed  = "  Hi  ".trim();      
+String replaced = s.replace('l','r');   
+System.out.println(s);                  
+
 String a = "Hello";
-String b = a + " World";               // new String "Hello World"
-System.out.println(a == b);            // false
+String b = a + " World";               
+System.out.println(a == b);            
 
-// The "reassignment" illusion
 String x = "Java";
-x = x + " 21";  // x now points to NEW "Java 21"
-// Old "Java" object eligible for GC
+x = x + " 21";  
 
-// Why this matters for performance
 String result = "";
 for (int i = 0; i < 1000; i++) {
-  result += i;  // creates 1000 new String objects!
+  result += i;  
 }
-// Use StringBuilder instead:
+
 StringBuilder sb = new StringBuilder();
 for (int i = 0; i < 1000; i++) {
-  sb.append(i); // modifies ONE object in place
+  sb.append(i); 
 }
 String efficient = sb.toString();`}</CodeBlock>
       <div className="str-alert al-pu"><strong>🔍 How immutability is enforced:</strong> The String class is declared <code>final</code> (cannot be subclassed) and its internal <code>char[]</code> field is <code>private final</code>. No setter methods exist. The JVM also caches the hashCode after first computation since it can never change.</div>
@@ -285,7 +273,6 @@ String efficient = sb.toString();`}</CodeBlock>
     </div>
   );
 }
-
 
 function SecMethods() {
   const [input, setInput] = useState("Hello, World!");
@@ -424,26 +411,21 @@ function SecMethods() {
       </div>
       <CodeBlock label="Common String method patterns">{`String s = "  Hello, World!  ";
 
-// Chaining methods
 String clean = s.trim().toLowerCase().replace(",","");
-// "hello world!"
 
-// Checking content
-boolean hasHello = s.contains("Hello");      // true
-boolean startsH  = s.trim().startsWith("H"); // true
+boolean hasHello = s.contains("Hello");      
+boolean startsH  = s.trim().startsWith("H"); 
 
-// Extracting parts
-String word  = s.trim().substring(0, 5);     // "Hello"
-String[] parts = "a,b,c".split(",");         // ["a","b","c"]
+String word  = s.trim().substring(0, 5);     
+String[] parts = "a,b,c".split(",");         
 
-// Comparing
-"Java".equals("java");            // false
-"Java".equalsIgnoreCase("java");  // true
-"Apple".compareTo("Banana");      // negative (A < B)
+"Java".equals("java");            
+"Java".equalsIgnoreCase("java");  
+"Apple".compareTo("Banana");      
 
-// Java 11+ methods
-"  ".isBlank();                   // true
-"ha".repeat(3);                   // "hahaha"`}</CodeBlock>
+"  ".isBlank();                   
+"ha".repeat(3);                   
+`}</CodeBlock>
     </div>
   );
 }
@@ -509,27 +491,27 @@ function SecSB() {
       </div>
       <CodeBlock label="StringBuilder — all key methods">{`StringBuilder sb = new StringBuilder("Hello");
 
-sb.append(" World");          // "Hello World"
-sb.append(42);                // "Hello World42"
-sb.insert(5, ",");            // "Hello, World42"
-sb.delete(11, 13);            // "Hello, World"
-sb.replace(7, 12, "Java");    // "Hello, Java"
-sb.reverse();                 // "avaJ ,olleH"
-sb.reverse();                 // "Hello, Java"
-sb.deleteCharAt(sb.length()-1); // "Hello, Jav"
-sb.setCharAt(0, 'h');         // "hello, Jav"
+sb.append(" World");          
+sb.append(42);                
+sb.insert(5, ",");            
+sb.delete(11, 13);            
+sb.replace(7, 12, "Java");    
+sb.reverse();                 
+sb.reverse();                 
+sb.deleteCharAt(sb.length()-1); 
+sb.setCharAt(0, 'h');         
 
-int len = sb.length();        // current length
-int cap = sb.capacity();      // default 16 + initial length
+int len = sb.length();        
+int cap = sb.capacity();      
 
-String result = sb.toString(); // convert to String
+String result = sb.toString(); 
 
-// Chaining (all methods return 'this')
 String s = new StringBuilder()
   .append("Java")
   .append(" ")
   .append(21)
-  .toString();                 // "Java 21"`}</CodeBlock>
+  .toString();                 
+`}</CodeBlock>
       <div className="str-fw">
         <h3>StringBuilder Playground</h3>
         <div style={{fontFamily:"var(--mono)",fontSize:13,background:"#161b22",borderRadius:8,padding:"10px 14px",color:"#a8ff78",marginBottom:12}}>
@@ -575,7 +557,6 @@ String s = new StringBuilder()
   );
 }
 
-
 function SecToStr() {
   const [className, setClassName] = useState("Person");
   const [fields, setFields] = useState("name,age");
@@ -585,7 +566,7 @@ function SecToStr() {
     const cls = className || "MyClass";
     const flds = fields.split(",").map(f => f.trim()).filter(f => f);
     if (flds.length === 0) {
-      setOutput("// Add at least one field");
+      setOutput("");
       return;
     }
     let code = "@Override\npublic String toString() {\n  return \"" + cls + "{\" +\n";
@@ -605,8 +586,8 @@ function SecToStr() {
       <CodeBlock label="Default vs custom toString()">{`class Person {
   String name;
   int age;
-  // Without override:
-  // Person@15db9742 (useless!)
+  
+  
 }
 
 class Person {
@@ -622,7 +603,8 @@ class Person {
 Person p = new Person();
 p.name = "Alice";
 p.age = 25;
-System.out.println(p);  // Person{name=Alice, age=25}`}</CodeBlock>
+System.out.println(p);  
+`}</CodeBlock>
       <div className="str-fw">
         <h3>toString() Generator</h3>
         <div className="demo-ctrl">
@@ -677,31 +659,20 @@ function SecTok() {
 
 String text = "apple,banana,cherry";
 
-// Old way: StringTokenizer
 StringTokenizer st = new StringTokenizer(text, ",");
 while (st.hasMoreTokens()) {
   System.out.println(st.nextToken());
 }
-// apple
-// banana
-// cherry
 
-// Modern way: String.split()
 String[] tokens = text.split(",");
 for (String token : tokens) {
   System.out.println(token);
 }
-// apple
-// banana
-// cherry
 
-// StringTokenizer with multiple delimiters
 StringTokenizer st2 = new StringTokenizer("a,b;c:d", ",;:");
-// Splits on comma, semicolon, or colon
 
-// returnDelimiters = true
 StringTokenizer st3 = new StringTokenizer("a,b", ",", true);
-// Returns: "a", ",", "b"`}</CodeBlock>
+`}</CodeBlock>
       <div className="str-fw">
         <h3>StringTokenizer Demo</h3>
         <div className="demo-ctrl">
@@ -949,7 +920,6 @@ function SecPlay() {
   );
 }
 
-
 const CHAPTERS = [
   { id:"intro",   label:"Char[] vs String",      color:"bl" },
   { id:"create",  label:"Creating Strings",       color:"gr" },
@@ -983,7 +953,7 @@ export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
       <style>{styles}</style>
       <div className="str-wrap">
 
-        {/* Tab nav */}
+        {}
         <div className="str-nav">
           {CHAPTERS.map(ch => (
             <button key={ch.id}
@@ -995,7 +965,7 @@ export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
           ))}
         </div>
 
-        {/* Active section */}
+        {}
         {active === "intro"   && <SecIntro />}
         {active === "create"  && <SecCreate />}
         {active === "immut"   && <SecImmut />}
@@ -1005,7 +975,7 @@ export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
         {active === "tok"     && <SecTok />}
         {active === "play"    && <SecPlay />}
 
-        {/* Prev / Next bar */}
+        {}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
           marginTop:48,paddingTop:24,borderTop:"0.5px solid var(--bdr)"}}>
 
@@ -1023,7 +993,7 @@ export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
             </button>
           ) : <div />}
 
-          {/* Dot indicators */}
+          {}
           <div style={{display:"flex",gap:6}}>
             {CHAPTERS.map(ch => (
               <div key={ch.id} onClick={() => switchTab(ch.id)}
@@ -1053,4 +1023,3 @@ export default function StringsTutorial({ onPrev, onNext, onChapterChange }) {
     </div>
   );
 }
-

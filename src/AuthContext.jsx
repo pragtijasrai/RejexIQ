@@ -7,7 +7,6 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const TOKEN_KEY = "rejexiq_token";
 const USER_KEY  = "rejexiq_user";
 
-// ── helpers ───────────────────────────────────────────────────────────────────
 function saveSession(token, user) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -23,20 +22,19 @@ function loadSession() {
   try { return { token, user: JSON.parse(raw) }; } catch { return null; }
 }
 
-// ── provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children, onLogin, onLogout }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [token,       setToken]       = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [authError,   setAuthError]   = useState(null);
 
-  // Restore session on mount
+  
   useEffect(() => {
     const session = loadSession();
     if (session) {
       setToken(session.token);
       setCurrentUser(session.user);
-      // Notify App.jsx so dashboard loads
+      
       if (onLogin) onLogin(session.user);
     }
     setLoading(false);
@@ -50,7 +48,7 @@ export function AuthProvider({ children, onLogin, onLogout }) {
     if (onLogin) onLogin(user);
   }, [onLogin]);
 
-  // ── signup ────────────────────────────────────────────────────────────────
+  
   const signup = useCallback(async ({ name, email, password }) => {
     setAuthError(null);
     const res = await fetch(`${API}/api/auth/signup`, {
@@ -64,7 +62,7 @@ export function AuthProvider({ children, onLogin, onLogout }) {
     return data.user;
   }, [_setAuth]);
 
-  // ── signin ────────────────────────────────────────────────────────────────
+  
   const signin = useCallback(async ({ email, password }) => {
     setAuthError(null);
     const res = await fetch(`${API}/api/auth/signin`, {
@@ -78,13 +76,13 @@ export function AuthProvider({ children, onLogin, onLogout }) {
     return data.user;
   }, [_setAuth]);
 
-  // ── Google login ──────────────────────────────────────────────────────────
+  
   const googleLogin = useCallback(async () => {
     setAuthError(null);
-    // 1. Firebase popup → get idToken
+    
     const { idToken, name, email, avatar, uid } = await signInWithGoogle();
 
-    // 2. Send idToken to backend → get our JWT
+    
     const res = await fetch(`${API}/api/auth/google`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,7 +94,7 @@ export function AuthProvider({ children, onLogin, onLogout }) {
     return data.user;
   }, [_setAuth]);
 
-  // ── logout ────────────────────────────────────────────────────────────────
+  
   const logout = useCallback(async () => {
     try { await signOutFirebase(); } catch (_) {}
     clearSession();
@@ -105,7 +103,7 @@ export function AuthProvider({ children, onLogin, onLogout }) {
     if (onLogout) onLogout();
   }, [onLogout]);
 
-  // ── fetch /me (verify token still valid) ─────────────────────────────────
+  
   const refreshUser = useCallback(async () => {
     if (!token) return;
     try {

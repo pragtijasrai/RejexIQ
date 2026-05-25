@@ -27,8 +27,6 @@ import {
   LineChart, Line, Area, AreaChart
 } from "recharts";
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
-
 const ROLES = {
   frontend: {
     label: "Frontend Developer",
@@ -93,8 +91,6 @@ const TOUR_STEPS = [
   { target: "resume", title: "Resume Builder 📄", text: "Build a professional resume with live preview and PDF export." }
 ];
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-
 function calcReadiness(userSkills, roleKey) {
   const role = ROLES[roleKey];
   if (!role) return 0;
@@ -146,8 +142,6 @@ function passwordStrength(pwd) {
   const colors = ["#374151", "#ef4444", "#f59e0b", "#3b82f6", "#10b981"];
   return { score, label: labels[score], color: colors[score] };
 }
-
-// ─── STYLES ───────────────────────────────────────────────────────────────────
 
 const G = {
   bg: "#0a0e27",
@@ -541,8 +535,6 @@ const css = `
   }
 `;
 
-// ─── COMPONENTS ───────────────────────────────────────────────────────────────
-
 function ScoreRing({ score, size = 140, color = G.accent, label = "" }) {
   const r = (size / 2) - 12;
   const circ = 2 * Math.PI * r;
@@ -603,9 +595,6 @@ function LoadingSpinner({ size = 24 }) {
   );
 }
 
-// ─── PAGES ────────────────────────────────────────────────────────────────────
-
-// LANDING PAGE
 function LandingPage({ onNav, onDemo }) {
   const [typeIdx, setTypeIdx] = useState(0);
   const phrases = ["Evaluate Your Skills", "Analyze Career Readiness", "Build Your Professional Resume", "Discover Your Best Role"];
@@ -662,7 +651,7 @@ function LandingPage({ onNav, onDemo }) {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      {/* NAV */}
+      {}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
         background: "rgba(10,14,39,0.95)", backdropFilter: "blur(12px)",
@@ -679,9 +668,9 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </nav>
 
-      {/* HERO */}
+      {}
       <section className="hero-grid" style={{ paddingTop: 160, paddingBottom: 100, position: "relative", overflow: "hidden", minHeight: "100vh" }}>
-        {/* Glow orbs */}
+        {}
         <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, background: `radial-gradient(circle, ${G.accent}20 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
         <div style={{ position: "absolute", top: "30%", right: "10%", width: 500, height: 500, background: `radial-gradient(circle, ${G.purple}20 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
         <div style={{ position: "absolute", bottom: "20%", left: "40%", width: 350, height: 350, background: `radial-gradient(circle, ${G.cyan}15 0%, transparent 70%)`, borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
@@ -719,7 +708,7 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* FEATURES */}
+      {}
       <section style={{ padding: "80px 40px", background: G.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
@@ -741,7 +730,7 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {}
       <section style={{ padding: "80px 40px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
@@ -761,7 +750,7 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* DASHBOARD PREVIEW */}
+      {}
       <section style={{ padding: "80px 40px", background: G.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
@@ -795,7 +784,7 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* AI ASSISTANT */}
+      {}
       <section style={{ padding: "80px 40px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           <div className="float-anim" style={{ fontSize: 72, marginBottom: 24 }}>🤖</div>
@@ -809,7 +798,7 @@ function LandingPage({ onNav, onDemo }) {
         </div>
       </section>
 
-      {/* CTA */}
+      {}
       <section style={{ padding: "80px 40px", background: "linear-gradient(135deg, rgba(0,229,255,0.05), rgba(124,58,237,0.05))", borderTop: `1px solid ${G.border}` }}>
         <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
           <h2 className="syne" style={{ fontSize: 40, fontWeight: 800, marginBottom: 16 }}>
@@ -829,7 +818,6 @@ function LandingPage({ onNav, onDemo }) {
   );
 }
 
-// AUTH PAGE — uses the new standalone AuthPage component
 function AuthPage({ type, onLogin, onNav }) {
   return <NewAuthPage onLogin={onLogin} onNav={onNav} initialMode={type === "login" ? "signin" : "signup"} />;
 }
@@ -876,7 +864,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         boxShadow: visuallyExpanded ? "8px 0 28px rgba(120, 10, 30, 0.06)" : "4px 0 30px rgba(0, 0, 0, 0.08)"
       }}
     >
-      {/* Desktop Floating Lock Toggle */}
+      {}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -909,7 +897,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         {collapsed ? "»" : "«"}
       </button>
 
-      {/* Logo */}
+      {}
       <div style={{
         padding: visuallyExpanded ? "24px 20px" : "24px 0",
         borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
@@ -959,7 +947,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         </div>
       </div>
 
-      {/* User */}
+      {}
       <div style={{
         padding: visuallyExpanded ? "16px 20px" : "16px 0",
         borderBottom: "1px solid rgba(120, 10, 30, 0.08)",
@@ -998,7 +986,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         </div>
       </div>
 
-      {/* Nav */}
+      {}
       <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
         {navItems.map(item => {
           const isActive = active === item.key;
@@ -1031,7 +1019,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
               }}
               title={!visuallyExpanded ? item.label : ""}
             >
-              {/* Active vertical line indicator */}
+              {}
               {isActive && (
                 <div style={{
                   position: "absolute",
@@ -1053,10 +1041,10 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
         })}
       </nav>
 
-      {/* Footer Actions: Profile, Settings, Logout */}
+      {}
       <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(120, 10, 30, 0.08)", display: "flex", flexDirection: "column", gap: "4px" }}>
 
-        {/* Profile */}
+        {}
         <button
           onClick={() => { onNav("profile"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
           className={`nav-link-premium ${active === "profile" ? "active" : ""}`}
@@ -1092,7 +1080,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
           {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Profile</span>}
         </button>
 
-        {/* Settings */}
+        {}
         <button
           onClick={() => { onNav("settings"); if (typeof setMobileOpen === 'function') setMobileOpen(false); }}
           className={`nav-link-premium ${active === "settings" ? "active" : ""}`}
@@ -1128,7 +1116,7 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
           {visuallyExpanded && <span style={{ animation: "fadeIn 0.3s ease", zIndex: 1, whiteSpace: "nowrap" }}>Settings</span>}
         </button>
 
-        {/* Log Out */}
+        {}
         <button
           onClick={onLogout}
           className="nav-link-premium"
@@ -1163,7 +1151,6 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
   );
 }
 
-// TRACK SELECTION — Onboarding screen for new users
 function TrackSelection({ onSelect }) {
   const tracks = [
     { key: "Learning Student", title: "Learning Student", desc: "Start from scratch, learn programming fundamentals, DSA, and build your foundation.", icon: "🎒" },
@@ -1190,7 +1177,7 @@ function TrackSelection({ onSelect }) {
       position: "relative",
       overflow: "hidden"
     }}>
-      {/* Background Glows */}
+      {}
       <div style={{ position: "absolute", top: "5%", left: "5%", width: 400, height: 400, background: "radial-gradient(circle, rgba(126,0,35,0.08) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(60px)" }} />
       <div style={{ position: "absolute", bottom: "5%", right: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(190,18,60,0.07) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none", filter: "blur(70px)" }} />
 
@@ -1320,12 +1307,10 @@ function TrackSelection({ onSelect }) {
   );
 }
 
-// PROFILE PAGE — uses the new standalone ProfilePage component
 function ProfilePage({ user, onUpdateUser, onNav }) {
   return <NewProfilePage user={user} onUpdateUser={onUpdateUser} onNav={onNav} />;
 }
 
-// DASHBOARD
 function Dashboard({ user, onNav, showTour, setShowTour }) {
   const hasAssessment = user.assessmentDone && Object.keys(user.skills || {}).length > 0;
   const skills = user.skills || {};
@@ -1336,7 +1321,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
 
   return (
     <div className="section-enter">
-      {/* Welcome */}
+      {}
       <div style={{ marginBottom: 32 }}>
         <h1 className="syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
           Welcome back, {user.name} 👋
@@ -1346,7 +1331,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
         </p>
       </div>
 
-      {/* Stats Row */}
+      {}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 32 }}>
         {[
           { label: "Readiness Score", val: hasAssessment ? `${avgScore}%` : "—", icon: "⚡", color: G.accent },
@@ -1366,7 +1351,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
       </div>
 
       {!hasAssessment ? (
-        /* Onboarding CTA */
+        
         <div className="gradient-border" style={{ padding: 40, textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
           <h2 className="syne" style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: "#F5E6D3" }}>Start Your Skill Assessment</h2>
@@ -1376,9 +1361,9 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
           </button>
         </div>
       ) : (
-        /* Main content grid */
+        
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-          {/* Radar chart */}
+          {}
           <div className="card">
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Skill Radar</h3>
             <ResponsiveContainer width="100%" height={260}>
@@ -1391,7 +1376,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
             </ResponsiveContainer>
           </div>
 
-          {/* Career readiness */}
+          {}
           <div className="card">
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Career Readiness</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1412,7 +1397,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
         </div>
       )}
 
-      {/* Skill scores */}
+      {}
       {hasAssessment && (
         <div className="card" style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -1433,7 +1418,7 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
         </div>
       )}
 
-      {/* Quick actions */}
+      {}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {[
           { icon: "📊", label: "View Market Trends", action: () => onNav("market"), color: G.accent },
@@ -1452,7 +1437,6 @@ function Dashboard({ user, onNav, showTour, setShowTour }) {
   );
 }
 
-// SKILL ASSESSMENT
 function SkillAssessment({ user, onSave, onNav }) {
   const [skills, setSkills] = useState(() =>
     Object.fromEntries(SKILL_KEYS.map(k => [k, user.skills?.[k] || 50]))
@@ -1536,7 +1520,7 @@ function SkillAssessment({ user, onSave, onNav }) {
         ))}
       </div>
 
-      {/* Live preview */}
+      {}
       <div className="card" style={{ marginBottom: 32, background: "linear-gradient(135deg, rgba(0,229,255,0.03), rgba(124,58,237,0.03))" }}>
         <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Live Score Preview</h3>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
@@ -1559,8 +1543,6 @@ function SkillAssessment({ user, onSave, onNav }) {
     </div>
   );
 }
-
-// ─── MARKET DEMAND DATA ───────────────────────────────────────────────────────
 
 const MD_ROLES = {
   "Software Engineer": {
@@ -1887,7 +1869,6 @@ function CircleMatch({ pct, color, size = 120 }) {
   );
 }
 
-// MARKET DEMAND — Premium Dashboard
 function MarketDemand({ onNav, user }) {
   const [tab, setTab] = useState("trending");
   const [selectedRole, setSelectedRole] = useState("Software Engineer");
@@ -1973,7 +1954,7 @@ function MarketDemand({ onNav, user }) {
     prevSalary.current = salaryNum;
     prevTrend.current = trendNum;
     prevMatch.current = matchPct;
-  }, [selectedRole]); // eslint-disable-line
+  }, [selectedRole]); 
 
   const c1 = useCounter(openingsNum, 1200);
   const c2 = useCounter(monthlyNum, 1200);
@@ -1983,14 +1964,14 @@ function MarketDemand({ onNav, user }) {
 
   return (
     <div className="section-enter" style={{ paddingBottom: 48 }}>
-      {/* ── HEADER ── */}
+      {}
       <div style={{
         position: "relative", borderRadius: 24, overflow: "hidden",
         background: "linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(124,58,237,0.12) 50%, rgba(255,107,157,0.08) 100%)",
         border: "1px solid rgba(0,0,0,0.05)",
         padding: "36px 40px", marginBottom: 32
       }}>
-        {/* Glow orbs */}
+        {}
         <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -30, left: "30%", width: 160, height: 160, background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
 
@@ -2011,7 +1992,7 @@ function MarketDemand({ onNav, user }) {
             </p>
           </div>
 
-          {/* Role selector */}
+          {}
           <div style={{ minWidth: 220 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 8, letterSpacing: 1 }}>SELECT JOB ROLE</label>
             <select
@@ -2033,7 +2014,7 @@ function MarketDemand({ onNav, user }) {
           </div>
         </div>
 
-        {/* KPI strip */}
+        {}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginTop: 28 }}>
           {[
             {
@@ -2112,7 +2093,7 @@ function MarketDemand({ onNav, user }) {
         </div>
       </div>
 
-      {/* ── TABS ── */}
+      {}
       <div style={{ display: "flex", gap: 6, marginBottom: 28, flexWrap: "wrap" }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -2126,12 +2107,10 @@ function MarketDemand({ onNav, user }) {
         ))}
       </div>
 
-      {/* ══════════════════════════════════════════════════════
-          TAB 1 — TRENDING SKILLS
-      ══════════════════════════════════════════════════════ */}
+      {}
       {tab === "trending" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Category filter chips — dynamic per role */}
+          {}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {roleCategories.map(cat => (
               <button key={cat} onClick={() => setFilterCat(cat)} style={{
@@ -2143,7 +2122,7 @@ function MarketDemand({ onNav, user }) {
             ))}
           </div>
 
-          {/* Skills grid */}
+          {}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
             {filteredTrending.map((s, i) => (
               <div key={`${roleChangeKey}-${i}`}
@@ -2189,7 +2168,7 @@ function MarketDemand({ onNav, user }) {
             ))}
           </div>
 
-          {/* Bar chart */}
+          {}
           <div key={roleChangeKey} style={{
             background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)",
             borderRadius: 20, padding: "28px 24px"
@@ -2225,12 +2204,10 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          TAB 2 — YOUR MATCH
-      ══════════════════════════════════════════════════════ */}
+      {}
       {tab === "match" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Match overview */}
+          {}
           <div style={{
             display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center",
             background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "32px 36px"
@@ -2272,7 +2249,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* Skill comparison list */}
+          {}
           <div style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "28px 28px" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: "#1e293b" }}>
               Skill-by-Skill Comparison — <span style={{ color: roleColor }}>{selectedRole}</span>
@@ -2307,7 +2284,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* Missing skills callout */}
+          {}
           {enrichedSkills.filter(s => !s.userHas).length > 0 && (
             <div style={{
               background: "linear-gradient(135deg, rgba(248,113,113,0.08), rgba(251,191,36,0.06))",
@@ -2333,12 +2310,10 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          TAB 3 — ROLE INSIGHTS
-      ══════════════════════════════════════════════════════ */}
+      {}
       {tab === "role" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Role header card */}
+          {}
           <div style={{
             background: `linear-gradient(135deg, ${roleColor}12, ${roleColor}06)`,
             border: `1px solid ${roleColor}30`, borderRadius: 20, padding: "32px 36px",
@@ -2368,7 +2343,7 @@ function MarketDemand({ onNav, user }) {
               </div>
             </div>
 
-            {/* Salary range */}
+            {}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
               {[
                 { label: "Entry Level", val: roleData.salary.min, sub: "0–2 years" },
@@ -2388,7 +2363,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* Required skills ranked */}
+          {}
           <div style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 20, padding: "28px 28px" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: "#1e293b" }}>Top Required Skills — Ranked by Demand</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -2408,7 +2383,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* Hiring trend chart */}
+          {}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Hiring Trend — Tech Sector</h3>
             <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Total job postings vs AI/ML roles (Jul 2024 – Feb 2025)</p>
@@ -2446,12 +2421,10 @@ function MarketDemand({ onNav, user }) {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          TAB 4 — AI RECOMMENDATIONS
-      ══════════════════════════════════════════════════════ */}
+      {}
       {tab === "ai" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* AI header */}
+          {}
           <div style={{
             background: "linear-gradient(135deg, rgba(129,140,248,0.1), rgba(192,132,252,0.08))",
             border: "1px solid rgba(129,140,248,0.25)", borderRadius: 20, padding: "28px 32px",
@@ -2468,7 +2441,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* Recommendations */}
+          {}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
             {roleData.aiRecs.map((rec, i) => {
               const typeColors = { skill: "#22d3ee", project: "#c084fc", resume: "#fbbf24" };
@@ -2495,7 +2468,7 @@ function MarketDemand({ onNav, user }) {
             })}
           </div>
 
-          {/* General market insights */}
+          {}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 28px" }}>
             <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>📊 Market Intelligence — 2025</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
@@ -2524,7 +2497,7 @@ function MarketDemand({ onNav, user }) {
             </div>
           </div>
 
-          {/* CTA */}
+          {}
           <div style={{
             background: "linear-gradient(135deg, rgba(255,107,157,0.1), rgba(124,58,237,0.1))",
             border: "1px solid rgba(255,107,157,0.2)", borderRadius: 16, padding: "24px 28px",
@@ -2549,13 +2522,10 @@ function MarketDemand({ onNav, user }) {
   );
 }
 
-
-// RESUME BUILDER — delegates to the premium standalone component
 function ResumeBuilder({ user }) {
   return <PremiumResumeBuilder user={user} />;
 }
 
-// OLD RESUME BUILDER (replaced) — keeping stub for reference
 function _OldResumeBuilder_UNUSED({ user }) {
   const [form, setForm] = useState({
     name: user.name || "",
@@ -2613,7 +2583,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-        {/* Form */}
+        {}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {[
             ["Full Name", "name", "text"], ["Job Title", "title", "text"],
@@ -2640,13 +2610,13 @@ function _OldResumeBuilder_UNUSED({ user }) {
           ))}
         </div>
 
-        {/* Live Preview */}
+        {}
         <div style={{ position: "sticky", top: 20, height: "fit-content" }}>
           <div className="resume-preview" id="resume-preview-content" style={{
             background: template === "minimal" ? "#fafafa" : "white",
             fontFamily: template === "classic" ? "Georgia, serif" : template === "minimal" ? "Arial, sans-serif" : "'Inter', sans-serif"
           }}>
-            {/* Header - Different for each template */}
+            {}
             {template === "modern" && (
               <div style={{ background: "linear-gradient(135deg, #0097a7, #00bcd4)", padding: 20, marginBottom: 16, borderRadius: "8px 8px 0 0" }}>
                 <h1 style={{ fontSize: 26, fontWeight: 800, color: "white", marginBottom: 4 }}>{form.name || "Your Name"}</h1>
@@ -2677,7 +2647,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Summary */}
+            {}
             {form.summary && (
               <div style={{ marginBottom: 16 }}>
                 <h2 style={{
@@ -2697,7 +2667,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Skills */}
+            {}
             {form.skills && (
               <div style={{ marginBottom: 16 }}>
                 <h2 style={{
@@ -2728,7 +2698,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Experience */}
+            {}
             {form.exp && (
               <div style={{ marginBottom: 16 }}>
                 <h2 style={{
@@ -2750,7 +2720,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Projects */}
+            {}
             {form.projects && (
               <div style={{ marginBottom: 16 }}>
                 <h2 style={{
@@ -2770,7 +2740,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Education */}
+            {}
             {form.education && (
               <div style={{ marginBottom: 16 }}>
                 <h2 style={{
@@ -2788,7 +2758,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
               </div>
             )}
 
-            {/* Certifications */}
+            {}
             {form.certifications && (
               <div>
                 <h2 style={{
@@ -2813,9 +2783,7 @@ function _OldResumeBuilder_UNUSED({ user }) {
     </div>
   );
 }
-// END _OldResumeBuilder_UNUSED
 
-// AI ASSISTANT - Real AI Integration
 function AIAssistant({ user }) {
   const [messages, setMessages] = useState([
     { role: "assistant", text: `Hi ${user.name}! 👋 I'm your AI Career Assistant powered by Google Gemini. I can help you with skill improvement tips, career guidance, interview preparation, and learning resources. What would you like to know?` }
@@ -2986,7 +2954,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }}>
         <div className="card" style={{ padding: 0, display: "flex", flexDirection: "column", height: 520 }}>
-          {/* Header */}
+          {}
           <div style={{ padding: "16px 24px", borderBottom: `1px solid ${G.border}`, display: "flex", alignItems: "center", gap: 12 }}>
             <div className="float-anim" style={{ fontSize: 28 }}>🤖</div>
             <div>
@@ -2995,7 +2963,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             </div>
           </div>
 
-          {/* Messages */}
+          {}
           <div ref={msgRef} style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
@@ -3015,7 +2983,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
             )}
           </div>
 
-          {/* Input */}
+          {}
           <div style={{ padding: 16, borderTop: `1px solid ${G.border}`, display: "flex", gap: 8 }}>
             <input className="input-field" placeholder="Ask me anything..." value={input}
               onChange={e => setInput(e.target.value)}
@@ -3024,7 +2992,7 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
           </div>
         </div>
 
-        {/* Suggestions */}
+        {}
         <div>
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: G.muted }}>QUICK QUESTIONS</h3>
@@ -3051,7 +3019,6 @@ Provide helpful, actionable career advice. Be concise but thorough. Use bullet p
   );
 }
 
-// TOUR COMPONENT
 function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
   return (
     <>
@@ -3076,8 +3043,6 @@ function GuidedTour({ step, total, onNext, onSkip, targetPos }) {
   );
 }
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
-
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
@@ -3089,7 +3054,7 @@ export default function App() {
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
 
-  // Load user data from localStorage on mount
+  
   useEffect(() => {
     const savedUser = localStorage.getItem("rejexiq_user");
     if (savedUser) {
@@ -3109,7 +3074,7 @@ export default function App() {
     }
   }, []);
 
-  // Save user data to localStorage whenever it changes
+  
   useEffect(() => {
     if (user) {
       localStorage.setItem("rejexiq_user", JSON.stringify(user));
@@ -3197,18 +3162,18 @@ export default function App() {
     if (["login", "signup", "home", "assessment", "career", "market", "resume", "dashboard"].includes(dest)) {
       if (dest === "home") { setPage("home"); return; }
       if (dest === "login" || dest === "signup") { setPage(dest); return; }
-      // Allow assessment without login
+      
       if (dest === "assessment") {
         if (user) { setAppPage(dest); setPage("app"); }
         else { setPage("assessment"); }
         return;
       }
-      // Other pages require login
+      
       if (user) { setAppPage(dest); setPage("app"); } else { setPage("login"); }
     }
   }
 
-  // Tour navigation labels → app pages
+  
   const tourPageMap = ["dashboard", "assessment", "career", "market", "resume"];
 
   const tourPositions = [
@@ -3261,7 +3226,7 @@ export default function App() {
           <TrackSelection onSelect={handleSelectTrack} />
         ) : (
           <div style={{ display: "flex", minHeight: "100vh", background: "#fdfdfb", position: "relative" }}>
-            {/* Background Orbs to make Glassmorphism visible */}
+            {}
             <div style={{ position: "fixed", top: -150, left: -150, width: 500, height: 500, background: "radial-gradient(circle, rgba(190,18,60,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
             <div style={{ position: "fixed", bottom: -100, left: -50, width: 450, height: 450, background: "radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
             <Sidebar
@@ -3276,7 +3241,7 @@ export default function App() {
               onHoverChange={setSidebarHovered}
             />
 
-            {/* Main content */}
+            {}
             <div style={{
               marginLeft: !sidebarCollapsed ? 240 : 72,
               width: `calc(100vw - ${!sidebarCollapsed ? 240 : 72}px)`,
@@ -3293,8 +3258,7 @@ export default function App() {
               zIndex: 1
             }} className="main-content-area">
 
-
-              {/* Demo badge */}
+              {}
               {user.email === "demo@rejexiq.com" && (
                 <div style={{ marginBottom: 16, padding: "8px 16px", background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, fontSize: 12, color: G.warning, display: "inline-flex", alignItems: "center", gap: 8 }}>
                   ✨ Demo Mode — All features available. Data is pre-loaded for demonstration.
@@ -3329,7 +3293,7 @@ export default function App() {
               {appPage === "community" && <Community user={user} />}
             </div>
 
-            {/* Guided Tour */}
+            {}
             {showTour && (
               <GuidedTour
                 step={tourStep}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { fetchWorlds, fetchProgress } from "./storyApi";
 
-// ── NEBULA CANVAS ─────────────────────────────────────────────────────────────
 function NebulaCanvas() {
   const ref = useRef();
   useEffect(() => {
@@ -42,7 +41,6 @@ function NebulaCanvas() {
   return <canvas ref={ref} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}/>;
 }
 
-// ── LEVEL UP MODAL ────────────────────────────────────────────────────────────
 function LevelUpModal({level,onClose}) {
   return (
     <div style={{position:"fixed",inset:0,zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.8)",backdropFilter:"blur(10px)"}}>
@@ -56,7 +54,6 @@ function LevelUpModal({level,onClose}) {
   );
 }
 
-// ── WORLD CARD ────────────────────────────────────────────────────────────────
 const WMETA = {
   arrays:     {bg:"linear-gradient(135deg,#020d1a 0%,#0a1f35 100%)", particle:"#00e5ff", difficulty:"Beginner",     missions:5},
   linkedlist: {bg:"linear-gradient(135deg,#1a0d00 0%,#2d1a00 100%)", particle:"#f59e0b", difficulty:"Beginner",     missions:6},
@@ -89,20 +86,20 @@ function WorldCard({world,index,completedMissions,onSelect}) {
         transition:"all 0.35s cubic-bezier(0.34,1.2,0.64,1)",
         animation:`cardEntrance 0.6s ease ${index*0.12}s both`}}>
 
-      {/* Scanlines */}
+      {}
       <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.012) 2px,rgba(255,255,255,0.012) 4px)",pointerEvents:"none",borderRadius:24}}/>
 
-      {/* Shimmer on hover */}
+      {}
       {hov&&<div style={{position:"absolute",inset:0,background:`linear-gradient(105deg,transparent 40%,${world.color}18 50%,transparent 60%)`,backgroundSize:"200% 100%",animation:"shimmerSlide 1.2s ease infinite",borderRadius:24,pointerEvents:"none"}}/>}
 
-      {/* Floating dots */}
+      {}
       <div style={{position:"absolute",inset:0,overflow:"hidden",borderRadius:24,pointerEvents:"none"}}>
         {[...Array(10)].map((_,j)=>(
           <div key={j} style={{position:"absolute",width:j%3===0?4:2,height:j%3===0?4:2,borderRadius:"50%",background:meta.particle,opacity:hov?0.7:0.25,left:`${8+j*9}%`,top:`${15+(j%4)*20}%`,animation:`floatDot ${1.8+j*0.25}s ease-in-out infinite`,animationDelay:`${j*0.18}s`,transition:"opacity 0.3s"}}/>
         ))}
       </div>
 
-      {/* Difficulty badge */}
+      {}
       <div style={{position:"absolute",top:16,right:16,background:`${dc}20`,border:`1px solid ${dc}50`,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:700,color:dc,letterSpacing:0.5}}>{meta.difficulty}</div>
 
       <div style={{position:"relative",zIndex:1}}>
@@ -110,7 +107,7 @@ function WorldCard({world,index,completedMissions,onSelect}) {
         <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:world.color,marginBottom:6}}>{world.name}</h2>
         <p style={{color:"#94a3b8",fontSize:13,lineHeight:1.6,marginBottom:20}}>{world.description}</p>
 
-        {/* Progress */}
+        {}
         <div style={{marginBottom:20}}>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#64748b",marginBottom:5}}>
             <span>{done}/{meta.missions} missions</span>
@@ -129,7 +126,6 @@ function WorldCard({world,index,completedMissions,onSelect}) {
   );
 }
 
-// ── STATS ROW ─────────────────────────────────────────────────────────────────
 function StatsRow({progress}) {
   const stats=[
     {icon:"⭐",label:"Total XP",value:progress?.xp||0,color:"#fbbf24"},
@@ -152,7 +148,6 @@ function StatsRow({progress}) {
   );
 }
 
-// ── STATIC WORLDS (fallback when backend is offline) ─────────────────────────
 const STATIC_WORLDS = [
   { id:"arrays",     name:"Array Kingdom",        description:"Master the land of indexed elements",       icon:"🏰", color:"#00e5ff" },
   { id:"linkedlist", name:"Linked List Labyrinth", description:"Traverse the chains of connected nodes",    icon:"🔗", color:"#f59e0b" },
@@ -166,7 +161,6 @@ const STATIC_WORLDS = [
 
 const STATIC_PROGRESS = { userId:"guest", xp:0, level:"Beginner", completedMissions:[] };
 
-// ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function WorldMap({userId,onSelectWorld,onBack}) {
   const [worlds,setWorlds]=useState([]);
   const [progress,setProgress]=useState(null);
@@ -178,7 +172,7 @@ export default function WorldMap({userId,onSelectWorld,onBack}) {
     Promise.all([fetchWorlds(),fetchProgress(userId)])
       .then(([w,p])=>{setWorlds(w.worlds);setProgress(p);prevLevel.current=p.level;})
       .catch(()=>{
-        // Backend offline — use static data so all worlds are always visible
+        
         setWorlds(STATIC_WORLDS);
         setProgress(STATIC_PROGRESS);
         prevLevel.current=STATIC_PROGRESS.level;
@@ -206,7 +200,7 @@ export default function WorldMap({userId,onSelectWorld,onBack}) {
       <style>{KF}</style>
       {levelUpMsg&&<LevelUpModal level={levelUpMsg} onClose={()=>setLevelUpMsg(null)}/>}
 
-      {/* Sticky top bar with back button — always visible */}
+      {}
       <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(6,9,18,0.92)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(255,255,255,0.06)",padding:"10px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <button onClick={onBack} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#94a3b8",padding:"8px 18px",borderRadius:20,cursor:"pointer",fontSize:13,fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:6,transition:"all 0.2s"}}
           onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.1)";e.currentTarget.style.color="#f0f4ff";}}
@@ -224,7 +218,7 @@ export default function WorldMap({userId,onSelectWorld,onBack}) {
         )}
       </div>
 
-      {/* Hero */}
+      {}
       <div style={S.hero}>
         <NebulaCanvas/>
         <div style={{position:"relative",zIndex:1,textAlign:"center",padding:"60px 40px 50px"}}>

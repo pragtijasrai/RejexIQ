@@ -49,7 +49,6 @@ const styles = `
 @media(max-width:500px){ .sort-2col{grid-template-columns:1fr;} }
 `;
 
-// ── Bar chart visualizer ──
 function Bars({ arr, comparing = [], sorted = [], pivot = -1 }) {
   const max = Math.max(...arr, 1);
   const colors = arr.map((_, i) => {
@@ -70,7 +69,6 @@ function Bars({ arr, comparing = [], sorted = [], pivot = -1 }) {
   );
 }
 
-// ── Bubble Sort ──
 function SecBubble() {
   const INIT = [64, 34, 25, 12, 22, 11, 90];
   const [arr, setArr] = useState([...INIT]);
@@ -138,7 +136,7 @@ function SecBubble() {
   for (int i = 0; i < n - 1; i++) {
     for (int j = 0; j < n - 1 - i; j++) {
       if (arr[j] > arr[j + 1]) {
-        // swap
+        
         int temp = arr[j];
         arr[j] = arr[j + 1];
         arr[j + 1] = temp;
@@ -146,15 +144,12 @@ function SecBubble() {
     }
   }
 }
-// Time: O(n²) worst/avg | O(n) best (already sorted with flag)
-// Space: O(1) — in-place
-// Stable: YES`}</div>
+`}</div>
       <div className="sort-info"><p>OPTIMIZATION: Add a boolean flag. If no swaps occur in a full pass, the array is already sorted → break early. Best case becomes O(n).</p></div>
     </div>
   );
 }
 
-// ── Selection Sort ──
 function SecSelection() {
   const INIT = [64, 25, 12, 22, 11];
   const [arr, setArr] = useState([...INIT]);
@@ -208,20 +203,17 @@ function SecSelection() {
     int minIdx = i;
     for (int j = i + 1; j < n; j++)
       if (arr[j] < arr[minIdx]) minIdx = j;
-    // swap arr[i] with arr[minIdx]
+    
     int temp = arr[minIdx];
     arr[minIdx] = arr[i];
     arr[i] = temp;
   }
 }
-// Time: O(n²) always — no early exit possible
-// Space: O(1) — in-place
-// Stable: NO (swapping can change relative order)`}</div>
+`}</div>
     </div>
   );
 }
 
-// ── Insertion Sort ──
 function SecInsertion() {
   return (
     <div className="sort-sec">
@@ -231,20 +223,17 @@ function SecInsertion() {
       <div className="sort-code">{`void insertionSort(int[] arr) {
   int n = arr.length;
   for (int i = 1; i < n; i++) {
-    int key = arr[i];   // element to insert
+    int key = arr[i];   
     int j = i - 1;
-    // shift elements greater than key one position right
+    
     while (j >= 0 && arr[j] > key) {
       arr[j + 1] = arr[j];
       j--;
     }
-    arr[j + 1] = key;   // insert key at correct position
+    arr[j + 1] = key;   
   }
 }
-// Time: O(n²) worst/avg | O(n) best (nearly sorted)
-// Space: O(1) — in-place
-// Stable: YES
-// Best for: small arrays, nearly sorted data, online sorting`}</div>
+`}</div>
       <div className="sort-info"><p>Insertion sort is the fastest O(n²) sort for small n (≤ 20) and nearly-sorted data. Java's Arrays.sort() uses it for small subarrays within TimSort.</p></div>
       <div className="sort-h3">Trace: [5, 3, 4, 1, 2]</div>
       <div className="sort-code">{`Pass 1: key=3 → [3, 5, 4, 1, 2]
@@ -255,7 +244,6 @@ Pass 4: key=2 → [1, 2, 3, 4, 5] ✓`}</div>
   );
 }
 
-// ── Merge Sort ──
 function SecMerge() {
   return (
     <div className="sort-sec">
@@ -264,15 +252,15 @@ function SecMerge() {
       <p className="sort-p">Divide the array in half, recursively sort each half, then merge the two sorted halves. Classic divide-and-conquer. Guaranteed O(n log n).</p>
       <div className="sort-viz">
         <svg viewBox="0 0 560 200" style={{width:"100%"}} xmlns="http://www.w3.org/2000/svg">
-          {/* Level 0 */}
+          {}
           <rect x="180" y="10" width="200" height="28" rx="6" fill="var(--color-background-info)" stroke="var(--color-border-info)" strokeWidth="1"/>
           <text x="280" y="29" textAnchor="middle" fontSize="12" fill="var(--color-text-info)" fontWeight="500">[38, 27, 43, 3, 9, 82]</text>
-          {/* Level 1 */}
+          {}
           <rect x="60"  y="60" width="160" height="28" rx="6" fill="var(--color-background-success)" stroke="var(--color-border-success)" strokeWidth="1"/>
           <text x="140" y="79" textAnchor="middle" fontSize="12" fill="var(--color-text-success)" fontWeight="500">[38, 27, 43]</text>
           <rect x="340" y="60" width="160" height="28" rx="6" fill="var(--color-background-success)" stroke="var(--color-border-success)" strokeWidth="1"/>
           <text x="420" y="79" textAnchor="middle" fontSize="12" fill="var(--color-text-success)" fontWeight="500">[3, 9, 82]</text>
-          {/* Level 2 */}
+          {}
           <rect x="20"  y="115" width="70" height="26" rx="5" fill="var(--color-background-warning)" stroke="var(--color-border-warning)" strokeWidth="1"/>
           <text x="55"  y="132" textAnchor="middle" fontSize="11" fill="var(--color-text-warning)">[38]</text>
           <rect x="105" y="115" width="90" height="26" rx="5" fill="var(--color-background-warning)" stroke="var(--color-border-warning)" strokeWidth="1"/>
@@ -281,21 +269,21 @@ function SecMerge() {
           <text x="345" y="132" textAnchor="middle" fontSize="11" fill="var(--color-text-warning)">[3]</text>
           <rect x="395" y="115" width="90" height="26" rx="5" fill="var(--color-background-warning)" stroke="var(--color-border-warning)" strokeWidth="1"/>
           <text x="440" y="132" textAnchor="middle" fontSize="11" fill="var(--color-text-warning)">[9, 82]</text>
-          {/* Merge result */}
+          {}
           <rect x="140" y="168" width="280" height="26" rx="5" fill="var(--color-background-info)" stroke="var(--color-border-info)" strokeWidth="1"/>
           <text x="280" y="185" textAnchor="middle" fontSize="12" fill="var(--color-text-info)" fontWeight="500">Merge → [3, 9, 27, 38, 43, 82] ✓</text>
-          {/* Arrows */}
+          {}
           <line x1="240" y1="38" x2="180" y2="60" stroke="var(--color-border-tertiary)" strokeWidth="1" markerEnd="url(#ma)"/>
           <line x1="320" y1="38" x2="380" y2="60" stroke="var(--color-border-tertiary)" strokeWidth="1" markerEnd="url(#ma)"/>
           <defs><marker id="ma" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--color-border-tertiary)" strokeWidth="1.5"/></marker></defs>
         </svg>
       </div>
       <div className="sort-code">{`void mergeSort(int[] arr, int l, int r) {
-  if (l >= r) return;           // base case: 1 element
+  if (l >= r) return;           
   int mid = (l + r) / 2;
-  mergeSort(arr, l, mid);       // sort left half
-  mergeSort(arr, mid + 1, r);   // sort right half
-  merge(arr, l, mid, r);        // merge sorted halves
+  mergeSort(arr, l, mid);       
+  mergeSort(arr, mid + 1, r);   
+  merge(arr, l, mid, r);        
 }
 
 void merge(int[] arr, int l, int mid, int r) {
@@ -307,14 +295,11 @@ void merge(int[] arr, int l, int mid, int r) {
   while (j <= r)   temp[k++] = arr[j++];
   for (int x = 0; x < temp.length; x++) arr[l + x] = temp[x];
 }
-// Time: O(n log n) always
-// Space: O(n) — needs temp array
-// Stable: YES`}</div>
+`}</div>
     </div>
   );
 }
 
-// ── Quick Sort ──
 function SecQuick() {
   return (
     <div className="sort-sec">
@@ -324,28 +309,25 @@ function SecQuick() {
       <div className="sort-code">{`void quickSort(int[] arr, int low, int high) {
   if (low < high) {
     int pi = partition(arr, low, high);
-    quickSort(arr, low, pi - 1);   // sort left of pivot
-    quickSort(arr, pi + 1, high);  // sort right of pivot
+    quickSort(arr, low, pi - 1);   
+    quickSort(arr, pi + 1, high);  
   }
 }
 
 int partition(int[] arr, int low, int high) {
-  int pivot = arr[high];  // last element as pivot
-  int i = low - 1;        // index of smaller element
+  int pivot = arr[high];  
+  int i = low - 1;        
   for (int j = low; j < high; j++) {
     if (arr[j] <= pivot) {
       i++;
       int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;
     }
   }
-  // place pivot in correct position
+  
   int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;
   return i + 1;
 }
-// Time: O(n log n) avg | O(n²) worst (sorted array + last pivot)
-// Space: O(log n) stack space
-// Stable: NO
-// Fix worst case: use random pivot or median-of-three`}</div>
+`}</div>
       <div className="sort-warn"><p>WORST CASE: If the array is already sorted and you always pick the last element as pivot, every partition creates one empty side → O(n²). Fix: randomize the pivot.</p></div>
       <div className="sort-h3">Trace: [3, 6, 8, 10, 1, 2, 1] pivot=1</div>
       <div className="sort-code">{`Initial:   [3, 6, 8, 10, 1, 2, 1]  pivot=1 (last)
@@ -356,7 +338,6 @@ Right: [8, 10, 3, 2, 6] → recurse`}</div>
   );
 }
 
-// ── Complexity Table ──
 function SecSortingComparison() {
   const QUESTIONS = [
     { q:"Which sorting algorithm has O(n log n) guaranteed time complexity?", opts:["Quick Sort","Bubble Sort","Merge Sort","Selection Sort"], ans:2 },

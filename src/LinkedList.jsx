@@ -69,7 +69,6 @@ const styles = `
 @media(max-width:500px){ .ll-2col{grid-template-columns:1fr;} }
 `;
 
-// ── Shared render helper ──
 function LLRender({ nodes, highlights = {} }) {
   if (!nodes.length) return <span className="ll-null">Empty list (HEAD → NULL)</span>;
   return (
@@ -87,7 +86,6 @@ function LLRender({ nodes, highlights = {} }) {
   );
 }
 
-// ── Chapter 1: Introduction ──
 function SecIntro() {
   return (
     <div className="ll-sec">
@@ -169,7 +167,6 @@ function SecIntro() {
   );
 }
 
-// ── Chapter 2: Memory ──
 function SecMemory() {
   const addrs = ['0x100','0x104','0x108','0x10C','0x110','0x114','0x118','0x11C','0x120','0x124','0x128','0x12C','0x130','0x134','0x138','0x13C'];
   const used = {
@@ -213,11 +210,10 @@ function SecMemory() {
 
       <div className="ll-h3">Node Structure in C</div>
       <div className="ll-code">{`struct Node {
-  int  data;           // stores actual value
-  struct Node *next;   // stores address of next node
+  int  data;           
+  struct Node *next;   
 };
 
-// Creating a new node dynamically
 struct Node* createNode(int val) {
   struct Node* n = (struct Node*) malloc(sizeof(struct Node));
   n->data = val;
@@ -263,7 +259,6 @@ struct Node* createNode(int val) {
   );
 }
 
-// ── Chapter 3: Traversal ──
 function SecTraversal() {
   const BASE = [10,20,30,40,50];
   const [list] = useState(BASE);
@@ -324,25 +319,23 @@ function SecTraversal() {
 
       <div className="ll-h3">Algorithm</div>
       <div className="ll-code">{`void traverse(Node *head) {
-  Node *curr = head;           // start at head
-  while (curr != NULL) {       // stop at NULL
-    printf("%d ", curr->data); // visit node
-    curr = curr->next;         // move forward
+  Node *curr = head;           
+  while (curr != NULL) {       
+    printf("%d ", curr->data); 
+    curr = curr->next;         
   }
 }
-// Time: O(n)  |  Space: O(1)`}</div>
-
+`}</div>
       <div className="ll-h3">Traversal for Search</div>
       <div className="ll-code">{`Node* search(Node *head, int key) {
   Node *curr = head;
   while (curr != NULL) {
-    if (curr->data == key) return curr; // found!
+    if (curr->data == key) return curr; 
     curr = curr->next;
   }
-  return NULL; // not found
+  return NULL; 
 }
-// Time: O(n) worst case`}</div>
-
+`}</div>
       <div className="ll-h3">Counting Nodes</div>
       <div className="ll-code">{`int countNodes(Node *head) {
   int count = 0;
@@ -350,23 +343,21 @@ function SecTraversal() {
   while (curr != NULL) { count++; curr = curr->next; }
   return count;
 }
-// Time: O(n) — must visit every node`}</div>
-
+`}</div>
       <div className="ll-info"><p>KEY RULE: Always use a temporary pointer for traversal. Never move <code>head</code> directly — if you do, you lose access to the beginning of the list forever.</p></div>
     </div>
   );
 }
 
-// ── Chapter 4: Insertion ──
 function SecInsert() {
   const [tab, setTab] = useState("unsorted");
-  // Unsorted
+  
   const [uList, setUList] = useState([10,20,30,40]);
   const [uVal, setUVal] = useState(55);
   const [uPos, setUPos] = useState(2);
   const [uStatus, setUStatus] = useState("");
   const [uHl, setUHl] = useState({});
-  // Sorted
+  
   const [sList, setSList] = useState([5,15,25,45,60]);
   const [sVal, setSVal] = useState(35);
   const [sStatus, setSStatus] = useState("List is sorted ascending");
@@ -429,20 +420,20 @@ function SecInsert() {
           <div className="ll-h3">At Beginning — O(1)</div>
           <div className="ll-code">{`void insertBegin(Node **head, int val) {
   Node *newNode = createNode(val);
-  newNode->next = *head;  // new node points to old head
-  *head = newNode;        // head now points to new node
+  newNode->next = *head;  
+  *head = newNode;        
 }
-// Steps: 1) Create  2) Link to old head  3) Update head`}</div>
+`}</div>
           <div className="ll-h3">At End — O(n)</div>
           <div className="ll-code">{`void insertEnd(Node **head, int val) {
   Node *newNode = createNode(val);
   if (*head == NULL) { *head = newNode; return; }
   Node *curr = *head;
-  while (curr->next != NULL)  // find last node
+  while (curr->next != NULL)  
     curr = curr->next;
-  curr->next = newNode;       // link last node to new node
+  curr->next = newNode;       
 }
-// Must traverse to find tail — hence O(n)`}</div>
+`}</div>
           <div className="ll-warn"><p>CRITICAL ORDER: Always set newNode→next BEFORE updating curr→next. If you reverse this, you lose the rest of the list!</p></div>
         </>
       )}
@@ -462,19 +453,19 @@ function SecInsert() {
           <div className="ll-h3">Algorithm — O(n)</div>
           <div className="ll-code">{`void insertSorted(Node **head, int val) {
   Node *newNode = createNode(val);
-  // Case 1: empty list OR new node goes before head
+  
   if (*head == NULL || (*head)->data >= val) {
     newNode->next = *head;
     *head = newNode; return;
   }
-  // Case 2: find position — stop where next node > val
+  
   Node *curr = *head;
   while (curr->next != NULL && curr->next->data < val)
     curr = curr->next;
   newNode->next = curr->next;
   curr->next = newNode;
 }
-// Time: O(n)  |  Space: O(1)`}</div>
+`}</div>
           <div className="ll-info"><p>Three cases: (1) empty list, (2) insert before head (new minimum), (3) insert in middle or at end. Always check all three in exams!</p></div>
         </>
       )}
@@ -482,7 +473,6 @@ function SecInsert() {
   );
 }
 
-// ── Chapter 5: Deletion ──
 function SecDelete() {
   const [list, setList] = useState([10,20,30,40,50]);
   const [delVal, setDelVal] = useState(30);
@@ -530,32 +520,30 @@ function SecDelete() {
       <div className="ll-h3">Delete by Value — O(n)</div>
       <div className="ll-code">{`void deleteByVal(Node **head, int key) {
   if (*head == NULL) return;
-  // Case 1: delete head node
+  
   if ((*head)->data == key) {
     Node *temp = *head;
     *head = (*head)->next;
     free(temp); return;
   }
-  // Case 2: find node before the target
+  
   Node *curr = *head;
   while (curr->next != NULL && curr->next->data != key)
     curr = curr->next;
-  if (curr->next == NULL) return; // not found
+  if (curr->next == NULL) return; 
   Node *temp = curr->next;
-  curr->next = curr->next->next;  // bypass it
+  curr->next = curr->next->next;  
   free(temp);
 }
-// Time: O(n)  |  Space: O(1)`}</div>
-
+`}</div>
       <div className="ll-h3">Delete First — O(1)</div>
       <div className="ll-code">{`void deleteFirst(Node **head) {
   if (*head == NULL) return;
-  Node *temp = *head;       // save old head
-  *head = (*head)->next;    // move head forward
-  free(temp);               // free old head
+  Node *temp = *head;       
+  *head = (*head)->next;    
+  free(temp);               
 }
-// O(1) — no traversal needed`}</div>
-
+`}</div>
       <div className="ll-warn"><p>NEVER forget to free() memory in C/C++! Always save the node in a temp pointer before unlinking it.</p></div>
 
       <div className="ll-h3">Complexity Summary</div>
@@ -572,7 +560,6 @@ function SecDelete() {
   );
 }
 
-// ── Chapter 6: Doubly ──
 function DoublyRender({ nodes, msg }) {
   if (!nodes.length) return <span className="ll-null">Empty (HEAD = NULL)</span>;
   return (
@@ -646,13 +633,12 @@ function SecDoubly() {
   if (*head == NULL || del == NULL) return;
   if (*head == del) *head = del->next;
   if (del->next != NULL)
-    del->next->prev = del->prev;  // next's prev skips del
+    del->next->prev = del->prev;  
   if (del->prev != NULL)
-    del->prev->next = del->next;  // prev's next skips del
+    del->prev->next = del->next;  
   free(del);
 }
-// Advantage: no need to traverse to find prev node!`}</div>
-
+`}</div>
       <div className="ll-2col" style={{marginTop:12}}>
         <div className="ll-card"><h4>Advantages</h4><ul className="ll-ul"><li>Traverse in both directions</li><li>Delete given node in O(1)</li><li>Insert before given node in O(1)</li></ul></div>
         <div className="ll-card"><h4>Disadvantages</h4><ul className="ll-ul"><li>Extra memory (prev pointer)</li><li>More complex insert/delete code</li><li>Must update both prev & next</li></ul></div>
@@ -661,7 +647,6 @@ function SecDoubly() {
   );
 }
 
-// ── Chapter 7: Circular ──
 function CircularSVG({ nodes, highlight }) {
   const n = nodes.length;
   if (!n) return <text x="280" y="100" textAnchor="middle" fontSize="14" fill="#888">Empty Circular List</text>;
@@ -760,14 +745,13 @@ function SecCircular() {
       <div className="ll-h3">Traversal — Must Use a Do-While</div>
       <div className="ll-code">{`void traverse(Node *last) {
   if (last == NULL) return;
-  Node *curr = last->next;       // start at head
+  Node *curr = last->next;       
   do {
     printf("%d ", curr->data);
     curr = curr->next;
-  } while (curr != last->next);  // stop when back at head
+  } while (curr != last->next);  
 }
-// MUST use do-while to visit all nodes including last`}</div>
-
+`}</div>
       <div className="ll-h3">Real-World Applications</div>
       <div className="ll-2col">
         <div className="ll-card"><h4>OS Round-Robin Scheduling</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>CPU gives each process a time slice. After the last process, scheduler wraps back to the first.</p></div>
@@ -779,7 +763,6 @@ function SecCircular() {
   );
 }
 
-// ── Chapter 8: Quiz ──
 const QUESTIONS = [
   { q:"What is the time complexity of inserting at the beginning of a singly linked list?", opts:["O(n)","O(1)","O(log n)","O(n²)"], ans:1 },
   { q:"Which pointer must NEVER be moved during traversal?", opts:["curr","temp","HEAD","prev"], ans:2 },

@@ -98,7 +98,6 @@ pre.code { background: var(--code-bg); border-radius: 10px; padding: 16px 18px; 
 @media (max-width:600px) { .grid2,.grid3{grid-template-columns:1fr;} }
 `;
 
-// ── Section 1: 1D Arrays ──
 function Sec1Arrays() {
   const [arrInput, setArrInput] = useState("10,20,30,40,50");
   const [hiIdx, setHiIdx] = useState(2);
@@ -142,43 +141,35 @@ function Sec1Arrays() {
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">Array declaration, creation, initialization</span>
         </div>
-        <pre className="code">{`// ===== 3 ways to declare + create =====
-// Method 1: declare then allocate (default values: 0, false, null)
-int[] arr1 = new int[5];        // [0, 0, 0, 0, 0]
+        <pre className="code">{`
 
-// Method 2: declare, allocate, assign separately
+int[] arr1 = new int[5];        
+
 int[] arr2;
 arr2 = new int[5];
-arr2[0] = 10;  arr2[1] = 20;  // assign element by element
+arr2[0] = 10;  arr2[1] = 20;  
 
-// Method 3: array literal (size is implicit)
 int[] arr3 = {10, 20, 30, 40, 50};
 
-// ===== Key properties =====
-System.out.println(arr3.length);       // 5 (field, NOT method — no ()!)
-System.out.println(arr3[0]);           // 10  ← first element
-System.out.println(arr3[arr3.length-1]); // 50  ← last element
+System.out.println(arr3.length);       
+System.out.println(arr3[0]);           
+System.out.println(arr3[arr3.length-1]); 
 
-// ===== Traversal methods =====
-// 1. for loop (index access — can modify)
 for (int i = 0; i < arr3.length; i++)
-  System.out.print(arr3[i] + " ");   // 10 20 30 40 50
+  System.out.print(arr3[i] + " ");   
 
-// 2. for-each (cleaner, no modification)
 for (int val : arr3)
   System.out.print(val + " ");
 
-// 3. Arrays utility class
-System.out.println(java.util.Arrays.toString(arr3)); // [10, 20, 30, 40, 50]
+System.out.println(java.util.Arrays.toString(arr3)); 
 
-// ===== Reference trap! =====
 int[] a = {1, 2, 3};
-int[] b = a;           // b points to SAME array!
+int[] b = a;           
 b[0] = 99;
-System.out.println(a[0]); // 99 ← a also changed!
+System.out.println(a[0]); 
 
-// Correct copy: Arrays.copyOf
-int[] c = java.util.Arrays.copyOf(a, a.length); // true copy`}</pre>
+int[] c = java.util.Arrays.copyOf(a, a.length); 
+`}</pre>
       </div>
 
       <div className="fw">
@@ -211,26 +202,24 @@ int[] c = java.util.Arrays.copyOf(a, a.length); // true copy`}</pre>
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">Linear search, max/min, sum, reverse</span>
         </div>
-        <pre className="code">{`// Linear search — O(n)
+        <pre className="code">{`
 static int linearSearch(int[] arr, int key) {
   for (int i = 0; i < arr.length; i++)
-    if (arr[i] == key) return i;     // return index
-  return -1;                          // not found
+    if (arr[i] == key) return i;     
+  return -1;                          
 }
 
-// Max element — O(n)
 static int findMax(int[] arr) {
-  int max = arr[0];                   // start with first
+  int max = arr[0];                   
   for (int i = 1; i < arr.length; i++)
     if (arr[i] > max) max = arr[i];
   return max;
 }
 
-// Reverse array in-place — O(n)
 static void reverse(int[] arr) {
   int left = 0, right = arr.length - 1;
   while (left < right) {
-    int temp = arr[left];             // swap
+    int temp = arr[left];             
     arr[left++] = arr[right];
     arr[right--] = temp;
   }
@@ -240,7 +229,6 @@ static void reverse(int[] arr) {
   );
 }
 
-// ── Section 2: Memory ──
 function Sec2Memory() {
   const [baseAddr, setBaseAddr] = useState(1000);
   const [dtype, setDtype] = useState(4);
@@ -310,24 +298,10 @@ function Sec2Memory() {
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">Address formula — row-major & column-major</span>
         </div>
-        <pre className="code">{`// 1D Array address formula:
-// addr(A[i]) = base + i × sizeof(type)
-// Example: int[] at base=1000, sizeof(int)=4
-// addr(A[3]) = 1000 + 3×4 = 1012
+        <pre className="code">{`
 
-// 2D Array (m rows × n cols) — Row-Major (Java uses this!):
-// addr(A[i][j]) = base + (i×n + j) × sizeof(type)
-// Row-major: entire row 0 stored first, then row 1, etc.
-
-// Column-Major (Fortran, MATLAB):
-// addr(A[i][j]) = base + (j×m + i) × sizeof(type)
-
-// Java proof — 2D array is array of arrays (each row separate!)
 int[][] mat = {{1,2,3},{4,5,6},{7,8,9}};
-// mat itself → reference to array of row-references
-// mat[0]    → reference to {1,2,3}  (on heap)
-// mat[1]    → reference to {4,5,6}  (on heap, may be elsewhere!)
-// This is why jagged arrays work in Java but not C!`}</pre>
+`}</pre>
       </div>
 
       <div className="alert a-green"><strong>Why O(1) random access?</strong> The formula <code>base + i × size</code> requires exactly 1 multiplication and 1 addition — two operations regardless of array size. In contrast, a linked list must traverse i nodes: O(i) = O(n).</div>
@@ -348,7 +322,6 @@ int[][] mat = {{1,2,3},{4,5,6},{7,8,9}};
   );
 }
 
-// ── Section 3: Insert & Delete ──
 function Sec3Ops() {
   const CAPACITY = 10;
   const [opsArr, setOpsArr] = useState([10,20,30,40,50,0,0,0,0,0]);
@@ -436,38 +409,29 @@ function Sec3Ops() {
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">Insert & delete — full Java implementation</span>
         </div>
-        <pre className="code">{`// Working with a fixed-capacity array + logical size counter
-int[] arr = new int[10];           // physical capacity = 10
-int size = 5;                      // logical size = 5
-// arr = [10, 20, 30, 40, 50, _, _, _, _, _]
-//         0   1   2   3   4
+        <pre className="code">{`
+int[] arr = new int[10];           
+int size = 5;                      
 
-// ===== INSERT at position pos =====
 static int insert(int[] arr, int size, int pos, int val) {
   if (size >= arr.length) { System.out.println("Array full!"); return size; }
   if (pos < 0 || pos > size) { System.out.println("Invalid position!"); return size; }
-  // Shift elements RIGHT from end to pos (MUST go right to left!)
+  
   for (int i = size - 1; i >= pos; i--)
     arr[i + 1] = arr[i];
-  arr[pos] = val;                   // place new element
-  return size + 1;                  // new logical size
+  arr[pos] = val;                   
+  return size + 1;                  
 }
-// After insert(arr, 5, 2, 99):
-// [10, 20, 99, 30, 40, 50, _, _, _, _]
-//          ↑ inserted here, 30,40,50 shifted right
 
-// ===== DELETE at position pos =====
 static int delete(int[] arr, int size, int pos) {
   if (pos < 0 || pos >= size) { System.out.println("Invalid position!"); return size; }
-  // Shift elements LEFT from pos+1 onwards (left to right!)
+  
   for (int i = pos; i < size - 1; i++)
     arr[i] = arr[i + 1];
-  arr[size - 1] = 0;              // optional: clear last slot
-  return size - 1;                // new logical size
+  arr[size - 1] = 0;              
+  return size - 1;                
 }
-// delete(arr, 6, 2) removes 99:
-// [10, 20, 30, 40, 50, _, _, _, _, _]
-//              ← 30,40,50 shifted left`}</pre>
+`}</pre>
       </div>
 
       <div className="alert a-amber"><strong>Critical direction rule:</strong> For insertion, the shifting loop must go from RIGHT to LEFT (i = size-1 down to pos). If you go left to right, you'll overwrite elements before moving them — a classic bug!</div>
@@ -487,7 +451,6 @@ static int delete(int[] arr, int size, int pos) {
   );
 }
 
-// ── Section 4: Multi-Dim ──
 const matA = [[1,2,3],[4,5,6],[7,8,9]];
 const matB = [[9,8,7],[6,5,4],[3,2,1]];
 
@@ -586,29 +549,21 @@ function Sec4Multi() {
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">2D array creation, traversal, jagged arrays</span>
         </div>
-        <pre className="code">{`// 2D array declaration and creation
-int[][] mat = new int[3][4];         // 3 rows, 4 cols
+        <pre className="code">{`
+int[][] mat = new int[3][4];         
 int[][] mat2 = {{1,2,3},{4,5,6},{7,8,9}};
 
-// Key: mat is array of arrays
-// mat[0] → {1,2,3}  (a 1D array, the first row)
-// mat.length    = 3  (rows)
-// mat[0].length = 3  (cols of row 0)
-
-// Traversal: row by row (row-major order — cache friendly)
-for (int i = 0; i < mat2.length; i++) {        // rows
-  for (int j = 0; j < mat2[i].length; j++)     // cols
+for (int i = 0; i < mat2.length; i++) {        
+  for (int j = 0; j < mat2[i].length; j++)     
     System.out.printf("%3d", mat2[i][j]);
   System.out.println();
 }
 
-// Jagged arrays — different row sizes (only in Java!)
 int[][] jagged = new int[3][];
-jagged[0] = new int[1];               // row 0 has 1 col
-jagged[1] = new int[3];               // row 1 has 3 cols
-jagged[2] = new int[2];               // row 2 has 2 cols
+jagged[0] = new int[1];               
+jagged[1] = new int[3];               
+jagged[2] = new int[2];               
 
-// Matrix transpose — swap [i][j] with [j][i]
 static int[][] transpose(int[][] A) {
   int r = A.length, c = A[0].length;
   int[][] T = new int[c][r];
@@ -618,8 +573,6 @@ static int[][] transpose(int[][] A) {
   return T;
 }
 
-// Matrix multiplication — O(n³)
-// C[i][j] = sum of A[i][k] * B[k][j] for all k
 static int[][] multiply(int[][] A, int[][] B) {
   int n = A.length;
   int[][] C = new int[n][n];
@@ -640,7 +593,6 @@ static int[][] multiply(int[][] A, int[][] B) {
   );
 }
 
-// ── Section 5: Recursion ──
 function Sec5Recursion() {
   const [recType, setRecType] = useState("fact");
   const [recN, setRecN] = useState(5);
@@ -778,60 +730,44 @@ function Sec5Recursion() {
           <div className="dot" style={{background:"#28c840"}}></div>
           <span className="ch-lbl">Core recursive functions — deeply explained</span>
         </div>
-        <pre className="code">{`// ===== Factorial =====
-// factorial(5) = 5 × 4 × 3 × 2 × 1 = 120
-// Recurrence: fact(n) = n × fact(n-1), fact(0)=1
+        <pre className="code">{`
+
 static long factorial(int n) {
-  if (n == 0) return 1;           // base case
-  return n * factorial(n - 1);    // recursive case
+  if (n == 0) return 1;           
+  return n * factorial(n - 1);    
 }
-// Call stack for factorial(4):
-// fact(4) → 4 * fact(3)
-//   fact(3) → 3 * fact(2)
-//     fact(2) → 2 * fact(1)
-//       fact(1) → 1 * fact(0)
-//         fact(0) → 1  ← BASE CASE HIT
-//       fact(1) → 1*1 = 1  (return up)
-//     fact(2) → 2*1 = 2
-//   fact(3) → 3*2 = 6
-// fact(4) → 4*6 = 24
 
-// ===== Fibonacci =====
-// WARNING: naive recursion is O(2^n) — exponential!
 static int fib(int n) {
-  if (n <= 1) return n;             // base cases: fib(0)=0, fib(1)=1
-  return fib(n-1) + fib(n-2);      // TWO recursive calls
+  if (n <= 1) return n;             
+  return fib(n-1) + fib(n-2);      
 }
 
-// Memoized Fibonacci — O(n) with HashMap cache
 static Map<Integer,Long> memo = new HashMap<>();
 static long fibMemo(int n) {
   if (n <= 1) return n;
-  if (memo.containsKey(n)) return memo.get(n); // cache hit
+  if (memo.containsKey(n)) return memo.get(n); 
   long result = fibMemo(n-1) + fibMemo(n-2);
   memo.put(n, result);
   return result;
 }
 
-// ===== Binary Search (recursive) — O(log n) =====
 static int binarySearch(int[] arr, int lo, int hi, int key) {
-  if (lo > hi) return -1;           // base case: not found
-  int mid = lo + (hi - lo) / 2;    // avoid integer overflow
-  if (arr[mid] == key) return mid;  // base case: found!
+  if (lo > hi) return -1;           
+  int mid = lo + (hi - lo) / 2;    
+  if (arr[mid] == key) return mid;  
   if (key < arr[mid])
-    return binarySearch(arr, lo, mid-1, key); // search left
+    return binarySearch(arr, lo, mid-1, key); 
   else
-    return binarySearch(arr, mid+1, hi, key); // search right
+    return binarySearch(arr, mid+1, hi, key); 
 }
 
-// ===== Tower of Hanoi — classic recursion =====
 static void hanoi(int n, char src, char dest, char aux) {
   if (n == 1) { System.out.println("Move disk 1: " + src + " → " + dest); return; }
-  hanoi(n-1, src, aux, dest);     // move top n-1 to aux
+  hanoi(n-1, src, aux, dest);     
   System.out.println("Move disk "+n+": "+src+" → "+dest);
-  hanoi(n-1, aux, dest, src);     // move n-1 from aux to dest
+  hanoi(n-1, aux, dest, src);     
 }
-// hanoi(3,'A','C','B') requires 2^n - 1 = 7 moves`}</pre>
+`}</pre>
       </div>
 
       <div className="fw">
@@ -868,9 +804,6 @@ static void hanoi(int n, char src, char dest, char aux) {
   );
 }
 
-// ── Main Export ──
-
-// ── Main Export ──
 const CHAPTERS = [
   { id:"arr",   label:"1D Arrays",       color:"1" },
   { id:"mem",   label:"Memory & Address", color:"2" },
@@ -896,7 +829,7 @@ export default function ArraysRecursion({ onPrev, onNext, _startAt, onChapterCha
       <style>{styles}</style>
       <div className="wrap">
 
-        {/* Chapter tabs */}
+        {}
         <div className="nav">
           {CHAPTERS.map((ch, i) => (
             <button key={ch.id} className={`nb${active===ch.id?" on":""}`} data-c={ch.color}
@@ -906,14 +839,14 @@ export default function ArraysRecursion({ onPrev, onNext, _startAt, onChapterCha
           ))}
         </div>
 
-        {/* Active section */}
+        {}
         {active === "arr"   && <Sec1Arrays />}
         {active === "mem"   && <Sec2Memory />}
         {active === "ops"   && <Sec3Ops />}
         {active === "multi" && <Sec4Multi />}
         {active === "rec"   && <Sec5Recursion />}
 
-        {/* Prev / Next bar */}
+        {}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
           marginTop:48,paddingTop:24,borderTop:"0.5px solid var(--border)"}}>
 
@@ -931,7 +864,7 @@ export default function ArraysRecursion({ onPrev, onNext, _startAt, onChapterCha
             </button>
           ) : <div />}
 
-          {/* Dot indicators */}
+          {}
           <div style={{display:"flex",gap:6}}>
             {CHAPTERS.map((ch, i) => (
               <div key={ch.id} onClick={() => switchTab(ch.id)}

@@ -6,7 +6,6 @@ import TimeEstimator from "./TimeEstimator";
 import ROIAnalyzer from "./ROIAnalyzer";
 import SkillChart from "./SkillChart";
 
-// ── THEME ─────────────────────────────────────────────────────────────────────
 const C = {
   bg: "#080c1e", surface: "#0d1225", card: "#111827",
   cardAlt: "#141b3a", border: "rgba(255,255,255,0.07)",
@@ -22,7 +21,6 @@ const TABS = [
   { id: "roi",        label: "Skill ROI",       icon: "📈" }
 ];
 
-// ── READINESS RING ────────────────────────────────────────────────────────────
 function ReadinessRing({ score, color, size = 120, label }) {
   const r = size * 0.38, circ = 2 * Math.PI * r;
   const dash = (score / 100) * circ;
@@ -42,7 +40,6 @@ function ReadinessRing({ score, color, size = 120, label }) {
   );
 }
 
-// ── ROLE CARD ─────────────────────────────────────────────────────────────────
 function RoleCard({ role, score, isSelected, onClick }) {
   const [hov, setHov] = useState(false);
   const color = role.color;
@@ -56,7 +53,6 @@ function RoleCard({ role, score, isSelected, onClick }) {
   );
 }
 
-// ── STAT CHIP ─────────────────────────────────────────────────────────────────
 function StatChip({ icon, label, value, color }) {
   return (
     <div style={{ background: C.cardAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -69,7 +65,6 @@ function StatChip({ icon, label, value, color }) {
   );
 }
 
-// ── OVERVIEW TAB ──────────────────────────────────────────────────────────────
 function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
   const role = roles.find(r => r.key === selectedRole);
   if (!role) return null;
@@ -92,9 +87,9 @@ function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      {/* Left: best match + role selector */}
+      {}
       <div>
-        {/* Best match banner */}
+        {}
         <div style={{ background: `linear-gradient(135deg,${bestRole.color}15,${C.cardAlt})`, border: `1px solid ${bestRole.color}40`, borderRadius: 16, padding: "20px", marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Your Best Match</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -108,14 +103,14 @@ function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
           </div>
         </div>
 
-        {/* Role grid */}
+        {}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 20 }}>
           {roles.map(r => (
             <RoleCard key={r.key} role={r} score={calcReadiness(skills, r.requiredSkills)} isSelected={selectedRole === r.key} onClick={() => onRoleChange(r.key)} />
           ))}
         </div>
 
-        {/* Market stats */}
+        {}
         {role && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <StatChip icon="💰" label="Avg Salary" value={role.avgSalary} color={C.success} />
@@ -126,14 +121,14 @@ function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
         )}
       </div>
 
-      {/* Right: skill chart + live sliders */}
+      {}
       <div>
         <div style={{ background: C.cardAlt, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px", marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Skill Analysis — {role.label}</div>
           <SkillChart skills={editSkills} requiredSkills={role.requiredSkills} onSkillChange={handleSkillChange} showSliders={true} />
         </div>
 
-        {/* Top gaps */}
+        {}
         {gaps.length > 0 && (
           <div style={{ background: C.cardAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px" }}>
             <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Priority Gaps</div>
@@ -150,7 +145,6 @@ function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
   );
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 function calcReadiness(skills, requiredSkills) {
   if (!requiredSkills) return 0;
   let total = 0, count = 0;
@@ -170,7 +164,6 @@ function getBestRole(skills, roles) {
   return best ? { ...best, score: bestScore } : { label: "—", color: C.accent, icon: "🎯", score: 0, avgSalary: "—", growthRate: "—" };
 }
 
-// ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function CareerMatch({ user, onNav }) {
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState("frontend");
@@ -183,7 +176,7 @@ export default function CareerMatch({ user, onNav }) {
   useEffect(() => {
     getRoles().then(d => {
       setRoles(d.roles);
-      // Auto-select best role
+      
       if (d.roles.length > 0 && hasSkills) {
         const best = d.roles.reduce((b, r) => {
           const s = calcReadiness(skills, r.requiredSkills);
@@ -223,7 +216,7 @@ export default function CareerMatch({ user, onNav }) {
         * { box-sizing: border-box; }
       `}</style>
 
-      {/* Header */}
+      {}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
@@ -232,7 +225,7 @@ export default function CareerMatch({ user, onNav }) {
             </h1>
             <p style={{ color: "#475569", fontSize: 14 }}>Simulate real jobs · Predict rejection · Plan your path</p>
           </div>
-          {/* Role quick-switch */}
+          {}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {roles.map(r => (
               <button key={r.key} onClick={() => setSelectedRole(r.key)}
@@ -244,7 +237,7 @@ export default function CareerMatch({ user, onNav }) {
         </div>
       </div>
 
-      {/* Tab bar */}
+      {}
       <div style={{ display: "flex", gap: 4, marginBottom: 24, background: C.card, borderRadius: 14, padding: 6, border: `1px solid ${C.border}`, overflowX: "auto" }}>
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -254,7 +247,7 @@ export default function CareerMatch({ user, onNav }) {
         ))}
       </div>
 
-      {/* Tab content */}
+      {}
       <div style={{ animation: "tabIn 0.3s ease" }} key={activeTab}>
         {activeTab === "overview" && (
           <OverviewTab user={user} roles={roles} selectedRole={selectedRole} onRoleChange={setSelectedRole} />
@@ -269,7 +262,7 @@ export default function CareerMatch({ user, onNav }) {
                   Step into a real job scenario. Make decisions under pressure. See how your choices affect your career readiness score.
                 </p>
               </div>
-              {/* Role selector for simulator */}
+              {}
               <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
                 {roles.filter(r => ["frontend","backend","fullstack","dataAnalyst"].includes(r.key)).map(r => (
                   <button key={r.key} onClick={() => setSelectedRole(r.key)}
@@ -336,7 +329,6 @@ export default function CareerMatch({ user, onNav }) {
   );
 }
 
-// ── ROADMAP ───────────────────────────────────────────────────────────────────
 function Roadmap({ skills, requiredSkills }) {
   const RESOURCES = {
     JavaScript: ["javascript.info", "Eloquent JavaScript", "30 Days of JS"],
