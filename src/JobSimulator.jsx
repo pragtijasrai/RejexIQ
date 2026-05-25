@@ -155,8 +155,8 @@ export default function JobSimulator({ user, selectedRole, onClose }) {
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       `}</style>
 
-      {!submitted ? (
-        <>
+      <div style={{ display: submitted ? "grid" : "block", gridTemplateColumns: submitted ? "1fr 1fr" : "1fr", gap: 32, alignItems: "start" }}>
+        <div style={{ maxWidth: submitted ? "none" : 720 }}>
           {}
           <div style={{ background: `linear-gradient(135deg,${C.card},${C.surface})`, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px", marginBottom: 24 }}>
             <div style={{ fontSize: 11, color: C.accent, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Job Simulation</div>
@@ -185,17 +185,23 @@ export default function JobSimulator({ user, selectedRole, onClose }) {
             <TaskCard key={task.id} task={task} index={i}
               selected={answers[task.id]}
               onSelect={(taskId, choiceId) => setAnswers(prev => ({ ...prev, [taskId]: choiceId }))}
-              revealed={false} result={null} />
+              revealed={submitted} result={result?.taskResults?.find(r => r.taskId === task.id) || null} />
           ))}
 
-          <button onClick={handleSubmit} disabled={!allAnswered || submitting}
-            style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: allAnswered ? `linear-gradient(135deg,${C.accent},${C.purple})` : C.border, color: allAnswered ? "#0a0e27" : C.muted, fontWeight: 800, fontSize: 15, cursor: allAnswered ? "pointer" : "not-allowed", fontFamily: "'Space Grotesk',sans-serif", transition: "all 0.2s", marginTop: 8 }}>
-            {submitting ? "Evaluating..." : allAnswered ? "Submit & See Results →" : `Answer all ${sim.tasks.length} tasks to continue`}
-          </button>
-        </>
-      ) : (
-        <ResultScreen result={result} roleLabel={sim.title} onRetry={() => { setAnswers({}); setSubmitted(false); setResult(null); }} onClose={onClose} />
-      )}
+          {!submitted && (
+            <button onClick={handleSubmit} disabled={!allAnswered || submitting}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: allAnswered ? `linear-gradient(135deg,${C.accent},${C.purple})` : C.border, color: allAnswered ? "#0a0e27" : C.muted, fontWeight: 800, fontSize: 15, cursor: allAnswered ? "pointer" : "not-allowed", fontFamily: "'Space Grotesk',sans-serif", transition: "all 0.2s", marginTop: 8 }}>
+              {submitting ? "Evaluating..." : allAnswered ? "Submit & See Results →" : `Answer all ${sim.tasks.length} tasks to continue`}
+            </button>
+          )}
+        </div>
+
+        {submitted && (
+          <div style={{ position: "sticky", top: 24, padding: "24px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+            <ResultScreen result={result} roleLabel={sim.title} onRetry={() => { setAnswers({}); setSubmitted(false); setResult(null); }} onClose={onClose} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

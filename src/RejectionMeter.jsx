@@ -7,6 +7,16 @@ const C = {
   warning: "#f59e0b", text: "#f0f4ff", muted: "#64748b", surface: "#111827"
 };
 
+function parseProjectCount(val) {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    const lines = val.split('\n').filter(p => p.trim().length > 0);
+    return lines.length > 0 ? lines.length : 1;
+  }
+  if (Array.isArray(val)) return val.length;
+  return 1;
+}
+
 // Animated arc meter
 function ArcMeter({ value, size = 180 }) {
   const r = size * 0.38;
@@ -67,7 +77,7 @@ function FactorBar({ label, impact, type }) {
 export default function RejectionMeter({ user, selectedRole }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState(user?.projects || 1);
+  const [projects, setProjects] = useState(() => parseProjectCount(user?.projects));
   const prevRole = useRef(null);
 
   useEffect(() => {

@@ -68,7 +68,7 @@ export default function ROIAnalyzer({ user, selectedRole }) {
         @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
       `}</style>
 
-      {}
+      {/* Top recommendation */}
       {top && (
         <div style={{ background: `linear-gradient(135deg,${C.success}12,${C.accent}08)`, border: `1px solid ${C.success}40`, borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.success, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>🎯 Best ROI Recommendation</div>
@@ -81,7 +81,7 @@ export default function ROIAnalyzer({ user, selectedRole }) {
         </div>
       )}
 
-      {}
+      {/* All skills ranked */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px" }}>
         <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Skill ROI Ranking (per +20 pts)</div>
         {data.map((item, i) => (

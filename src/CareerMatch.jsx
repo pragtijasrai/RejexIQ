@@ -147,19 +147,25 @@ function OverviewTab({ user, roles, selectedRole, onRoleChange }) {
 
 function calcReadiness(skills, requiredSkills) {
   if (!requiredSkills) return 0;
-  let total = 0, count = 0;
-  for (const [skill, req] of Object.entries(requiredSkills)) {
-    total += Math.min(100, ((skills[skill] || 0) / req) * 100);
-    count++;
+  let totalUser = 0, totalReq = 0;
+  for (const [skill, required] of Object.entries(requiredSkills)) {
+    const user = skills[skill] || 0;
+    totalUser += Math.min(user, required);
+    totalReq += required;
   }
-  return count > 0 ? Math.round(total / count) : 0;
+  return totalReq === 0 ? 0 : Math.round((totalUser / totalReq) * 100);
 }
 
 function getBestRole(skills, roles) {
-  let best = null, bestScore = 0;
+  let best = null, bestScore = -1, bestReq = 0;
   for (const r of roles) {
-    const s = calcReadiness(skills, r.requiredSkills);
-    if (s > bestScore) { best = r; bestScore = s; }
+    const score = calcReadiness(skills, r.requiredSkills);
+    const req = Object.values(r.requiredSkills).reduce((a, b) => a + b, 0);
+    if (score > bestScore || (score === bestScore && req > bestReq)) {
+      best = r;
+      bestScore = score;
+      bestReq = req;
+    }
   }
   return best ? { ...best, score: bestScore } : { label: "—", color: C.accent, icon: "🎯", score: 0, avgSalary: "—", growthRate: "—" };
 }
@@ -178,10 +184,7 @@ export default function CareerMatch({ user, onNav }) {
       setRoles(d.roles);
       
       if (d.roles.length > 0 && hasSkills) {
-        const best = d.roles.reduce((b, r) => {
-          const s = calcReadiness(skills, r.requiredSkills);
-          return s > b.score ? { key: r.key, score: s } : b;
-        }, { key: "frontend", score: 0 });
+        const best = getBestRole(skills, d.roles);
         setSelectedRole(best.key);
       }
     }).catch(console.error).finally(() => setLoading(false));
@@ -254,7 +257,7 @@ export default function CareerMatch({ user, onNav }) {
         )}
 
         {activeTab === "simulator" && (
-          <div style={{ maxWidth: 720 }}>
+          <div>
             <div style={{ background: C.cardAlt, border: `1px solid ${C.border}`, borderRadius: 16, padding: "24px" }}>
               <div style={{ marginBottom: 20 }}>
                 <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>🎮 Job Reality Simulator</h3>

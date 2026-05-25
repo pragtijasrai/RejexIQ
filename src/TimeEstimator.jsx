@@ -7,6 +7,16 @@ const C = {
   warning: "#f59e0b", text: "#f0f4ff", muted: "#64748b"
 };
 
+function parseProjectCount(val) {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    const lines = val.split('\n').filter(p => p.trim().length > 0);
+    return lines.length > 0 ? lines.length : 1;
+  }
+  if (Array.isArray(val)) return val.length;
+  return 1;
+}
+
 function MonthsDisplay({ months }) {
   const color = months <= 2 ? C.success : months <= 5 ? C.warning : C.danger;
   return (
@@ -42,7 +52,7 @@ function ScenarioBar({ hours, months, isActive }) {
 
 export default function TimeEstimator({ user, selectedRole }) {
   const [hoursPerDay, setHoursPerDay] = useState(2);
-  const [projects, setProjects] = useState(user?.projects || 1);
+  const [projects, setProjects] = useState(() => parseProjectCount(user?.projects));
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 

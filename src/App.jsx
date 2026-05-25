@@ -27,40 +27,58 @@ import {
 } from "recharts";
 
 const ROLES = {
+  softwareEngineer: {
+    label: "Software Engineer",
+    icon: "💻",
+    color: "#e879f9",
+    skills: { JavaScript: 85, React: 70, Python: 80, CSS: 60, SystemDesign: 85, DataStructures: 85, ProblemSolving: 90, Communication: 80, Cloud: 75, Databases: 80, MachineLearning: 40, Testing: 75 }
+  },
   frontend: {
     label: "Frontend Developer",
     icon: "🎨",
     color: "#00e5ff",
-    skills: { JavaScript: 85, React: 80, CSS: 75, ProblemSolving: 70, Communication: 65, SystemDesign: 40, Python: 20, DataStructures: 55 }
+    skills: { JavaScript: 90, React: 90, CSS: 85, ProblemSolving: 70, Communication: 65, SystemDesign: 40, Python: 20, DataStructures: 55, Cloud: 30, Databases: 30, MachineLearning: 10, Testing: 70 }
   },
   backend: {
     label: "Backend Developer",
     icon: "⚙️",
     color: "#7c3aed",
-    skills: { JavaScript: 75, Python: 80, SystemDesign: 80, DataStructures: 75, ProblemSolving: 80, Communication: 60, React: 30, CSS: 25 }
+    skills: { JavaScript: 75, Python: 85, SystemDesign: 85, DataStructures: 80, ProblemSolving: 80, Communication: 60, React: 30, CSS: 25, Cloud: 75, Databases: 90, MachineLearning: 30, Testing: 70 }
   },
   fullstack: {
     label: "Full Stack Developer",
     icon: "🔥",
     color: "#f59e0b",
-    skills: { JavaScript: 85, React: 75, Python: 70, SystemDesign: 70, DataStructures: 70, ProblemSolving: 75, Communication: 65, CSS: 65 }
+    skills: { JavaScript: 85, React: 80, Python: 75, SystemDesign: 75, DataStructures: 70, ProblemSolving: 75, Communication: 65, CSS: 75, Cloud: 70, Databases: 80, MachineLearning: 25, Testing: 70 }
   },
   dataAnalyst: {
     label: "Data Analyst",
     icon: "📊",
     color: "#10b981",
-    skills: { Python: 85, DataStructures: 75, ProblemSolving: 80, Communication: 75, SystemDesign: 60, JavaScript: 40, React: 20, CSS: 15 }
+    skills: { Python: 85, DataStructures: 75, ProblemSolving: 80, Communication: 75, SystemDesign: 60, JavaScript: 40, React: 20, CSS: 15, Cloud: 40, Databases: 85, MachineLearning: 60, Testing: 30 }
   },
   devops: {
     label: "DevOps Engineer",
     icon: "🚀",
     color: "#ef4444",
-    skills: { SystemDesign: 90, ProblemSolving: 80, Python: 70, DataStructures: 65, Communication: 65, JavaScript: 50, React: 25, CSS: 20 }
+    skills: { SystemDesign: 90, ProblemSolving: 80, Python: 75, DataStructures: 65, Communication: 65, JavaScript: 50, React: 25, CSS: 20, Cloud: 95, Databases: 70, MachineLearning: 20, Testing: 60 }
+  },
+  mlEngineer: {
+    label: "AI/ML Engineer",
+    icon: "🧠",
+    color: "#f43f5e",
+    skills: { Python: 95, DataStructures: 85, ProblemSolving: 85, Communication: 65, SystemDesign: 75, JavaScript: 40, React: 20, CSS: 15, Cloud: 65, Databases: 70, MachineLearning: 95, Testing: 60 }
+  },
+  cloudArchitect: {
+    label: "Cloud Architect",
+    icon: "🌩️",
+    color: "#38bdf8",
+    skills: { SystemDesign: 95, ProblemSolving: 85, Python: 70, DataStructures: 65, Communication: 80, JavaScript: 40, React: 20, CSS: 15, Cloud: 100, Databases: 85, MachineLearning: 30, Testing: 50 }
   }
 };
 
-const SKILL_KEYS = ["JavaScript", "React", "Python", "CSS", "SystemDesign", "DataStructures", "ProblemSolving", "Communication"];
-const SKILL_ICONS = { JavaScript: "⚡", React: "⚛️", Python: "🐍", CSS: "🎨", SystemDesign: "🏗️", DataStructures: "🌳", ProblemSolving: "🧩", Communication: "💬" };
+const SKILL_KEYS = ["JavaScript", "React", "Python", "CSS", "SystemDesign", "DataStructures", "ProblemSolving", "Communication", "Cloud", "Databases", "MachineLearning", "Testing"];
+const SKILL_ICONS = { JavaScript: "⚡", React: "⚛️", Python: "🐍", CSS: "🎨", SystemDesign: "🏗️", DataStructures: "🌳", ProblemSolving: "🧩", Communication: "💬", Cloud: "☁️", Databases: "🗄️", MachineLearning: "🤖", Testing: "🧪" };
 
 const MARKET_DATA = [
   { skill: "JavaScript", demand: 92 }, { skill: "Python", demand: 88 },
@@ -78,7 +96,7 @@ const TREND_DATA = [
 
 const DEMO_USER = {
   name: "Demo User", email: "demo@rejexiq.com",
-  skills: { JavaScript: 72, React: 68, Python: 45, CSS: 80, SystemDesign: 35, DataStructures: 55, ProblemSolving: 70, Communication: 75 },
+  skills: { JavaScript: 72, React: 68, Python: 45, CSS: 80, SystemDesign: 35, DataStructures: 55, ProblemSolving: 70, Communication: 75, Cloud: 40, Databases: 60, MachineLearning: 25, Testing: 50 },
   assessmentDone: true
 };
 
@@ -93,20 +111,25 @@ const TOUR_STEPS = [
 function calcReadiness(userSkills, roleKey) {
   const role = ROLES[roleKey];
   if (!role) return 0;
-  let total = 0, count = 0;
+  let totalUser = 0, totalReq = 0;
   for (const [skill, required] of Object.entries(role.skills)) {
     const user = userSkills[skill] || 0;
-    total += Math.min(100, (user / required) * 100);
-    count++;
+    totalUser += Math.min(user, required);
+    totalReq += required;
   }
-  return Math.round(total / count);
+  return totalReq === 0 ? 0 : Math.round((totalUser / totalReq) * 100);
 }
 
 function getBestRole(userSkills) {
-  let best = null, bestScore = 0;
+  let best = null, bestScore = -1, bestReq = 0;
   for (const key of Object.keys(ROLES)) {
     const score = calcReadiness(userSkills, key);
-    if (score > bestScore) { best = key; bestScore = score; }
+    const req = Object.values(ROLES[key].skills).reduce((a, b) => a + b, 0);
+    if (score > bestScore || (score === bestScore && req > bestReq)) {
+      best = key;
+      bestScore = score;
+      bestReq = req;
+    }
   }
   return { key: best, score: bestScore };
 }
@@ -825,13 +848,13 @@ function Sidebar({ active, onNav, user, onLogout, collapsed, setCollapsed, mobil
   const navItems = [
     { key: "dashboard", icon: "https://img.icons8.com/fluency/48/dashboard.png", label: "Dashboard" },
     { key: "assessment", icon: "https://img.icons8.com/fluency/48/test.png", label: "Skill Assessment" },
-    { key: "dsa", icon: "https://img.icons8.com/fluency/48/opened-folder.png", label: "DSA Tutorial" },
-    { key: "story", icon: "https://img.icons8.com/fluency/48/controller.png", label: "Story Mode" },
     { key: "career", icon: "https://img.icons8.com/fluency/48/trophy.png", label: "Career Match" },
     { key: "market", icon: "https://img.icons8.com/fluency/48/line-chart.png", label: "Market Demand" },
     { key: "resume", icon: "https://img.icons8.com/fluency/48/resume.png", label: "Resume Builder" },
-    { key: "assistant", icon: "https://img.icons8.com/fluency/48/bot.png", label: "AI Assistant" },
+    { key: "dsa", icon: "https://img.icons8.com/fluency/48/opened-folder.png", label: "DSA Tutorial" },
+    { key: "story", icon: "https://img.icons8.com/fluency/48/controller.png", label: "Story Mode" },
     { key: "arena", icon: "https://img.icons8.com/fluency/48/domain.png", label: "Code Arena" },
+    { key: "assistant", icon: "https://img.icons8.com/fluency/48/bot.png", label: "AI Assistant" },
     { key: "leaderboard", icon: "https://img.icons8.com/fluency/48/star.png", label: "Leaderboard" },
     { key: "community", icon: "https://img.icons8.com/fluency/48/people-working-together.png", label: "Community" }
   ];
@@ -1680,6 +1703,52 @@ const MD_ROLES = {
       { type: "skill", icon: "🟢", text: "MLOps knowledge separates junior from senior ML engineers." },
       { type: "project", icon: "🛠️", text: "Build and deploy a fine-tuned model on HuggingFace with a demo." },
       { type: "resume", icon: "📄", text: "Include model accuracy metrics, dataset sizes, and inference speed." },
+    ]
+  },
+  "Full Stack Developer": {
+    icon: "🔥", color: "#f59e0b",
+    salary: { min: "₹10L", max: "₹45L", avg: "₹22L" },
+    trend: "increasing", trendPct: "+25%",
+    openings: "38,000+",
+    trendingSkills: ["JavaScript", "React.js", "Node.js", "SQL", "Docker", "AWS", "TypeScript", "Next.js", "System Design", "Testing"],
+    skills: [
+      { name: "Frontend (React)", demand: 90, userHas: false },
+      { name: "Backend (Node/Python)", demand: 88, userHas: false },
+      { name: "Databases (SQL/NoSQL)", demand: 85, userHas: false },
+      { name: "Cloud & Deployment", demand: 75, userHas: false },
+      { name: "System Design", demand: 70, userHas: false },
+      { name: "Testing (Jest/Cypress)", demand: 65, userHas: false },
+      { name: "TypeScript", demand: 80, userHas: false },
+      { name: "Version Control (Git)", demand: 85, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "Bridging the gap between React and Node.js with Next.js is highly valued." },
+      { type: "skill", icon: "🟢", text: "Full Stack roles demand strong Database optimization skills." },
+      { type: "project", icon: "🛠️", text: "Build an end-to-end e-commerce site with Stripe integration and auth." },
+      { type: "resume", icon: "📄", text: "Highlight end-to-end features you shipped and their business impact." },
+    ]
+  },
+  "Cloud Architect": {
+    icon: "🌩️", color: "#38bdf8",
+    salary: { min: "₹18L", max: "₹70L", avg: "₹35L" },
+    trend: "increasing", trendPct: "+35%",
+    openings: "12,000+",
+    trendingSkills: ["AWS", "System Design", "Kubernetes", "Terraform", "Security", "Microservices", "Docker", "Networking", "Linux", "CI/CD"],
+    skills: [
+      { name: "AWS / Azure / GCP", demand: 98, userHas: false },
+      { name: "System Design", demand: 95, userHas: false },
+      { name: "Microservices", demand: 90, userHas: false },
+      { name: "Security / Compliance", demand: 85, userHas: false },
+      { name: "Terraform / IaC", demand: 82, userHas: false },
+      { name: "Networking", demand: 80, userHas: false },
+      { name: "Kubernetes", demand: 85, userHas: false },
+      { name: "Cost Optimization", demand: 75, userHas: false },
+    ],
+    aiRecs: [
+      { type: "skill", icon: "⚡", text: "AWS Solutions Architect Professional certification is a major differentiator." },
+      { type: "skill", icon: "🟢", text: "System Design is the most critical interview round for this role." },
+      { type: "project", icon: "🛠️", text: "Design a fault-tolerant, multi-region architecture document." },
+      { type: "resume", icon: "📄", text: "Emphasize infrastructure cost reductions and system uptime improvements." },
     ]
   }
 };

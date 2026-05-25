@@ -1,28 +1,43 @@
 const ROLES = {
+  softwareEngineer: {
+    label: "Software Engineer", icon: "💻", color: "#e879f9",
+    requiredSkills: { JavaScript: 85, React: 70, Python: 80, CSS: 60, SystemDesign: 85, DataStructures: 85, ProblemSolving: 90, Communication: 80, Cloud: 75, Databases: 80, MachineLearning: 40, Testing: 75 },
+    avgSalary: "$100k–$160k", openings: 85000, growthRate: "+12%"
+  },
   frontend: {
     label: "Frontend Developer", icon: "🎨", color: "#00e5ff",
-    requiredSkills: { JavaScript: 80, React: 75, CSS: 70, Communication: 60, DSA: 40, SystemDesign: 35 },
+    requiredSkills: { JavaScript: 90, React: 90, CSS: 85, ProblemSolving: 70, Communication: 65, SystemDesign: 40, Python: 20, DataStructures: 55, Cloud: 30, Databases: 30, MachineLearning: 10, Testing: 70 },
     avgSalary: "$85k–$130k", openings: 42000, growthRate: "+8%"
   },
   backend: {
-    label: "Backend Developer", icon: "⚙️", color: "#c084fc",
-    requiredSkills: { JavaScript: 75, DSA: 70, SystemDesign: 75, Communication: 55, React: 25, CSS: 20 },
+    label: "Backend Developer", icon: "⚙️", color: "#7c3aed",
+    requiredSkills: { JavaScript: 75, Python: 85, SystemDesign: 85, DataStructures: 80, ProblemSolving: 80, Communication: 60, React: 30, CSS: 25, Cloud: 75, Databases: 90, MachineLearning: 30, Testing: 70 },
     avgSalary: "$90k–$145k", openings: 38000, growthRate: "+11%"
   },
   fullstack: {
     label: "Full Stack Developer", icon: "🔥", color: "#f59e0b",
-    requiredSkills: { JavaScript: 80, React: 70, DSA: 60, SystemDesign: 65, CSS: 60, Communication: 60 },
+    requiredSkills: { JavaScript: 85, React: 80, Python: 75, SystemDesign: 75, DataStructures: 70, ProblemSolving: 75, Communication: 65, CSS: 75, Cloud: 70, Databases: 80, MachineLearning: 25, Testing: 70 },
     avgSalary: "$95k–$155k", openings: 55000, growthRate: "+14%"
   },
   dataAnalyst: {
-    label: "Data Analyst", icon: "📊", color: "#34d399",
-    requiredSkills: { DSA: 75, Communication: 75, JavaScript: 45, SystemDesign: 55, React: 20, CSS: 15 },
+    label: "Data Analyst", icon: "📊", color: "#10b981",
+    requiredSkills: { Python: 85, DataStructures: 75, ProblemSolving: 80, Communication: 75, SystemDesign: 60, JavaScript: 40, React: 20, CSS: 15, Cloud: 40, Databases: 85, MachineLearning: 60, Testing: 30 },
     avgSalary: "$70k–$110k", openings: 29000, growthRate: "+18%"
   },
   devops: {
-    label: "DevOps Engineer", icon: "🚀", color: "#f87171",
-    requiredSkills: { SystemDesign: 85, DSA: 60, JavaScript: 50, Communication: 60, React: 20, CSS: 15 },
+    label: "DevOps Engineer", icon: "🚀", color: "#ef4444",
+    requiredSkills: { SystemDesign: 90, ProblemSolving: 80, Python: 75, DataStructures: 65, Communication: 65, JavaScript: 50, React: 25, CSS: 20, Cloud: 95, Databases: 70, MachineLearning: 20, Testing: 60 },
     avgSalary: "$100k–$160k", openings: 22000, growthRate: "+22%"
+  },
+  mlEngineer: {
+    label: "AI/ML Engineer", icon: "🧠", color: "#f43f5e",
+    requiredSkills: { Python: 95, DataStructures: 85, ProblemSolving: 85, Communication: 65, SystemDesign: 75, JavaScript: 40, React: 20, CSS: 15, Cloud: 65, Databases: 70, MachineLearning: 95, Testing: 60 },
+    avgSalary: "$120k–$180k", openings: 15000, growthRate: "+30%"
+  },
+  cloudArchitect: {
+    label: "Cloud Architect", icon: "🌩️", color: "#38bdf8",
+    requiredSkills: { SystemDesign: 95, ProblemSolving: 85, Python: 70, DataStructures: 65, Communication: 80, JavaScript: 40, React: 20, CSS: 15, Cloud: 100, Databases: 85, MachineLearning: 30, Testing: 50 },
+    avgSalary: "$130k–$200k", openings: 10000, growthRate: "+15%"
   }
 };
 
@@ -295,12 +310,14 @@ function calculateROI(skills, roleKey) {
 }
 
 function calcReadiness(skills, requiredSkills) {
-  let total = 0, count = 0;
+  if (!requiredSkills) return 0;
+  let totalUser = 0, totalReq = 0;
   for (const [skill, required] of Object.entries(requiredSkills)) {
-    total += Math.min(100, ((skills[skill] || 0) / required) * 100);
-    count++;
+    const user = skills[skill] || 0;
+    totalUser += Math.min(user, required);
+    totalReq += required;
   }
-  return count > 0 ? Math.round(total / count) : 0;
+  return totalReq === 0 ? 0 : Math.round((totalUser / totalReq) * 100);
 }
 
 function evaluateSimulation(roleKey, answers) {
