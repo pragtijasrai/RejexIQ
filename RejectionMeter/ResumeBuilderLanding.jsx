@@ -2239,11 +2239,11 @@ export default function ResumeBuilderLanding({ user = {} }) {
     return (
       <div>
         {/* Back button */}
-        {/* <div className="fixed top-4 left-4 z-50">
+        <div className="fixed top-4 left-4 z-50">
           <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={()=>setView("landing")}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-white/20 text-white/70 hover:text-white hover:border-white/40 transition-all backdrop-blur-xl"
             style={{background:"rgba(10,14,39,0.9)"}}>← Back to Home</motion.button>
-        </div> */}
+        </div>
         <OriginalBuilder user={user} initTemplate={selTpl} initAccent={selAccent} onBack={()=>setView("landing")} />
       </div>
     );
