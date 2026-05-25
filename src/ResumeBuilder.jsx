@@ -30,7 +30,8 @@ const RESUME_TIPS = [
   { icon:"⚡", tip:"List your most relevant skills first" },
 ];
 
-async function parseResumeFile(file) {
+// ─── RESUME PARSING UTILITIES ───────────────────────────────────
+export async function parseResumeFile(file) {
   try {
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       return await parsePDF(file);
@@ -91,8 +92,25 @@ function extractResumeData(text) {
   
   const uid = (pfx) => pfx + Math.random().toString(36).slice(2, 8);
 
-  
-  const rawLines = text.split(/\r?\n/).map(l => l.replace(/[ \t]+/g, ' ').trim());
+  // Normalise line endings, collapse runs of spaces but keep newlines.
+  // THEN: re-split any line that contains multiple bullet characters mid-line.
+  // PDFs often join "• Item1 • Item2 • Item3" onto one line — we split them back out.
+  const rawLines = (() => {
+    const initial = text.split(/\r?\n/).map(l => l.replace(/[ \t]+/g, ' ').trim()).filter(Boolean);
+    const result = [];
+    for (const line of initial) {
+      // If the line contains a bullet character NOT at the very start, split on it
+      // e.g. "• Cert A Link: X • Cert B Link: Y" → ["• Cert A Link: X", "• Cert B Link: Y"]
+      if (/[•▸►→✦✧]/.test(line.slice(1))) {
+        // Split on bullet chars that appear after the first character
+        const parts = line.split(/(?=[•▸►→✦✧])/).map(p => p.trim()).filter(Boolean);
+        result.push(...parts);
+      } else {
+        result.push(line);
+      }
+    }
+    return result;
+  })();
 
   
   const fullText = rawLines.join(' ');
@@ -121,7 +139,7 @@ function extractResumeData(text) {
     { key: 'experience',     re: /^(work\s*experience|professional\s*experience|experience|employment)\s*:?\s*$/i },
     { key: 'projects',       re: /^(projects?|personal\s*projects?|academic\s*projects?)\s*:?\s*$/i },
     { key: 'education',      re: /^(education|academic\s*background|qualifications?)\s*:?\s*$/i },
-    { key: 'certifications', re: /^(certifications?|certificates?|licenses?\s*&?\s*certifications?)\s*:?\s*$/i },
+    { key: 'certifications', re: /^(certifications?(\s*&\s*[\w\s]+)?|certificates?|licenses?\s*&?\s*certifications?|online\s*courses?)\s*:?\s*$/i },
     { key: 'achievements',   re: /^(achievements?|awards?|honors?)\s*:?\s*$/i },
     { key: 'links',          re: /^(links?|profiles?|social)\s*:?\s*$/i },
   ];
@@ -145,6 +163,29 @@ function extractResumeData(text) {
       currentSec = matched.key;
       if (!sections[currentSec]) sections[currentSec] = [];
       continue;
+    }
+
+    // Handle case where PDF joins section heading + first content on same line:
+    // e.g. "CERTIFICATIONS & ONLINE COURSES • Digital Transformation..."
+    // Try each pattern as a prefix match (not full-line match)
+    if (!matched) {
+      let foundInline = false;
+      for (const pat of SECTION_PATTERNS) {
+        // Build a prefix version of the pattern (remove $ anchor)
+        const prefixSrc = pat.re.source.replace(/\\\s\*\$/, '').replace(/\s\*\$$/, '');
+        const prefixRe = new RegExp('^(' + prefixSrc + ')\\s*:?\\s*', 'i');
+        const pm = line.match(prefixRe);
+        if (pm && pm[0].length < line.length && pm[0].length <= 60) {
+          // The heading is a prefix — switch section and push the remainder as content
+          currentSec = pat.key;
+          if (!sections[currentSec]) sections[currentSec] = [];
+          const remainder = line.slice(pm[0].length).trim();
+          if (remainder) sections[currentSec].push(remainder);
+          foundInline = true;
+          break;
+        }
+      }
+      if (foundInline) continue;
     }
 
     if (currentSec === null) {
@@ -549,107 +590,197 @@ function extractResumeData(text) {
     if (curEdu && (curEdu.degree || curEdu.institution)) education.push({ ...curEdu, id: uid('d') });
   }
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  // ── 9. CERTIFICATIONS ────────────────────────────────────────
+  // Supports TWO formats:
+  //
+  // FORMAT 1 — keyword-based (old):
+  //   Python Game Development – Advanced | CERTIFICATE
+  //   Infosys Springboard | May 2025
+  //
+  // FORMAT 2 — bullet-based (new):
+  //   • Digital Transformation in Financial Services – Coursera
+  //     Link: Coursera
+  //   • Introduction to Cybersecurity – Cisco Networking Academy Jan 2025 | Link: Cisco Networking Academy
+  //
+  // DETECTION STRATEGY:
+  //   - If the section contains ANY bullet lines → treat every bullet as a new cert entry
+  //   - Otherwise → use the keyword-based block parser
   const certifications = [];
   if (sections.certifications) {
     const certLines = sections.certifications;
-    let curCert = null;
-    let firstCertSeen = false;
 
-    const isBullet = l => /^[•\-\*▸►→]/.test(l);
+    const isBullet = l => /^[•\-\*▸►→✦✧]/.test(l);
+    const hasBullets = certLines.some(l => isBullet(l));
 
-    
-    
-    const CERT_KEYWORDS = /\b(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\b/i;
+    // ── Helper: parse a single cert text string into { name, issuer, year, url } ──
+    const parseCertText = (raw) => {
+      let text = raw.trim();
+      let name = '', issuer = '', year = '', url = '';
 
-    const isCertTitle = (l, hasActiveCert) => {
-      if (isBullet(l)) return false;
-      if (/^https?:\/\//.test(l.trim())) return false;
-      if (/^\d{4}$/.test(l.trim())) return false;
-      
-      if (CERT_KEYWORDS.test(l)) return true;
-      
-      if (!hasActiveCert) return true;
-      return false;
-    };
-
-    for (const line of certLines) {
-      if (isBullet(line)) {
-        if (curCert) curCert.description = (curCert.description ? curCert.description + ' ' : '') + line.replace(/^[•\-\*▸►→]\s*/, '');
-        continue;
+      // 1. Extract "Link: <label>" or "<Platform> Link: <label>" patterns
+      //    e.g. "Link: Coursera" / "Cisco Link: Cisco Networking Academy" / "thingQbator Link: thingQbator"
+      //    Match greedily up to end-of-string or next pipe
+      const linkLabelM = text.match(/\|\s*Link:\s*([^|]+?)(?:\s*\||$)/i)
+                      || text.match(/(?:[\w\s]+\s+)?Link:\s*([^|]+?)(?:\s*\||$)/i);
+      if (linkLabelM) {
+        const linkVal = linkLabelM[1].trim();
+        url = linkVal; // store platform name or URL
+        // Remove the entire "... Link: value" fragment from text
+        text = text.replace(linkLabelM[0], '').trim();
+        // Also strip any orphaned word that was the platform prefix before "Link:"
+        // e.g. "thingQbator Cohort 5.0 – thingQbator thingQbator" → remove trailing duplicate
+        text = text.replace(/\s+\S+$/, (tail) => {
+          // Only remove if the tail word matches the url value (duplicate platform name)
+          return tail.trim().toLowerCase() === linkVal.split(/\s+/)[0].toLowerCase() ? '' : tail;
+        }).trim();
       }
 
-      if (isCertTitle(line, firstCertSeen)) {
-        
-        if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
-        firstCertSeen = true;
+      // 2. Extract real https:// URLs
+      const urlM = text.match(/https?:\/\/[^\s|,]+/);
+      if (urlM) { url = url || urlM[0]; text = text.replace(urlM[0], '').trim(); }
 
-        let certName = line, issuer = '', year = '', certUrl = '';
+      // 3. Extract year / month-year  e.g. "Jan 2025" or "2025"
+      const yearM = text.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(?:20|19)\d{2}\b|\b(?:20|19)\d{2}\b/i);
+      if (yearM) { year = yearM[0].trim(); text = text.replace(yearM[0], '').trim(); }
 
-        
-        const urlM = line.match(/https?:\/\/[^\s]+/);
-        if (urlM) { certUrl = urlM[0]; certName = certName.replace(urlM[0], '').trim(); }
+      // 4. Strip trailing pipe/dash/comma
+      text = text.replace(/\s*[|–—,]+\s*$/, '').trim();
 
-        
-        const yearM = certName.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i);
-        if (yearM) { year = yearM[0].trim(); certName = certName.replace(yearM[0], '').trim(); }
+      // 5. Split title from issuer
+      const KNOWN_PLATFORMS = /^(coursera|udemy|linkedin\s*learning|google|microsoft|amazon|aws|cisco|infosys|springboard|nptel|edx|pluralsight|udacity|hackerrank|leetcode|codechef|thingqbator|nasscom|ibm|oracle|adobe|salesforce|meta|facebook|twitter|github|jetbrains|sololearn|freecodecamp|w3schools|simplilearn|great\s*learning|upgrad|internshala|swayam|alison|futurelearn|skillshare|datacamp|codecademy|treehouse|lynda|youtube|khan\s*academy|mit\s*opencourseware|stanford\s*online|harvard\s*online|duke\s*university|university|college|institute|academy|school|networking\s*academy)\b/i;
 
-        
-        
-        
-        const certKwMatch = certName.match(/^(.*?)\s*[|–—]\s*(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\s*$/i);
-        if (certKwMatch) {
-          
-          const beforeKw = certKwMatch[1].trim();
-          const kw = certKwMatch[2];
-          
-          const innerPipe = beforeKw.lastIndexOf('|');
-          if (innerPipe !== -1) {
-            certName = beforeKw.slice(0, innerPipe).trim() + ' | ' + kw;
-            issuer = beforeKw.slice(innerPipe + 1).trim();
+      // Try " – " or " — " split (em-dash style)
+      const dashSplit = text.match(/^(.+?)\s*[–—]\s*(.+)$/);
+      if (dashSplit) {
+        const before = dashSplit[1].trim();
+        const after  = dashSplit[2].trim();
+        const afterHasCertKw = /\b(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\b/i.test(after);
+        if (!afterHasCertKw && (KNOWN_PLATFORMS.test(after) || after.length < 60)) {
+          name   = before;
+          issuer = issuer || after;
+        } else {
+          name = text;
+        }
+      } else {
+        // Try " | " split
+        const pipeSplit = text.match(/^(.+?)\s*\|\s*(.+)$/);
+        if (pipeSplit) {
+          const before = pipeSplit[1].trim();
+          const after  = pipeSplit[2].trim();
+          // If after is ONLY a cert keyword → keep whole thing as name
+          if (/^(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma)$/i.test(after)) {
+            name = text;
           } else {
-            certName = beforeKw + ' | ' + kw;
+            name = before;
+            // Strip leading cert keyword from issuer if present
+            // e.g. "CERTIFICATE Department of..." → "Department of..."
+            issuer = issuer || after.replace(/^(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma)\s*/i, '').trim();
           }
         } else {
-          
-          certName = certName.replace(/[,\-–—|]+$/, '').trim();
-        }
-
-        curCert = { name: certName, issuer, year, url: certUrl, description: '' };
-      } else if (curCert) {
-        
-
-        
-        const urlM = line.match(/https?:\/\/[^\s]+/);
-        if (urlM && !curCert.url) { curCert.url = urlM[0]; continue; }
-
-        
-        const yearOnlyM = line.match(/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\s*$/i);
-        if (yearOnlyM) { if (!curCert.year) curCert.year = line.trim(); continue; }
-
-        
-        const yearM = line.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i);
-        if (yearM && !curCert.year) curCert.year = yearM[0].trim();
-
-        
-        const cleaned = line.replace(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i, '').replace(/[|,\s]+$/, '').trim();
-        if (!curCert.issuer && cleaned.length > 2) {
-          curCert.issuer = cleaned;
-        } else if (cleaned.length > 2 && cleaned !== curCert.issuer) {
-          
-          curCert.issuer = curCert.issuer ? curCert.issuer + ', ' + cleaned : cleaned;
+          name = text;
         }
       }
+
+      // 6. Clean cert-type keyword suffix from name
+      name = name.replace(/\s*[|–—,]\s*(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma)\s*$/i, '').trim();
+
+      // 7. Deduplicate issuer if it accidentally contains the same word twice
+      //    e.g. "thingQbator thingQbator" → "thingQbator"
+      if (issuer) {
+        const words = issuer.split(/\s+/);
+        const half = Math.ceil(words.length / 2);
+        if (words.length >= 2 && words.slice(0, half).join(' ').toLowerCase() === words.slice(half).join(' ').toLowerCase()) {
+          issuer = words.slice(0, half).join(' ');
+        }
+      }
+
+      return { name: name.trim(), issuer: issuer.trim(), year, url };
+    };
+
+    if (hasBullets) {
+      // ── FORMAT 2: bullet-based ──────────────────────────────
+      // Each bullet = one cert. Non-bullet lines after a bullet = detail lines for that cert.
+      let curCert = null;
+
+      for (const line of certLines) {
+        if (isBullet(line)) {
+          // Save previous
+          if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
+
+          const text = line.replace(/^[•\-\*▸►→✦✧]\s*/, '').trim();
+          const parsed = parseCertText(text);
+          curCert = { ...parsed, description: '' };
+        } else if (curCert) {
+          // Detail line after a bullet — could be "Link: ...", year, issuer, or URL
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          // "Link: <value>" pattern
+          const linkM = trimmed.match(/^(?:\w+\s+)?Link:\s*(.+)$/i);
+          if (linkM) {
+            curCert.url = curCert.url || linkM[1].trim();
+            continue;
+          }
+
+          // Pure URL
+          const urlM = trimmed.match(/^https?:\/\/[^\s]+$/);
+          if (urlM) { curCert.url = curCert.url || urlM[0]; continue; }
+
+          // Year-only line
+          const yearM = trimmed.match(/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(?:20|19)\d{2}$|^(?:20|19)\d{2}$/i);
+          if (yearM) { curCert.year = curCert.year || trimmed; continue; }
+
+          // Otherwise treat as issuer or additional detail
+          if (!curCert.issuer) curCert.issuer = trimmed;
+          else curCert.description = (curCert.description ? curCert.description + ' ' : '') + trimmed;
+        }
+        // Non-bullet lines before any bullet are ignored (section noise)
+      }
+      if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
+
+    } else {
+      // ── FORMAT 1: keyword/block-based ───────────────────────
+      let curCert = null;
+      let firstCertSeen = false;
+
+      const CERT_KEYWORDS = /\b(CERTIFICATE|Certification|Specialization|Course|Program|Badge|Diploma|License|Credential|Achievement|Award|Training)\b/i;
+
+      const isCertTitle = (l, hasActiveCert) => {
+        if (/^https?:\/\//i.test(l.trim())) return false;
+        if (/^\d{4}$/.test(l.trim())) return false;
+        if (CERT_KEYWORDS.test(l)) return true;
+        if (!hasActiveCert) return true;
+        return false;
+      };
+
+      for (const line of certLines) {
+        if (isCertTitle(line, firstCertSeen)) {
+          if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
+          firstCertSeen = true;
+          const parsed = parseCertText(line);
+          curCert = { ...parsed, description: '' };
+        } else if (curCert) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          const urlM = trimmed.match(/https?:\/\/[^\s]+/);
+          if (urlM && !curCert.url) { curCert.url = urlM[0]; continue; }
+
+          const yearOnlyM = trimmed.match(/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(?:20|19)\d{2}$/i);
+          if (yearOnlyM) { if (!curCert.year) curCert.year = trimmed; continue; }
+
+          const yearM = trimmed.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i);
+          if (yearM && !curCert.year) curCert.year = yearM[0].trim();
+
+          const cleaned = trimmed.replace(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*(20\d{2}|19\d{2})\b/i, '').replace(/[|,\s]+$/, '').trim();
+          if (!curCert.issuer && cleaned.length > 2) curCert.issuer = cleaned;
+          else if (cleaned.length > 2 && cleaned !== curCert.issuer) {
+            curCert.issuer = curCert.issuer ? curCert.issuer + ', ' + cleaned : cleaned;
+          }
+        }
+      }
+      if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
     }
-    if (curCert && curCert.name) certifications.push({ ...curCert, id: uid('c') });
   }
 
   
@@ -1854,17 +1985,7 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                 <div key={l} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0"><span className="text-base">{ok?"✅":"⭕"}</span><span className={"text-sm "+(ok?tp:tm)}>{l}</span></div>
               ))}
             </div>
-﻿            {}
-            <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
-              <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>⚡ Quick Actions</p>
-              <div className="space-y-2">
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>doAI("summary")} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>✨ AI Improve Summary</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={()=>{const add=sugg.filter(s=>!data.skills.includes(s));if(add.length)upd("skills",[...data.skills,...add]);}} className={"w-full text-left text-xs rounded-xl border transition-all leading-relaxed "+(dark?"border-white/10 text-white/50 hover:text-white/80 hover:border-white/20":"border-gray-200 text-gray-500 hover:text-gray-800")} style={{padding:"10px 18px"}}>⚡ Add Suggested Skills</motion.button>
-                <motion.button whileHover={{scale:1.02,x:2}} whileTap={{scale:0.98}} onClick={doPDF} className="w-full text-left text-xs rounded-xl font-semibold transition-all" style={{padding:"10px 18px",background:accent+"22",color:accent,border:"1px solid "+accent+"33"}}>📥 Export as PDF</motion.button>
-              </div>
-            </div>
-
-            {}
+﻿            {/* ── NEW: Resume Health Score ── */}
             <div className={"rounded-2xl border "+card} style={{padding:"20px 20px"}}>
               <p className={"text-xs font-bold "+tm+" uppercase tracking-widest mb-3"}>🏥 Resume Health</p>
               <div className="space-y-2">

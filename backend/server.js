@@ -283,6 +283,11 @@ const { initSocket } = require("./socketManager");
 const io = initSocket(server, { origin: CLIENT_URL, credentials: true });
 app.set("io", io);
 
+// ── SOCKET.IO ─────────────────────────────────────────────────────────────────
+const { initSocket } = require("./socket/index");
+const io = initSocket(server, CLIENT_URL);
+app.set("io", io); // make io accessible in routes if needed
+
 server.listen(PORT, () => {
   console.log(`🚀 RejexIQ Server running at http://localhost:${PORT}`);
   console.log(`📋 API at http://localhost:${PORT}/api`);
