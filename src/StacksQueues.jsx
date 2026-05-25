@@ -207,7 +207,7 @@ function SecStackIntro() {
   int peek() { return top.data; }
   boolean isEmpty() { return top == null; }
 }
-
+`}</div>
       <div className="sq-info"><p>KEY: Stack overflow occurs when you push onto a full array-based stack. Stack underflow occurs when you pop from an empty stack. Always check isEmpty() before pop/peek.</p></div>
     </div>
   );
@@ -285,7 +285,7 @@ function SecStackApps() {
   }
   return stack.isEmpty(); 
 }
-
+`}</div>
       <div className="sq-h3">Application 2 — Infix to Postfix Conversion</div>
       <p className="sq-p">Operators are pushed onto a stack. Higher-precedence operators are applied first.</p>
       <div className="sq-viz">
@@ -296,10 +296,10 @@ function SecStackApps() {
         <div className="sq-status" style={{marginTop:10,fontSize:14}}>{postfixResult}</div>
       </div>
       <div className="sq-code">{`
-
+`}</div>
       <div className="sq-h3">Application 3 — Function Call Stack</div>
       <div className="sq-code">{`
-
+`}</div>
       <div className="sq-h3">Application 4 — Reverse a String</div>
       <div className="sq-code">{`String reverse(String s) {
   Stack<Character> stack = new Stack<>();
@@ -308,7 +308,7 @@ function SecStackApps() {
   while (!stack.isEmpty()) sb.append(stack.pop());
   return sb.toString();
 }
-
+`}</div>
       <div className="sq-3col" style={{marginTop:12}}>
         <div className="sq-card"><h4>Undo/Redo</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>Two stacks: undo stack and redo stack. Each action pushes to undo. Ctrl+Z pops from undo, pushes to redo.</p></div>
         <div className="sq-card"><h4>Browser History</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>Back button = pop from history stack. Each new page visited = push to stack.</p></div>
@@ -399,7 +399,7 @@ function SecQueueIntro() {
   int front() { return arr[front]; }
   boolean isEmpty() { return size == 0; }
 }
-
+`}</div>
       <div className="sq-warn"><p>LINEAR QUEUE PROBLEM: In a simple array queue, after many enqueue/dequeue operations, front moves right and space at the beginning is wasted. Solution: use a circular queue with modulo arithmetic.</p></div>
     </div>
   );
@@ -494,7 +494,7 @@ function SecCircularQueue() {
 
       <div className="sq-h3">Why Circular Queue?</div>
       <div className="sq-code">{`
-
+`}</div>
       <div className="sq-info"><p>GREEN = FRONT (dequeue from here) | AMBER = REAR (enqueue here) | BLUE = filled slots. The circular structure reuses freed slots automatically.</p></div>
     </div>
   );
@@ -550,7 +550,7 @@ dq.peekFirst();
 dq.peekLast();     
 dq.pollFirst();    
 dq.pollLast();     
-
+`}</div>
       <div className="sq-h3">Priority Queue</div>
       <p className="sq-p">Elements are served based on <strong>priority</strong>, not insertion order. Internally implemented using a <strong>heap</strong>.</p>
       <div className="sq-code">{`import java.util.PriorityQueue;
@@ -613,7 +613,7 @@ Deque<Integer> queue2 = new ArrayDeque<>();
 queue2.offer(1); 
 queue2.poll();   
 queue2.peek();   
-
+`}</div>
       <div className="sq-h3">Implementation Comparison</div>
       <table className="sq-tbl">
         <thead><tr><th>Implementation</th><th>Push/Enqueue</th><th>Pop/Dequeue</th><th>Space</th><th>Notes</th></tr></thead>

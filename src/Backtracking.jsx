@@ -70,7 +70,7 @@ function SecIntro() {
     }
   }
 }
-
+`}</div>
       <div className="bt-info"><p>KEY INSIGHT: Backtracking = DFS + pruning + undo. The undo step restores state so the next branch starts fresh. This is why it's called "backtracking" — you literally go back.</p></div>
       <div className="bt-h3">Classic Problems</div>
       <div className="bt-2col">
@@ -252,7 +252,7 @@ function SecPermSubsets() {
     used[i] = false;             
   }
 }
-
+`}</div>
       <div className="bt-h3">Subsets (Power Set) — all combinations</div>
       <div className="bt-viz">
         <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -269,7 +269,7 @@ function SecPermSubsets() {
     current.remove(current.size()-1); 
   }
 }
-
+`}</div>
       <div className="bt-warn"><p>BACKTRACKING vs RECURSION: All backtracking is recursive, but not all recursion is backtracking. The key difference is the UNDO step — backtracking explicitly reverses the choice before trying the next option.</p></div>
     </div>
   );

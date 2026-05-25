@@ -144,7 +144,7 @@ function SecBubble() {
     }
   }
 }
-
+`}</div>
       <div className="sort-info"><p>OPTIMIZATION: Add a boolean flag. If no swaps occur in a full pass, the array is already sorted → break early. Best case becomes O(n).</p></div>
     </div>
   );
@@ -209,7 +209,7 @@ function SecSelection() {
     arr[i] = temp;
   }
 }
-
+`}</div>
     </div>
   );
 }
@@ -233,7 +233,7 @@ function SecInsertion() {
     arr[j + 1] = key;   
   }
 }
-
+`}</div>
       <div className="sort-info"><p>Insertion sort is the fastest O(n²) sort for small n (≤ 20) and nearly-sorted data. Java's Arrays.sort() uses it for small subarrays within TimSort.</p></div>
       <div className="sort-h3">Trace: [5, 3, 4, 1, 2]</div>
       <div className="sort-code">{`Pass 1: key=3 → [3, 5, 4, 1, 2]
@@ -295,7 +295,7 @@ void merge(int[] arr, int l, int mid, int r) {
   while (j <= r)   temp[k++] = arr[j++];
   for (int x = 0; x < temp.length; x++) arr[l + x] = temp[x];
 }
-
+`}</div>
     </div>
   );
 }
@@ -327,7 +327,7 @@ int partition(int[] arr, int low, int high) {
   int temp = arr[i+1]; arr[i+1] = arr[high]; arr[high] = temp;
   return i + 1;
 }
-
+`}</div>
       <div className="sort-warn"><p>WORST CASE: If the array is already sorted and you always pick the last element as pivot, every partition creates one empty side → O(n²). Fix: randomize the pivot.</p></div>
       <div className="sort-h3">Trace: [3, 6, 8, 10, 1, 2, 1] pivot=1</div>
       <div className="sort-code">{`Initial:   [3, 6, 8, 10, 1, 2, 1]  pivot=1 (last)

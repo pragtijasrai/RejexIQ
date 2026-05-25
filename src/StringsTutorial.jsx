@@ -137,6 +137,7 @@ char[] fromStr = str.toCharArray();
 
 char[] password = {'s','e','c','r','e','t'};
 java.util.Arrays.fill(password, '\\0');  
+`}</CodeBlock>
       <div className="str-mem">
         <div className="str-mem-box">
           <h4>char[] in memory</h4>
@@ -202,6 +203,7 @@ String empty = "";
 String blank = "   ";
 System.out.println(empty.isEmpty());  
 System.out.println(blank.isBlank());  
+`}</CodeBlock>
       <div className="str-pool">
         <h4>String Pool visualization</h4>
         <div style={{fontSize:12,color:"#8b949e",marginBottom:10}}>Literals are cached — same content shares one object</div>
@@ -423,6 +425,7 @@ String[] parts = "a,b,c".split(",");
 
 "  ".isBlank();                   
 "ha".repeat(3);                   
+`}</CodeBlock>
     </div>
   );
 }
@@ -508,6 +511,7 @@ String s = new StringBuilder()
   .append(" ")
   .append(21)
   .toString();                 
+`}</CodeBlock>
       <div className="str-fw">
         <h3>StringBuilder Playground</h3>
         <div style={{fontFamily:"var(--mono)",fontSize:13,background:"#161b22",borderRadius:8,padding:"10px 14px",color:"#a8ff78",marginBottom:12}}>
@@ -562,7 +566,7 @@ function SecToStr() {
     const cls = className || "MyClass";
     const flds = fields.split(",").map(f => f.trim()).filter(f => f);
     if (flds.length === 0) {
-      setOutput("
+      setOutput("");
       return;
     }
     let code = "@Override\npublic String toString() {\n  return \"" + cls + "{\" +\n";
@@ -600,6 +604,7 @@ Person p = new Person();
 p.name = "Alice";
 p.age = 25;
 System.out.println(p);  
+`}</CodeBlock>
       <div className="str-fw">
         <h3>toString() Generator</h3>
         <div className="demo-ctrl">
@@ -667,7 +672,7 @@ for (String token : tokens) {
 StringTokenizer st2 = new StringTokenizer("a,b;c:d", ",;:");
 
 StringTokenizer st3 = new StringTokenizer("a,b", ",", true);
-
+`}</CodeBlock>
       <div className="str-fw">
         <h3>StringTokenizer Demo</h3>
         <div className="demo-ctrl">

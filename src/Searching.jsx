@@ -114,7 +114,7 @@ function SecLinear() {
   }
   return -1;                        
 }
-
+`}</div>
     </div>
   );
 }
@@ -194,7 +194,7 @@ int binarySearch(int[] arr, int lo, int hi, int key) {
   if (arr[mid] < key) return binarySearch(arr, mid+1, hi, key);
   return binarySearch(arr, lo, mid-1, key);
 }
-
+`}</div>
       <div className="srch-info"><p>For n=1,000,000: Linear search needs up to 1,000,000 comparisons. Binary search needs at most log₂(1,000,000) ≈ 20 comparisons. That's 50,000× faster!</p></div>
     </div>
   );

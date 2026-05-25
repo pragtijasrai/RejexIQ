@@ -270,7 +270,7 @@ for (int i = 1; i <= 3; i++) {
     System.out.println(i + "," + j);
   }
 }
-
+`}</CodeBlock>
       <CodeBlock label="continue — with and without label">{`
 for (int i = 1; i <= 10; i++) {
   if (i % 2 == 0) continue;    
@@ -284,7 +284,7 @@ for (int i = 1; i <= 3; i++) {
     System.out.println(i + "," + j);
   }
 }
-
+`}</CodeBlock>
       <CodeBlock label="return — exiting methods from within loops">{`
 static boolean isPrime(int n) {
   if (n < 2) return false;          
@@ -352,7 +352,7 @@ while (row <= 3) {
   System.out.println();
   row++;
 }
-
+`}</CodeBlock>
       <div className="cf-fw">
         <h3>Key rules for nested loop variables</h3>
         <div className="syn-row"><div className="syn-n">1</div><div className="syn-t">Use different variable names: outer <code>i</code>, inner <code>j</code>, deepest <code>k</code>. Never reuse the same name across levels.</div></div>

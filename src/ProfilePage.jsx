@@ -1384,7 +1384,11 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             >
               🖼️ Upload
             </button>
-            <input type="file" id="cover-input-file" accept="image}
+            <input type="file" id="cover-input-file" accept="image/*" style={{ display: 'none' }} />
+          </div>
+        )}
+      </section>
+
       <section className="profile-header-card">
         {}
         <div className="profile-header-avatar-container">
@@ -1403,7 +1407,8 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
             </div>
           </div>
           {}
-          <input type="file" id="avatar-input-file" accept="image}
+          <input type="file" id="avatar-input-file" accept="image/*" style={{ display: 'none' }} />
+        </div>
         <div className="profile-header-info">
           {editMode ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", marginTop: 8 }} className="profile-header-inputs">
@@ -1537,7 +1542,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                     </span>
-                    <a href={tempSocials.facebook.startsWith('http') ? tempSocials.facebook : `https://${tempSocials.facebook}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.facebook.replace(/https?:\/\/(www\.)?facebook\.com\
+                    <a href={tempSocials.facebook.startsWith('http') ? tempSocials.facebook : `https://${tempSocials.facebook}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.facebook.replace(/https?:\/\/(www\.)?facebook\.com\//, '')}</a>
                   </div>
                 )}
                 {tempSocials?.linkedin && (
@@ -1545,7 +1550,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                     </span>
-                    <a href={tempSocials.linkedin.startsWith('http') ? tempSocials.linkedin : `https://${tempSocials.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.linkedin.replace(/https?:\/\/(www\.)?linkedin\.com\/in\
+                    <a href={tempSocials.linkedin.startsWith('http') ? tempSocials.linkedin : `https://${tempSocials.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.linkedin.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//, '')}</a>
                   </div>
                 )}
                 {tempSocials?.twitter && (
@@ -1553,7 +1558,7 @@ export default function ProfilePage({ user, onUpdateUser, onNav } = {}) {
                     <span className="profile-header-meta-icon" style={{ color: "var(--gray-400)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
                     </span>
-                    <a href={tempSocials.twitter.startsWith('http') ? tempSocials.twitter : `https://${tempSocials.twitter}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.twitter.replace(/https?:\/\/(www\.)?twitter\.com\
+                    <a href={tempSocials.twitter.startsWith('http') ? tempSocials.twitter : `https://${tempSocials.twitter}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-600)", textDecoration: "none" }} onMouseOver={e => e.currentTarget.style.color = "var(--g-light)"} onMouseOut={e => e.currentTarget.style.color = "var(--gray-600)"}>{tempSocials.twitter.replace(/https?:\/\/(www\.)?twitter\.com\//, '')}</a>
                   </div>
                 )}
               </div>

@@ -169,6 +169,7 @@ b[0] = 99;
 System.out.println(a[0]); 
 
 int[] c = java.util.Arrays.copyOf(a, a.length); 
+`}</pre>
       </div>
 
       <div className="fw">
@@ -300,7 +301,7 @@ function Sec2Memory() {
         <pre className="code">{`
 
 int[][] mat = {{1,2,3},{4,5,6},{7,8,9}};
-
+`}</pre>
       </div>
 
       <div className="alert a-green"><strong>Why O(1) random access?</strong> The formula <code>base + i × size</code> requires exactly 1 multiplication and 1 addition — two operations regardless of array size. In contrast, a linked list must traverse i nodes: O(i) = O(n).</div>
@@ -430,7 +431,7 @@ static int delete(int[] arr, int size, int pos) {
   arr[size - 1] = 0;              
   return size - 1;                
 }
-
+`}</pre>
       </div>
 
       <div className="alert a-amber"><strong>Critical direction rule:</strong> For insertion, the shifting loop must go from RIGHT to LEFT (i = size-1 down to pos). If you go left to right, you'll overwrite elements before moving them — a classic bug!</div>
@@ -766,7 +767,7 @@ static void hanoi(int n, char src, char dest, char aux) {
   System.out.println("Move disk "+n+": "+src+" → "+dest);
   hanoi(n-1, aux, dest, src);     
 }
-
+`}</pre>
       </div>
 
       <div className="fw">

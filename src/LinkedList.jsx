@@ -325,7 +325,7 @@ function SecTraversal() {
     curr = curr->next;         
   }
 }
-
+`}</div>
       <div className="ll-h3">Traversal for Search</div>
       <div className="ll-code">{`Node* search(Node *head, int key) {
   Node *curr = head;
@@ -335,7 +335,7 @@ function SecTraversal() {
   }
   return NULL; 
 }
-
+`}</div>
       <div className="ll-h3">Counting Nodes</div>
       <div className="ll-code">{`int countNodes(Node *head) {
   int count = 0;
@@ -343,7 +343,7 @@ function SecTraversal() {
   while (curr != NULL) { count++; curr = curr->next; }
   return count;
 }
-
+`}</div>
       <div className="ll-info"><p>KEY RULE: Always use a temporary pointer for traversal. Never move <code>head</code> directly — if you do, you lose access to the beginning of the list forever.</p></div>
     </div>
   );
@@ -423,7 +423,7 @@ function SecInsert() {
   newNode->next = *head;  
   *head = newNode;        
 }
-
+`}</div>
           <div className="ll-h3">At End — O(n)</div>
           <div className="ll-code">{`void insertEnd(Node **head, int val) {
   Node *newNode = createNode(val);
@@ -433,7 +433,7 @@ function SecInsert() {
     curr = curr->next;
   curr->next = newNode;       
 }
-
+`}</div>
           <div className="ll-warn"><p>CRITICAL ORDER: Always set newNode→next BEFORE updating curr→next. If you reverse this, you lose the rest of the list!</p></div>
         </>
       )}
@@ -465,7 +465,7 @@ function SecInsert() {
   newNode->next = curr->next;
   curr->next = newNode;
 }
-
+`}</div>
           <div className="ll-info"><p>Three cases: (1) empty list, (2) insert before head (new minimum), (3) insert in middle or at end. Always check all three in exams!</p></div>
         </>
       )}
@@ -535,7 +535,7 @@ function SecDelete() {
   curr->next = curr->next->next;  
   free(temp);
 }
-
+`}</div>
       <div className="ll-h3">Delete First — O(1)</div>
       <div className="ll-code">{`void deleteFirst(Node **head) {
   if (*head == NULL) return;
@@ -543,7 +543,7 @@ function SecDelete() {
   *head = (*head)->next;    
   free(temp);               
 }
-
+`}</div>
       <div className="ll-warn"><p>NEVER forget to free() memory in C/C++! Always save the node in a temp pointer before unlinking it.</p></div>
 
       <div className="ll-h3">Complexity Summary</div>
@@ -638,7 +638,7 @@ function SecDoubly() {
     del->prev->next = del->next;  
   free(del);
 }
-
+`}</div>
       <div className="ll-2col" style={{marginTop:12}}>
         <div className="ll-card"><h4>Advantages</h4><ul className="ll-ul"><li>Traverse in both directions</li><li>Delete given node in O(1)</li><li>Insert before given node in O(1)</li></ul></div>
         <div className="ll-card"><h4>Disadvantages</h4><ul className="ll-ul"><li>Extra memory (prev pointer)</li><li>More complex insert/delete code</li><li>Must update both prev & next</li></ul></div>
@@ -751,7 +751,7 @@ function SecCircular() {
     curr = curr->next;
   } while (curr != last->next);  
 }
-
+`}</div>
       <div className="ll-h3">Real-World Applications</div>
       <div className="ll-2col">
         <div className="ll-card"><h4>OS Round-Robin Scheduling</h4><p style={{fontSize:12,color:"var(--color-text-secondary)"}}>CPU gives each process a time slice. After the last process, scheduler wraps back to the first.</p></div>

@@ -204,7 +204,7 @@ function extractResumeData(text) {
         hl.length > 80 &&
         /^[A-Z]/.test(hl) &&
         !hl.includes('@') &&
-        !/^https?:\/\
+        !/^https?:\/\//.test(hl) &&
         !/\b(linkedin|github|leetcode)\b/i.test(hl)
       ) {
         summary = hl;
@@ -572,7 +572,7 @@ function extractResumeData(text) {
 
     const isCertTitle = (l, hasActiveCert) => {
       if (isBullet(l)) return false;
-      if (/^https?:\/\
+      if (/^https?:\/\//.test(l.trim())) return false;
       if (/^\d{4}$/.test(l.trim())) return false;
       
       if (CERT_KEYWORDS.test(l)) return true;
@@ -1463,7 +1463,22 @@ export default function ResumeBuilder({user={},initTemplate,initAccent,onBack}){
                         {data.profileImage?<img src={data.profileImage} alt="" className="w-full h-full object-cover"/>:<span className="text-2xl">📷</span>}
                       </div>
                       <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Profile Photo</div><button onClick={()=>imgRef.current?.click()} className={"text-xs rounded-lg border transition-all "+(dark?"border-white/10 text-white/40 hover:text-white/70":"border-gray-200 text-gray-400 hover:text-gray-700")} style={{padding:"6px 14px"}}>{data.profileImage?"Change":"Upload Photo"}</button></div>
-                      <input ref={imgRef} type="file" accept="image}
+                      <input ref={imgRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=()=>upd("profileImage",r.result);r.readAsDataURL(f);}}} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Full Name</div><input className={tCls} style={iStyle} value={data.name} onChange={e=>upd("name",e.target.value)} placeholder="e.g. John Doe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Job Title</div><input className={tCls} style={iStyle} value={data.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Software Engineer"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Email</div><input className={tCls} style={iStyle} value={data.email} onChange={e=>upd("email",e.target.value)} placeholder="e.g. john@example.com"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Phone</div><input className={tCls} style={iStyle} value={data.phone} onChange={e=>upd("phone",e.target.value)} placeholder="e.g. +1 234 567 890"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Location</div><input className={tCls} style={iStyle} value={data.location} onChange={e=>upd("location",e.target.value)} placeholder="e.g. New York, USA"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>LinkedIn</div><input className={tCls} style={iStyle} value={data.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="e.g. linkedin.com/in/johndoe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>GitHub</div><input className={tCls} style={iStyle} value={data.github} onChange={e=>upd("github",e.target.value)} placeholder="e.g. github.com/johndoe"/></div>
+                      <div><div className={"text-xs font-semibold "+tm+" mb-1.5"}>Portfolio / Website</div><input className={tCls} style={iStyle} value={data.leetcode} onChange={e=>upd("leetcode",e.target.value)} placeholder="e.g. johndoe.com"/></div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div><br></br>
             <div className={"rounded-2xl border "+card} style={{padding:"24px 32px"}}>
               <br></br><SecHead icon="📝" title="Professional Summary" collapsed={col.summary} onToggle={()=>togC("summary")}/>
               <AnimatePresence>

@@ -449,7 +449,7 @@ function OpCountingSection() {
 for (int i = 0; i < n; i++) {        
   sum = sum + a[i];                  
 }
-
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 2: Nested Loops</h4>
@@ -458,7 +458,7 @@ for (int i = 0; i < n; i++) {
     System.out.print(i*j);            
   }
 }
-
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 3: Logarithmic Loop</h4>
@@ -466,7 +466,7 @@ for (int i = 0; i < n; i++) {
 while (i > 1) {
   i = i / 2;   
 }
-
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>Worked Example 4: Triangular Nested Loops</h4>
@@ -475,7 +475,7 @@ while (i > 1) {
     
   }
 }
-
+`}</pre>
       </div>
     </div>
   );
@@ -660,6 +660,7 @@ HelloWorld.java
 javac HelloWorld.java → HelloWorld.class  
 
 java HelloWorld  
+`}</pre>
       </div>
     </div>
   );
@@ -779,6 +780,7 @@ int a = 5, b = 3, c = a + b;
 7: iload_2           
 8: iadd              
 9: istore_3          
+`}</pre>
       </div>
     </div>
   );
@@ -817,7 +819,7 @@ function MainMethodSection() {
     }
   }
 }
-
+`}</pre>
       </div>
       <div className="dsa-box warn"><div className="dsa-box-title">⚠️ Common Pitfall</div><strong>All command-line arguments are Strings!</strong> "123" is not the integer 123. You must parse: Integer.parseInt(args[0]), Double.parseDouble(args[0]), etc.</div>
     </div>
@@ -902,6 +904,7 @@ byte b = (byte) 300;
 char c = 'A';
 int ascii = c;          
 char back = (char)(ascii + 1); 
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>Wrapper Classes &amp; Autoboxing</h4>
@@ -922,6 +925,7 @@ int unboxed = boxed;
 
 Integer i = null;
 int x = i;  
+`}</pre>
       </div>
     </div>
   );
@@ -958,6 +962,7 @@ System.out.println(a / b);
 System.out.println(a % b);   
 System.out.println(10.0 / 3); 
 
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>2. Unary Operators</h4>
@@ -970,6 +975,7 @@ System.out.println(--x);
 System.out.println(x--);   
 boolean b = true;
 System.out.println(!b);    
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>3. Relational Operators — Always return boolean</h4>
@@ -985,6 +991,7 @@ String s1 = new String("hello");
 String s2 = new String("hello");
 s1 == s2        
 s1.equals(s2)   
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>4. Logical Operators</h4>
@@ -1019,6 +1026,7 @@ n & (n-1)
 n | (1<<k)  
 n & ~(1<<k) 
 (n>>k) & 1  
+`}</pre>
       </div>
       <div className="dsa-sub">
         <h4>6. Ternary &amp; instanceof Operators</h4>
@@ -1065,8 +1073,7 @@ if ((n & 1) == 0) {
   System.out.println(n + " is even");
 } else {
   System.out.println(n + " is odd");
-}
-
+}` },
     { n:"06", q:'What is the output? System.out.println(5 > 3 ? "yes" : 10 > 8 ? "maybe" : "no");', sol:'5>3 is true, so the result is the first branch: "yes". The nested ternary is never evaluated.' },
   ];
   return (

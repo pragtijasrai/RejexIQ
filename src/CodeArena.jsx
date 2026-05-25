@@ -269,12 +269,12 @@ const KW = new Set(["function","return","const","let","var","if","else","for","w
 function highlightLine(line) {
   if (!line.trim()) return <span>&nbsp;</span>;
   const t = line.trimStart();
-  if (t.startsWith("
+  if (t.startsWith("//"))
     return <span style={{ color:"#4a5568", fontStyle:"italic" }}>{line}</span>;
   const tokens = line.split(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\/\/.*|#.*|\b\w+\b|[^\w\s])/g);
   return tokens.map((tok, i) => {
     if (!tok) return null;
-    if (tok.startsWith("
+    if (tok.startsWith("//")) return <span key={i} style={{ color:"#4a5568", fontStyle:"italic" }}>{tok}</span>;
     if (/^["'`]/.test(tok))  return <span key={i} style={{ color:"#34d399" }}>{tok}</span>;
     if (KW.has(tok))          return <span key={i} style={{ color:"#c084fc", fontWeight:600 }}>{tok}</span>;
     if (/^\d+(\.\d+)?$/.test(tok)) return <span key={i} style={{ color:"#fbbf24" }}>{tok}</span>;
