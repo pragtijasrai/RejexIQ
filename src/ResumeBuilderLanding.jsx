@@ -1662,33 +1662,17 @@ function TemplatesSection({ onSelect }) {
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-semibold" style={{padding:"5px 16px"}}>🎯 ATS Score Checker</div>
             <h2 className="text-xl font-black text-white hidden sm:block">Check your <span style={{background:"linear-gradient(135deg,#67e8f9,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span></h2>
           </div>
-          <div className="flex items-center gap-3">
-            {atsScore!=null&&(
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10" style={{background:"rgba(255,255,255,0.05)"}}>
-                <span className="text-xs font-bold text-white/40 uppercase tracking-wider">ATS</span>
-                <span className="text-lg font-black" style={{color:sc}}>{atsScore}</span>
-                {appliedCount>0&&<span className="text-xs text-emerald-400 font-semibold">+{appliedCount} fixed</span>}
-              </div>
-            )}
-            {atsScore!=null&&(
-              <motion.button whileHover={{scale:1.03,boxShadow:"0 8px 24px rgba(16,185,129,0.4)"}} whileTap={{scale:0.97}}
-                onClick={downloadPDF} disabled={downloadingPDF}
-                className="flex items-center gap-2 rounded-xl font-bold text-white text-sm transition-all"
-                style={{padding:"9px 20px",background:"linear-gradient(135deg,#10b981,#059669)",boxShadow:"0 4px 12px rgba(16,185,129,0.3)"}}>
-                {downloadingPDF?<motion.span animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="inline-block">⟳</motion.span>:"📥"}
-                {downloadingPDF?"Generating...":"Download Improved Resume"+(appliedCount>0?" ("+appliedCount+" fix"+(appliedCount>1?"es":"")+")" :"")}
-              </motion.button>
-            )}
-          </div>
-        </div>
+          <h2 className="text-4xl lg:text-6xl font-black text-[#4a0e2e] mb-6 leading-tight">
+            Check your<br/><span style={{background:"linear-gradient(135deg,#67e8f9,#e11d48)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>resume score</span>
+          </h2>
+          <br/>
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto text-center whitespace-nowrap" style={{lineHeight:"1.85"}}>Upload your resume — get ATS score, line-by-line AI improvements, and download the fixed version.</p>
+          <br/>
+        </motion.div>
       </div>
 
       {/* ── SPLIT-SCREEN LAYOUT ── */}
       <div className="relative z-10 flex" style={{height:"calc(100vh - 65px)"}}>
-
-        {/* ══ LEFT PANEL (40%) — ATS score + suggestions + fix cards ══ */}
-        <div className="flex-shrink-0 border-r border-white/10" style={{width:"40%",height:"100%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.1) transparent"}}>
-          <div className="p-6 space-y-6">
 
             {/* Upload zone */}
             <div onClick={()=>fr.current?.click()} className="border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 group text-center" style={{padding:"28px 20px",borderColor:file?"#06b6d4":"rgba(255,255,255,0.15)",background:file?"rgba(6,182,212,0.08)":"rgba(255,255,255,0.03)"}}>
