@@ -3134,7 +3134,6 @@ export default function App() {
       if (isNew) {
         setAppPage("profile");
         setIsFirstLogin(true);
-        setTimeout(() => setShowTour(true), 600);
       } else {
         setAppPage("dashboard");
       }
@@ -3158,7 +3157,6 @@ export default function App() {
       } else {
         setAppPage("profile");
         setIsFirstLogin(true);
-        setTimeout(() => setShowTour(true), 600);
       }
       return prev;
     });
