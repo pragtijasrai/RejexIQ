@@ -1,183 +1,94 @@
-# RejexIQ - Career Intelligence Platform
-
-A skill evaluation and career readiness platform for students and professionals.
-
-## 🚀 Features
-
-- **Skill Assessment** - Rate yourself across 8 technical & soft skills
-- **Career Readiness Score** - AI-powered analysis comparing your profile to real job requirements
-- **Market Demand Analysis** - See which skills are trending in the industry
-- **Interactive Resume Builder** - Drag-and-drop builder with live preview and PDF export
-- **DSA Learning Hub** - Interactive tutorials for data structures and algorithms
-
-## 🛠️ Tech Stack
-
-**Frontend:**
-- React 18 + Vite
-- Recharts for data visualization
-- Tailwind CSS
-- Framer Motion for animations
-- Lenis for smooth scrolling
-
-**Backend:**
-- Node.js + Express
-- JWT authentication
-- bcrypt for password hashing
-- In-memory database (demo mode)
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js 16+ and npm
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd RejexIQ
-   ```
-
-2. **Install dependencies**
-   ```bash
-   # Install frontend dependencies
-   npm install
-
-   # Install backend dependencies
-   cd backend
-   npm install
-   cd ..
-   ```
-
-3. **Start the development servers**
-
-   **Terminal 1 - Frontend:**
-   ```bash
-   npm run dev
-   ```
-   Frontend runs on `http://localhost:5173`
-
-   **Terminal 2 - Backend:**
-   ```bash
-   cd backend
-   npm start
-   ```
-   Backend runs on `http://localhost:5000`
-
-4. **Open the app**
-   Navigate to `http://localhost:5173` in your browser
-
-## 🎯 Usage
-
-### For Team Members
-
-1. Start both frontend and backend servers (see Installation above)
-2. Create an account using email/password signup
-3. Complete the skill assessment
-4. Explore your career readiness dashboard
-5. Build your resume using the interactive builder
-
-### Demo Mode
-
-Click "Try Demo Mode" on the landing page to explore all features without creating an account.
-
-## 🔐 Authentication
-
-This project uses **email/password authentication** for simplicity and team collaboration.
-
-**Why no OAuth (Google/Microsoft)?**
-- OAuth credentials are secrets that cannot be committed to Git
-- Each team member would need to set up their own OAuth apps
-- Email/password auth works perfectly for demos and team projects
-
-If you need OAuth for production, see `OAUTH_SETUP.md` for detailed instructions.
-
-## 📁 Project Structure
-
-```
-RejexIQ/
-├── src/                    # Frontend React components
-│   ├── App.jsx            # Main app component
-│   ├── AuthPage.jsx       # Login/Signup page
-│   ├── ProfilePage.jsx    # User profile & dashboard
-│   ├── ResumeBuilder.jsx  # Resume builder component
-│   └── DSA*.jsx           # DSA tutorial components
-├── backend/
-│   ├── server.js          # Express backend server
-│   ├── package.json       # Backend dependencies
-│   └── .env.example       # Environment variables template
-├── index.html             # HTML entry point
-├── vite.config.js         # Vite configuration
-└── package.json           # Frontend dependencies
-```
-
-## 🧪 Testing
-
-The app includes:
-- Email validation (no spaces/commas allowed)
-- Password strength indicator
-- Form validation with real-time feedback
-- JWT token-based authentication
-
-## 🚢 Deployment
-
-### Frontend (Vercel/Netlify)
-1. Connect your GitHub repo
-2. Build command: `npm run build`
-3. Output directory: `dist`
-
-### Backend (Railway/Render/Heroku)
-1. Deploy the `backend/` folder
-2. Set environment variables:
-   - `JWT_SECRET` (generate a random string)
-   - `PORT` (usually auto-set by platform)
-3. Start command: `npm start`
-
-## 🤝 Contributing
-
-This is a team project. To contribute:
-
-1. Create a new branch for your feature
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. Make your changes and commit
-   ```bash
-   git add .
-   git commit -m "Add your feature description"
-   ```
-
-3. Push to your branch
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-4. Create a Pull Request on GitHub
-
-## 📝 License
-
-This project is for educational purposes.
-
-## 🐛 Known Issues
-
-- Backend uses in-memory storage (data resets on server restart)
-- For production, replace with MongoDB or PostgreSQL
-- Resume PDF export works best in Chrome/Edge
-
-## 💡 Future Enhancements
-
-- [ ] Database integration (MongoDB/PostgreSQL)
-- [ ] Email verification
-- [ ] Password reset functionality
-- [ ] Social sharing of career scores
-- [ ] More DSA tutorials
-- [ ] Interview preparation module
-
-## 📧 Support
-
-For questions or issues, open a GitHub issue or contact the team.
+<div align="center">
+  <img src="src/signin.svg" alt="RejexIQ Logo" width="120" />
+  <h1>RejexIQ</h1>
+  <p><strong>Decode the Hiring Algorithm. Clarify your Career.</strong></p>
+  <p>A next-generation career intelligence platform featuring real-time data, 3D WebGL interfaces, and predictive hiring analytics.</p>
+</div>
 
 ---
 
-**Built with ❤️ by the RejexIQ Team**
+## 🌟 Overview
+
+People don't search for jobs the way they used to. They ask questions, run trade-offs, and read between the lines. **RejexIQ** decodes how AI engines, recruiters, and Applicant Tracking Systems (ATS) see your profile—providing complete clarity for a new kind of career discovery.
+
+## ✨ Key Features
+
+- **🌐 Cinematic 3D Experience:** A stunning, scroll-driven 3D WebGL landing page built with React Three Fiber, Three.js, and Framer Motion that dynamically reacts to user navigation.
+- **⚡ Real-Time Global Chat:** Built with Socket.io, allowing instant, real-time communication and online-status tracking with anyone across the globe.
+- **🔐 Secure Authentication:** Seamless integration with Firebase Google OAuth alongside secure Email/Password authentication using JWT.
+- **📊 Real-Time Career Dashboard:** A live command center tracking your Visibility Index, Job Readiness, and Skill Coverage with rich data visualizations.
+- **📄 Interactive Resume Builder:** A professional, drag-and-drop resume builder featuring Canva-style layouts, live previews, and high-quality PDF exports.
+- **🧠 DSA & Learning Hub:** Interactive tutorials to master Data Structures and Algorithms right inside your browser.
+
+## 🛠️ Technology Stack
+
+**Frontend Architecture:**
+- **Core Framework:** React 18 + Vite
+- **3D & Animations:** Three.js, React Three Fiber, React Three Drei, Framer Motion
+- **Styling:** Tailwind CSS (Responsive, Mobile-First), Lenis (Smooth Scrolling)
+- **State & Data:** Context API, Recharts
+
+**Backend Architecture:**
+- **Server:** Node.js + Express
+- **Real-Time Engine:** Socket.io
+- **Auth & Security:** Firebase (Google Auth), JWT, Bcrypt
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+Make sure you have Node.js (v16+) and npm installed on your machine.
+
+### 1. Clone & Install
+```bash
+git clone <your-repo-url>
+cd RejexIQ
+
+# Install frontend dependencies
+npm install
+
+# Install backend dependencies
+cd backend
+npm install
+cd ..
+```
+
+### 2. Environment Configuration
+Create `.env` files in both your root directory and `backend/` directory based on the provided `.env.example` files. Make sure to include your Firebase config and backend connection strings:
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+### 3. Start the Engines
+You will need two terminal windows to run both the client and the server.
+
+**Terminal 1 (Frontend):**
+```bash
+npm run dev
+```
+**Terminal 2 (Backend):**
+```bash
+cd backend
+npm start
+```
+Navigate to `http://localhost:5173` to experience the platform!
+
+## 🚢 Deployment
+
+To unlock the global real-time chat and share RejexIQ with the world:
+1. **Frontend:** Deploy the root directory to [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/). Set your build command to `npm run build` and output directory to `dist`.
+2. **Backend:** Deploy the `backend/` directory to [Render](https://render.com/), [Railway](https://railway.app/), or [Heroku](https://heroku.com/). 
+3. **Connect:** Update your frontend's `VITE_API_URL` environment variable to point to your live backend URL!
+
+## 🤝 Contributing
+
+We welcome contributions to make RejexIQ even better! 
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+<div align="center">
+  <p>Built to bridge the gap between human ambition and machine algorithms.</p>
+</div>
