@@ -25,7 +25,7 @@ const OCEAN = {
   bubbleThem: "rgba(255, 255, 255, 0.05)",
 };
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : "http://localhost:5000");
 
 export default function Community({ user }) {
   const [activeTab, setActiveTab] = useState("discover"); 

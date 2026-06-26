@@ -3205,7 +3205,7 @@ export default function App() {
       const updated = { ...prev, ...updates };
       const token = localStorage.getItem("rejexiq_token");
       if (token) {
-        const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const API = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : "http://localhost:5000");
         fetch(`${API}/api/auth/profile`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

@@ -27,7 +27,7 @@ function pwStrength(p) {
   return { score: s, ...map[s] };
 }
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : "http://localhost:5000");
 
 export default function AuthPage({ onLogin, onNav, type, initialMode }) {
   const [isSignUpMode, setIsSignUpMode] = useState(() => (initialMode || type) === "signup");

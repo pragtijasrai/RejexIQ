@@ -13,7 +13,7 @@ const G = {
   danger: "#f87171"
 };
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : "http://localhost:5000");
 
 const FUN_NAMES = ["Code Ninja", "Mystery Hacker", "Tech Wizard", "Pixel Pioneer", "Cyber Surfer", "Data Jedi", "Logic Lord", "Bug Hunter", "Byte Boss", "Syntax Slayer"];
 function getFunName(id) {

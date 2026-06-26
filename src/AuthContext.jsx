@@ -3,7 +3,7 @@ import { signInWithGoogle, signOutFirebase } from "./firebase.js";
 
 const AuthContext = createContext(null);
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : "http://localhost:5000");
 const TOKEN_KEY = "rejexiq_token";
 const USER_KEY  = "rejexiq_user";
 
